@@ -1,0 +1,146 @@
+# Jamf Connect Monitor - Git Ignore File
+
+# Build artifacts
+build/
+output/
+dist/
+*.pkg
+*.dmg
+*.zip
+*.tar.gz
+
+# Log files
+*.log
+logs/
+/var/log/
+
+# Temporary files
+tmp/
+temp/
+.tmp/
+*.tmp
+*.temp
+
+# macOS system files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.vim/
+
+# Backup files
+*.backup
+*.bak
+*.orig
+*.save
+
+# Configuration files with sensitive data
+config/secrets.conf
+config/production.conf
+*.env
+.env.local
+.env.production
+
+# Package creation working directories
+payload/
+scripts/temp/
+package_temp/
+
+# Test output
+test_results/
+coverage/
+*.test
+
+# Compiled scripts
+*.compiled
+
+# Jamf Pro specific
+jamf_uploads/
+computer_reports/
+*.xml.processed
+
+# Certificate and key files
+*.pem
+*.key
+*.crt
+*.p12
+*.pfx
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+
+# Archive files
+*.rar
+*.7z
+
+# IDE and text editor files
+*.sublime-project
+*.sublime-workspace
+.textmate
+*.tmproj
+*.tmproject
+tmtags
+
+# Python bytecode (if any Python scripts are added)
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Node modules (if any Node.js tools are added)
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Ruby gems (if any Ruby scripts are added)
+*.gem
+*.rbc
+/.config
+/coverage/
+/InstalledFiles
+/pkg/
+/spec/reports/
+/spec/examples.txt
+/test/tmp/
+/test/version_tmp/
+
+# Local development files
+local_development/
+sandbox/
+scratch/
+
+# Documentation build files
+docs/_build/
+docs/.doctrees/
+
+# Release preparation files
+release_notes.txt
+version_bump.sh
+
+# Custom exclusions for this project
+approved_admins_custom.txt
+webhook_urls.txt
+company_specific_configs/
+
+# Ignore any files ending with _local or _dev
+*_local.*
+*_dev.*
+*_development.*
+
+# Ignore any sensitive or environment-specific configs
+config/*_production.*
+config/*_staging.*
+config/*_development.*
