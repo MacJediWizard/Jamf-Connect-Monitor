@@ -144,3 +144,11 @@ company_specific_configs/
 config/*_production.*
 config/*_staging.*
 config/*_development.*
+
+# Build artifacts
+scripts/build/
+scripts/output/
+
+# Build artifacts
+scripts/build/
+scripts/output/

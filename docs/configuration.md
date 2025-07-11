@@ -39,3 +39,7 @@ Update in package_creation_script.sh:
 ```bash
 PACKAGE_IDENTIFIER="com.yourcompany.jamfconnectmonitor"
 ```
+
+---
+
+**Created with ❤️ by MacJediWizard**

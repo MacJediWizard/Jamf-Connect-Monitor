@@ -36,7 +36,7 @@ sudo ./deployment_script.sh interactive
 ### Option 2: Package for Jamf Pro
 1. Download the latest `.pkg` from [Releases](https://github.com/MacJediWizard/jamf-connect-monitor/releases)
 2. Upload to Jamf Pro
-3. Deploy via policy (see [Deployment Guide](docs/jamf-pro-deployment.md))
+3. Deploy via policy (see [Jamf Pro Deployment Guide](docs/jamf-pro-deployment.md))
 
 ### Option 3: Manual Installation
 ```bash
@@ -54,10 +54,11 @@ sudo installer -pkg output/JamfConnectMonitor-1.0.pkg -target /
 ## 📖 Documentation
 
 - [Complete Installation Guide](docs/installation-guide.md)
-- [Jamf Pro Deployment](docs/jamf-pro-deployment.md)
+- [Jamf Pro Deployment Guide](docs/jamf-pro-deployment.md)
 - [Configuration Options](docs/configuration.md)
-- [Troubleshooting](docs/troubleshooting.md)
-- [API Reference](docs/api-reference.md)
+- [Troubleshooting Guide](docs/troubleshooting.md)
+- [Uninstall Guide](docs/uninstall-guide.md)
+- [CLI Reference](docs/cli-reference.md)
 
 ## 🛠️ Usage
 
@@ -131,6 +132,22 @@ sudo nano /usr/local/etc/jamf_connect_monitor.conf
 3. **Notification**: Sends alerts via configured channels (Slack/Email)
 4. **Remediation**: Automatically removes admin privileges
 5. **Reporting**: Updates Jamf Pro Extension Attribute for visibility
+
+## 🗑️ Uninstallation
+
+```bash
+# Download uninstall script
+curl -o uninstall_script.sh https://github.com/MacJediWizard/jamf-connect-monitor/releases/latest/download/uninstall_script.sh
+sudo chmod +x uninstall_script.sh
+
+# Interactive uninstall
+sudo ./uninstall_script.sh
+
+# OR use included uninstaller
+sudo /usr/local/share/jamf_connect_monitor/uninstall_script.sh --force
+```
+
+Complete removal guide: [Uninstall Guide](docs/uninstall-guide.md)
 
 ## 🤝 Contributing
 

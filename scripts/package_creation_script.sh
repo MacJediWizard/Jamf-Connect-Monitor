@@ -219,13 +219,29 @@ copy_main_files() {
     # Copy monitor script
     cp "./jamf_connect_monitor.sh" "$PAYLOAD_DIR/usr/local/bin/"
     
-    # Copy uninstall script to share directory (make it available on target systems)
-    cp "./uninstall_script.sh" "$PAYLOAD_DIR/usr/local/share/jamf_connect_monitor/"
+    # Copy uninstall script to share directory
+    if [[ -f "./uninstall_script.sh" ]]; then
+        cp "./uninstall_script.sh" "$PAYLOAD_DIR/usr/local/share/jamf_connect_monitor/"
+        print_status "$GREEN" "Uninstall script included"
+    else
+        print_status "$YELLOW" "WARNING: uninstall_script.sh not found"
+    fi
     
-    # Copy Extension Attribute script if it exists
+    # Copy Extension Attribute script - fix path reference
+    local ea_script_path=""
     if [[ -f "../jamf/extension-attribute.sh" ]]; then
-        cp "../jamf/extension-attribute.sh" "$PAYLOAD_DIR/usr/local/etc/jamf_ea_admin_violations.sh"
+        ea_script_path="../jamf/extension-attribute.sh"
+    elif [[ -f "jamf/extension-attribute.sh" ]]; then
+        ea_script_path="jamf/extension-attribute.sh"
+    elif [[ -f "./jamf/extension-attribute.sh" ]]; then
+        ea_script_path="./jamf/extension-attribute.sh"
+    fi
+    
+    if [[ -n "$ea_script_path" && -f "$ea_script_path" ]]; then
+        cp "$ea_script_path" "$PAYLOAD_DIR/usr/local/etc/jamf_ea_admin_violations.sh"
         print_status "$GREEN" "Extension Attribute script included"
+    else
+        print_status "$YELLOW" "WARNING: Extension Attribute script not found"
     fi
     
     print_status "$GREEN" "Main files copied"

@@ -35,3 +35,7 @@
 - Increase monitoring interval for large environments
 - Implement log rotation for disk space management
 - Consider network bandwidth for notifications
+
+---
+
+**Created with ❤️ by MacJediWizard**
