@@ -7,7 +7,7 @@ set -e  # Exit on any error
 
 # Configuration
 PACKAGE_NAME="JamfConnectMonitor"
-PACKAGE_VERSION="1.0"
+PACKAGE_VERSION="1.0.1"
 PACKAGE_IDENTIFIER="com.macjediwizard.jamfconnectmonitor"
 BUILD_DIR="$(pwd)/build"
 PAYLOAD_DIR="$BUILD_DIR/payload"
