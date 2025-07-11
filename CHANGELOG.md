@@ -8,11 +8,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
-- Initial repository setup
-- Core monitoring functionality
-- Jamf Pro integration
+- Enhanced documentation suite with CLI reference
+- Improved package creation reliability
 
-## [1.0.0] - 2025-01-10
+## [1.0.1] - 2025-07-11
+
+### Added
+- **Documentation Improvements**
+  - Complete CLI reference guide (docs/cli-reference.md)
+  - Comprehensive installation guide (docs/installation-guide.md) 
+  - Detailed Jamf Pro deployment guide (docs/jamf-pro-deployment.md)
+  - Enhanced README with corrected documentation links
+  - Professional MacJediWizard branding throughout
+
+### Fixed
+- **Package Creation Issues**
+  - Fixed Extension Attribute script path resolution in package builds
+  - Improved package creation reliability with fallback logic
+  - Enhanced build process with better component verification
+  - Corrected package version numbering to 1.0.1
+
+### Changed
+- **Documentation Structure**
+  - Renamed "API Reference" to "CLI Reference" for accuracy
+  - Consolidated deployment guides to prevent duplication
+  - Improved file structure with proper build artifact exclusion
+  - Enhanced professional presentation and consistency
+
+## [1.0.0] - 2025-07-10
 
 ### Added
 - **Core Features**
@@ -73,10 +96,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Complete installation and configuration guide
 - Jamf Pro deployment instructions
 - Troubleshooting documentation
-- API reference and examples
 - Community contribution guidelines
 
-## [0.1.0] - 2025-01-09
+## [0.1.0] - 2025-07-08
 
 ### Added
 - Initial project conception and planning
@@ -88,33 +110,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Version History Summary
 
+- **1.0.1**: Documentation improvements and package creation fixes
 - **1.0.0**: Full production release with complete feature set
 - **0.1.0**: Initial development and testing phase
-
-## Upgrade Instructions
-
-### From 0.x to 1.0.0
-This is the initial production release. Follow the installation guide for new deployments.
-
-### Future Upgrades
-When upgrading between versions:
-1. Backup existing configuration files
-2. Stop monitoring daemon
-3. Install new package
-4. Verify configuration migration
-5. Restart monitoring services
-
-## Known Issues
-
-### Version 1.0.0
-- None at release
 
 ## Support
 
 For issues, feature requests, or support:
-- **GitHub Issues**: [Report bugs or request features](https://github.com/yourusername/jamf-connect-monitor/issues)
-- **GitHub Discussions**: [Ask questions or discuss usage](https://github.com/yourusername/jamf-connect-monitor/discussions)
-- **Documentation**: [Check the wiki](https://github.com/yourusername/jamf-connect-monitor/wiki)
+- **GitHub Issues**: [Report bugs or request features](https://github.com/MacJediWizard/jamf-connect-monitor/issues)
+- **GitHub Discussions**: [Ask questions or discuss usage](https://github.com/MacJediWizard/jamf-connect-monitor/discussions)
+- **Documentation**: [Check the wiki](https://github.com/MacJediWizard/jamf-connect-monitor/wiki)
 
 ---
 
