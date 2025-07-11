@@ -1,0 +1,23 @@
+# Webhook Configuration Examples
+
+## Slack Webhook
+WEBHOOK_URL="https://hooks.slack.com/services/T00000000/B00000000/XXXXXXXXXXXXXXXXXXXXXXXX"
+
+## Microsoft Teams Webhook  
+WEBHOOK_URL="https://your-tenant.webhook.office.com/webhookb2/..."
+
+## Discord Webhook
+WEBHOOK_URL="https://discord.com/api/webhooks/000000000000000000/XXXXXXXXXXXXXXXXXXXXXXXX"
+
+## Custom Webhook Payload Example
+{
+  "text": "🚨 Admin Privilege Violation Detected",
+  "attachments": [{
+    "color": "danger",
+    "fields": [
+      {"title": "Hostname", "value": "MacBook-Pro", "short": true},
+      {"title": "Unauthorized User", "value": "john.doe", "short": true},
+      {"title": "Action Taken", "value": "Admin privileges removed", "short": false}
+    ]
+  }]
+}

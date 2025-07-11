@@ -3,7 +3,7 @@
 <plist version="1.0">
 <dict>
     <key>Label</key>
-    <string>com.company.jamfconnectmonitor</string>
+    <string>com.macjediwizard.jamfconnectmonitor</string>
     
     <key>ProgramArguments</key>
     <array>

@@ -28,20 +28,20 @@ A comprehensive monitoring and automated remediation system for Jamf Connect pri
 ### Option 1: One-Click Deployment (Recommended)
 ```bash
 # Download and run the deployment script
-curl -o deployment_script.sh https://github.com/yourusername/jamf-connect-monitor/releases/latest/download/deployment_script.sh
+curl -o deployment_script.sh https://github.com/MacJediWizard/jamf-connect-monitor/releases/latest/download/deployment_script.sh
 sudo chmod +x deployment_script.sh
 sudo ./deployment_script.sh interactive
 ```
 
 ### Option 2: Package for Jamf Pro
-1. Download the latest `.pkg` from [Releases](https://github.com/yourusername/jamf-connect-monitor/releases)
+1. Download the latest `.pkg` from [Releases](https://github.com/MacJediWizard/jamf-connect-monitor/releases)
 2. Upload to Jamf Pro
 3. Deploy via policy (see [Deployment Guide](docs/jamf-pro-deployment.md))
 
 ### Option 3: Manual Installation
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/jamf-connect-monitor.git
+git clone https://github.com/MacJediWizard/jamf-connect-monitor.git
 cd jamf-connect-monitor
 
 # Build deployment package
@@ -152,9 +152,9 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 🆘 Support
 
-- **Issues**: [GitHub Issues](https://github.com/yourusername/jamf-connect-monitor/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/yourusername/jamf-connect-monitor/discussions)
-- **Documentation**: [Wiki](https://github.com/yourusername/jamf-connect-monitor/wiki)
+- **Issues**: [GitHub Issues](https://github.com/MacJediWizard/jamf-connect-monitor/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/MacJediWizard/jamf-connect-monitor/discussions)
+- **Documentation**: [Wiki](https://github.com/MacJediWizard/jamf-connect-monitor/wiki)
 
 ## ⭐ Acknowledgments
 
@@ -164,11 +164,14 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 🏷️ Badges
 
-![GitHub release (latest by date)](https://img.shields.io/github/v/release/yourusername/jamf-connect-monitor)
-![GitHub all releases](https://img.shields.io/github/downloads/yourusername/jamf-connect-monitor/total)
-![GitHub issues](https://img.shields.io/github/issues/yourusername/jamf-connect-monitor)
-![GitHub stars](https://img.shields.io/github/stars/yourusername/jamf-connect-monitor?style=social)
+![GitHub release (latest by date)](https://img.shields.io/github/v/release/MacJediWizard/jamf-connect-monitor)
+![GitHub all releases](https://img.shields.io/github/downloads/MacJediWizard/jamf-connect-monitor/total)
+![GitHub issues](https://img.shields.io/github/issues/MacJediWizard/jamf-connect-monitor)
+![GitHub stars](https://img.shields.io/github/stars/MacJediWizard/jamf-connect-monitor?style=social)
 
 ---
 
 **Made with ❤️ for the macOS Administrator community**
+---
+
+Created with ❤️ by MacJediWizard

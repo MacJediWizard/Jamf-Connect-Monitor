@@ -8,7 +8,7 @@ set -e  # Exit on any error
 # Configuration
 PACKAGE_NAME="JamfConnectMonitor"
 PACKAGE_VERSION="1.0"
-PACKAGE_IDENTIFIER="com.company.jamfconnectmonitor"
+PACKAGE_IDENTIFIER="com.macjediwizard.jamfconnectmonitor"
 BUILD_DIR="$(pwd)/build"
 PAYLOAD_DIR="$BUILD_DIR/payload"
 SCRIPTS_DIR="$BUILD_DIR/scripts"
@@ -33,9 +33,9 @@ check_prerequisites() {
     
     # Check if required files exist
     local required_files=(
-        "jamf_connect_monitor.sh"
-        "preinstall_script.sh"
-        "postinstall_script.sh"
+        "./jamf_connect_monitor.sh"
+        "./preinstall_script.sh"
+        "./postinstall_script.sh"
     )
     
     for file in "${required_files[@]}"; do
@@ -81,13 +81,13 @@ setup_build_environment() {
 create_launch_daemon() {
     print_status "$BLUE" "Creating LaunchDaemon..."
     
-    cat > "$PAYLOAD_DIR/Library/LaunchDaemons/com.company.jamfconnectmonitor.plist" << 'EOF'
+    cat > "$PAYLOAD_DIR/Library/LaunchDaemons/com.macjediwizard.jamfconnectmonitor.plist" << 'EOF'
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
     <key>Label</key>
-    <string>com.company.jamfconnectmonitor</string>
+    <string>com.macjediwizard.jamfconnectmonitor</string>
     
     <key>ProgramArguments</key>
     <array>
@@ -183,7 +183,7 @@ elevation events and automatically removes unauthorized admin accounts.
 
 COMPONENTS:
 - Monitor Script: /usr/local/bin/jamf_connect_monitor.sh
-- LaunchDaemon: /Library/LaunchDaemons/com.company.jamfconnectmonitor.plist
+- LaunchDaemon: /Library/LaunchDaemons/com.macjediwizard.jamfconnectmonitor.plist
 - Configuration: /usr/local/etc/jamf_connect_monitor.conf
 - Approved Admins: /usr/local/etc/approved_admins.txt
 - Logs: /var/log/jamf_connect_monitor/
@@ -217,7 +217,7 @@ copy_main_files() {
     print_status "$BLUE" "Copying main files..."
     
     # Copy monitor script
-    cp "jamf_connect_monitor.sh" "$PAYLOAD_DIR/usr/local/bin/"
+    cp "./jamf_connect_monitor.sh" "$PAYLOAD_DIR/usr/local/bin/"
     
     print_status "$GREEN" "Main files copied"
 }
@@ -227,11 +227,11 @@ prepare_scripts() {
     print_status "$BLUE" "Preparing installation scripts..."
     
     # Copy pre-install script
-    cp "preinstall_script.sh" "$SCRIPTS_DIR/preinstall"
+    cp "./preinstall_script.sh" "$SCRIPTS_DIR/preinstall"
     chmod +x "$SCRIPTS_DIR/preinstall"
     
     # Copy post-install script  
-    cp "postinstall_script.sh" "$SCRIPTS_DIR/postinstall"
+    cp "./postinstall_script.sh" "$SCRIPTS_DIR/postinstall"
     chmod +x "$SCRIPTS_DIR/postinstall"
     
     print_status "$GREEN" "Installation scripts prepared"

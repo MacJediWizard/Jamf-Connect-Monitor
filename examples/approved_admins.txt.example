@@ -1,0 +1,8 @@
+# Example Approved Administrators
+# Add one username per line
+# This file is automatically populated during installation
+
+admin
+it_support
+helpdesk_admin
+system_administrator
