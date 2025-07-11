@@ -219,6 +219,15 @@ copy_main_files() {
     # Copy monitor script
     cp "./jamf_connect_monitor.sh" "$PAYLOAD_DIR/usr/local/bin/"
     
+    # Copy uninstall script to share directory (make it available on target systems)
+    cp "./uninstall_script.sh" "$PAYLOAD_DIR/usr/local/share/jamf_connect_monitor/"
+    
+    # Copy Extension Attribute script if it exists
+    if [[ -f "../jamf/extension-attribute.sh" ]]; then
+        cp "../jamf/extension-attribute.sh" "$PAYLOAD_DIR/usr/local/etc/jamf_ea_admin_violations.sh"
+        print_status "$GREEN" "Extension Attribute script included"
+    fi
+    
     print_status "$GREEN" "Main files copied"
 }
 
