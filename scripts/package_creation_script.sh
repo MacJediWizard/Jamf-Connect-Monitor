@@ -146,7 +146,7 @@ EmailRecipient=
 [System]
 CompanyName=YourCompany
 InstallDate=
-Version=1.0
+Version=1.0.1
 
 [Paths]
 ApprovedAdminsList=/usr/local/etc/approved_admins.txt
@@ -175,7 +175,7 @@ create_documentation() {
     print_status "$BLUE" "Creating documentation..."
     
     cat > "$PAYLOAD_DIR/usr/local/share/jamf_connect_monitor/README.txt" << 'EOF'
-Jamf Connect Monitor - Version 1.0
+Jamf Connect Monitor - Version 1.0.1
 
 DESCRIPTION:
 This package installs a monitoring system that tracks Jamf Connect privilege 

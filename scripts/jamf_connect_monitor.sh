@@ -2,7 +2,7 @@
 
 # Jamf Connect Elevation Monitor & Admin Account Remediation Script
 # This script monitors Jamf Connect elevation events and detects/removes unauthorized admin accounts
-# Version: 1.0
+# Version: 1.0.1
 # Author: System Administrator
 
 # Configuration Variables

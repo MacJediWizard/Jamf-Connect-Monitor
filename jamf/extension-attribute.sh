@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Jamf Pro Extension Attribute - Admin Account Violations
-# Version: 1.0
+# Version: 1.0.1
 # Author: System Administrator  
 # Description: Reports unauthorized admin account violations and current monitoring status
 # Compatible with: Jamf Pro 10.27+ and macOS 10.14+

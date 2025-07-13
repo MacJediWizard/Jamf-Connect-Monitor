@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Jamf Connect Monitor - Complete Uninstall Script
-# Version: 1.0
+# Version: 1.0.1
 # Author: MacJediWizard
 # Description: Completely removes all Jamf Connect Monitor components
 
@@ -471,7 +471,7 @@ confirm_uninstall() {
 # Main execution
 main() {
     print_status "$GREEN" "=== Starting Jamf Connect Monitor Uninstall ==="
-    print_status "$BLUE" "Version: 1.0"
+    print_status "$BLUE" "Version: 1.0.1"
     print_status "$BLUE" "Date: $(date)"
     echo
     

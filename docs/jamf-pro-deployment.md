@@ -17,7 +17,7 @@ This guide provides detailed instructions for deploying Jamf Connect Monitor thr
 #### 1.1 Upload Installation Package
 1. **Download Package:**
    - Go to [GitHub Releases](https://github.com/MacJediWizard/jamf-connect-monitor/releases/latest)
-   - Download `JamfConnectMonitor-1.0.pkg`
+   - Download `JamfConnectMonitor-1.0.1.pkg`
 
 2. **Upload to Jamf Pro:**
    - Navigate: **Settings → Computer Management → Packages**

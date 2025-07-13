@@ -17,13 +17,13 @@ This guide provides comprehensive installation instructions for deploying Jamf C
 
 #### Step 1: Download Package
 1. Go to [GitHub Releases](https://github.com/MacJediWizard/jamf-connect-monitor/releases/latest)
-2. Download `JamfConnectMonitor-1.0.pkg` (20KB)
-3. Download `JamfConnectMonitor-1.0.pkg.sha256` for verification
+2. Download `JamfConnectMonitor-1.0.1.pkg` (20KB)
+3. Download `JamfConnectMonitor-1.0.1.pkg.sha256` for verification
 
 #### Step 2: Verify Package Integrity
 ```bash
 # Verify package checksum
-shasum -a 256 -c JamfConnectMonitor-1.0.pkg.sha256
+shasum -a 256 -c JamfConnectMonitor-1.0.1.pkg.sha256
 ```
 
 #### Step 3: Upload to Jamf Pro
@@ -73,10 +73,10 @@ shasum -a 256 -c JamfConnectMonitor-1.0.pkg.sha256
 
 ```bash
 # Download package
-curl -LO https://github.com/MacJediWizard/jamf-connect-monitor/releases/download/v1.0.0/JamfConnectMonitor-1.0.pkg
+curl -LO https://github.com/MacJediWizard/jamf-connect-monitor/releases/download/v1.0.1/JamfConnectMonitor-1.0.1.pkg
 
 # Install package
-sudo installer -pkg JamfConnectMonitor-1.0.pkg -target /
+sudo installer -pkg JamfConnectMonitor-1.0.1.pkg -target /
 
 # Verify installation
 sudo jamf_connect_monitor.sh status
@@ -86,7 +86,7 @@ sudo jamf_connect_monitor.sh status
 
 ```bash
 # Download deployment script
-curl -LO https://github.com/MacJediWizard/jamf-connect-monitor/releases/download/v1.0.0/deployment_script.sh
+curl -LO https://github.com/MacJediWizard/jamf-connect-monitor/releases/download/v1.0.1/deployment_script.sh
 
 # Run interactive installation
 sudo ./deployment_script.sh interactive
@@ -128,7 +128,7 @@ sudo jamf_connect_monitor.sh remove-admin username
 tail -f /var/log/install.log
 
 # Verify package integrity
-pkgutil --check-signature JamfConnectMonitor-1.0.pkg
+pkgutil --check-signature JamfConnectMonitor-1.0.1.pkg
 ```
 
 #### Issue: Daemon Not Starting

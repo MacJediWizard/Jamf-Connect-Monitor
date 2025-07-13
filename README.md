@@ -48,7 +48,7 @@ cd jamf-connect-monitor
 sudo ./scripts/package_creation_script.sh build
 
 # Install the generated package
-sudo installer -pkg output/JamfConnectMonitor-1.0.pkg -target /
+sudo installer -pkg output/JamfConnectMonitor-1.0.1.pkg -target /
 ```
 
 ## 📖 Documentation
