@@ -118,8 +118,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 For issues, feature requests, or support:
 - **GitHub Issues**: [Report bugs or request features](https://github.com/MacJediWizard/jamf-connect-monitor/issues)
-- **GitHub Discussions**: [Ask questions or discuss usage](https://github.com/MacJediWizard/jamf-connect-monitor/discussions)
-- **Documentation**: [Check the wiki](https://github.com/MacJediWizard/jamf-connect-monitor/wiki)
+- **GitHub Issues**: [Report bugs or request features](https://github.com/MacJediWizard/jamf-connect-monitor/issues)
+- **Documentation**: [Complete guides in docs/](https://github.com/MacJediWizard/jamf-connect-monitor/tree/main/docs)
 
 ---
 

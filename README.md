@@ -170,8 +170,8 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## 🆘 Support
 
 - **Issues**: [GitHub Issues](https://github.com/MacJediWizard/jamf-connect-monitor/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/MacJediWizard/jamf-connect-monitor/discussions)
-- **Documentation**: [Wiki](https://github.com/MacJediWizard/jamf-connect-monitor/wiki)
+- **Community**: [GitHub Issues](https://github.com/MacJediWizard/jamf-connect-monitor/issues)
+- **Documentation**: [Complete Guides](https://github.com/MacJediWizard/jamf-connect-monitor/tree/main/docs)
 
 ## ⭐ Acknowledgments
 
