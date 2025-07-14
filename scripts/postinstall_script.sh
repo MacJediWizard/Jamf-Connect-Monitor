@@ -8,7 +8,7 @@ SCRIPT_NAME="JamfConnectMonitor-PostInstall"
 LOG_FILE="/var/log/jamf_connect_monitor_install.log"
 CONFIG_FILE="/usr/local/etc/jamf_connect_monitor.conf"
 MONITOR_SCRIPT="/usr/local/bin/jamf_connect_monitor.sh"
-LAUNCH_DAEMON="/Library/LaunchDaemons/com.company.jamfconnectmonitor.plist"
+LAUNCH_DAEMON="/Library/LaunchDaemons/com.macjediwizard.jamfconnectmonitor.plist"
 APPROVED_ADMINS="/usr/local/etc/approved_admins.txt"
 
 # Configuration from Jamf Pro Parameters (if provided)
