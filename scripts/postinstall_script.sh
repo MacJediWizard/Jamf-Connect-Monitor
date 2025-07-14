@@ -157,7 +157,7 @@ EmailRecipient=$EMAIL_RECIPIENT
 [System]
 CompanyName=$COMPANY_NAME
 InstallDate=$(date '+%Y-%m-%d %H:%M:%S')
-Version=1.0.1
+Version=1.0.2
 
 [Paths]
 ApprovedAdminsList=$APPROVED_ADMINS

@@ -54,8 +54,8 @@ get_recent_violations() {
 check_monitoring_status() {
     if pgrep -f "jamf_connect_monitor.sh" > /dev/null; then
         echo "Active"
-    elif [ -f "/Library/LaunchDaemons/com.company.jamfconnectmonitor.plist" ]; then
-        if launchctl list | grep -q "com.company.jamfconnectmonitor"; then
+    elif [ -f "/Library/LaunchDaemons/com.macjediwizard.jamfconnectmonitor.plist" ]; then
+        if launchctl list | grep -q "com.macjediwizard.jamfconnectmonitor"; then
             echo "Scheduled"
         else
             echo "Configured but not running"
@@ -70,8 +70,8 @@ get_jamf_connect_status() {
     # Check if Jamf Connect is installed and elevation is enabled
     if [ -f "/Applications/Jamf Connect.app/Contents/Info.plist" ]; then
         # Check if elevation is configured
-        local elevation_enabled=$(defaults read /Library/Managed\ Preferences/com.jamf.connect.plist TemporaryUserPromotion 2>/dev/null)
-        if [ "$elevation_enabled" = "1" ]; then
+        local elevation_enabled=$(/usr/libexec/PlistBuddy -c "Print :TemporaryUserPermissions:TemporaryUserPromotion" "/Library/Managed Preferences/com.jamf.connect.plist" 2>/dev/null)
+        if [ "$elevation_enabled" = "true" ]; then
             echo "Enabled"
         else
             echo "Installed but elevation disabled"

@@ -7,7 +7,7 @@ set -e  # Exit on any error
 
 # Configuration
 PACKAGE_NAME="JamfConnectMonitor"
-PACKAGE_VERSION="1.0.1"
+PACKAGE_VERSION="1.0.2"
 PACKAGE_IDENTIFIER="com.macjediwizard.jamfconnectmonitor"
 BUILD_DIR="$(pwd)/build"
 PAYLOAD_DIR="$BUILD_DIR/payload"
@@ -239,6 +239,7 @@ copy_main_files() {
     
     if [[ -n "$ea_script_path" && -f "$ea_script_path" ]]; then
         cp "$ea_script_path" "$PAYLOAD_DIR/usr/local/etc/jamf_ea_admin_violations.sh"
+        chmod +x "$PAYLOAD_DIR/usr/local/etc/jamf_ea_admin_violations.sh"
         print_status "$GREEN" "Extension Attribute script included"
     else
         print_status "$YELLOW" "WARNING: Extension Attribute script not found"
