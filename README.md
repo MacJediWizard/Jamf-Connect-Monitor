@@ -1,44 +1,45 @@
-# Jamf Connect Privilege Monitor
+# Jamf Connect Privilege Monitor v2.0.0
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Jamf Pro Compatible](https://img.shields.io/badge/Jamf%20Pro-10.27%2B-blue.svg)](https://jamf.com)
+[![Jamf Pro Compatible](https://img.shields.io/badge/Jamf%20Pro-10.19%2B-blue.svg)](https://jamf.com)
 [![macOS Compatible](https://img.shields.io/badge/macOS-10.14%2B-blue.svg)](https://apple.com/macos)
 
-A comprehensive monitoring and automated remediation system for Jamf Connect privilege elevation events. Automatically detects and removes unauthorized admin accounts while maintaining detailed audit trails.
+A comprehensive monitoring and automated remediation system for Jamf Connect privilege elevation events with **enterprise Configuration Profile management** and **real-time detection capabilities**.
 
-## 🚀 Features
+## 🚀 **New in v2.0.0**
 
-- **Real-time Monitoring**: Continuously monitors Jamf Connect elevation events
-- **Automated Remediation**: Automatically removes unauthorized admin privileges
-- **Comprehensive Logging**: Detailed audit trails of all elevation and violation events
-- **Jamf Pro Integration**: Extension Attribute for reporting and Smart Group automation
-- **Zero User Interaction**: Silent deployment and operation
-- **Notification Support**: Slack/Teams webhook and email notifications
-- **Whitelist Management**: Configurable approved administrator list
+- **Configuration Profile Support** - Centralized webhook/email management via Jamf Pro
+- **Real-time Monitoring** - Immediate violation detection (like Jamf Protect)
+- **JSON Schema Integration** - Easy Jamf Pro Application & Custom Settings deployment
+- **Enhanced Notifications** - Professional security report templates
+- **Smart Group Automation** - Advanced Jamf Pro integration workflows
 
-## 📋 Requirements
+## 🌟 **Features**
+
+- **Real-time & Periodic Monitoring** - Choose immediate or 5-minute interval detection
+- **Configuration Profile Management** - No more hardcoded credentials in scripts
+- **Automated Remediation** - Instantly removes unauthorized admin privileges
+- **Enterprise Notifications** - Slack/Teams webhooks and email with professional templates
+- **Comprehensive Logging** - Detailed audit trails of all elevation and violation events
+- **Jamf Pro Integration** - Extension Attributes, Smart Groups, and automated policies
+- **Zero User Interaction** - Silent deployment and operation across your fleet
+
+## 📋 **Requirements**
 
 - macOS 10.14 or later
 - Jamf Connect 2.33.0 or later with privilege elevation enabled
-- Jamf Pro 10.27 or later (recommended)
+- Jamf Pro 10.19 or later (for Configuration Profile JSON Schema support)
 - Root/administrator access for installation
 
-## 🔧 Quick Installation
+## 🔧 **Quick Installation**
 
-### Option 1: One-Click Deployment (Recommended)
-```bash
-# Download and run the deployment script
-curl -o deployment_script.sh https://github.com/MacJediWizard/jamf-connect-monitor/releases/latest/download/deployment_script.sh
-sudo chmod +x deployment_script.sh
-sudo ./deployment_script.sh interactive
-```
-
-### Option 2: Package for Jamf Pro
+### Option 1: Package for Jamf Pro (Recommended)
 1. Download the latest `.pkg` from [Releases](https://github.com/MacJediWizard/jamf-connect-monitor/releases)
-2. Upload to Jamf Pro
-3. Deploy via policy (see [Jamf Pro Deployment Guide](docs/jamf-pro-deployment.md))
+2. Upload to Jamf Pro and deploy via policy
+3. Deploy Configuration Profile using included JSON Schema
+4. See [Jamf Pro Deployment Guide](docs/jamf-pro-deployment.md) for details
 
-### Option 3: Manual Installation
+### Option 2: Manual Build and Deploy
 ```bash
 # Clone the repository
 git clone https://github.com/MacJediWizard/jamf-connect-monitor.git
@@ -48,47 +49,89 @@ cd jamf-connect-monitor
 sudo ./scripts/package_creation_script.sh build
 
 # Install the generated package
-sudo installer -pkg output/JamfConnectMonitor-1.0.1.pkg -target /
+sudo installer -pkg output/JamfConnectMonitor-2.0.0.pkg -target /
 ```
 
-## 📖 Documentation
+## 📱 **Configuration Profile Deployment**
 
-- [Complete Installation Guide](docs/installation-guide.md)
-- [Jamf Pro Deployment Guide](docs/jamf-pro-deployment.md)
-- [Configuration Options](docs/configuration.md)
-- [Troubleshooting Guide](docs/troubleshooting.md)
-- [Uninstall Guide](docs/uninstall-guide.md)
-- [CLI Reference](docs/cli-reference.md)
+### Jamf Pro Application & Custom Settings
+1. **Navigate:** Computer Management → Configuration Profiles → New
+2. **Add Payload:** Application & Custom Settings
+3. **Source:** Custom Schema
+4. **Preference Domain:** `com.macjediwizard.jamfconnectmonitor`
+5. **Upload Schema:** Use `jamf_connect_monitor_schema.json` from package
+6. **Configure Settings:** Webhook URLs, email recipients, monitoring modes
 
-## 🛠️ Usage
+### Example Configuration
+```json
+{
+  "NotificationSettings": {
+    "WebhookURL": "https://hooks.slack.com/services/YOUR/WEBHOOK",
+    "EmailRecipient": "security@yourcompany.com",
+    "NotificationTemplate": "security_report"
+  },
+  "MonitoringBehavior": {
+    "MonitoringMode": "realtime",
+    "AutoRemediation": true,
+    "GracePeriodMinutes": 5
+  },
+  "JamfProIntegration": {
+    "CompanyName": "Your Company",
+    "ITContactEmail": "ithelp@yourcompany.com"
+  }
+}
+```
+
+## 🛠️ **Usage**
 
 ### Command Line Interface
 ```bash
-# Check current status
+# Check current status with Configuration Profile info
 sudo jamf_connect_monitor.sh status
 
-# Add approved admin
-sudo jamf_connect_monitor.sh add-admin username
+# Test Configuration Profile settings
+sudo jamf_connect_monitor.sh test-config
 
-# Remove approved admin
+# Manage approved admins
+sudo jamf_connect_monitor.sh add-admin username
 sudo jamf_connect_monitor.sh remove-admin username
 
-# Force immediate check
+# Force immediate violation check
 sudo jamf_connect_monitor.sh force-check
 ```
 
-### Jamf Pro Integration
+### Monitoring Modes
+- **Periodic** - Traditional 5-minute interval checking
+- **Real-time** - Immediate violation detection using log streaming
+- **Hybrid** - Both periodic and real-time monitoring for maximum coverage
 
-Create an Extension Attribute with the provided script:
-- Navigate to Settings → Computer Management → Extension Attributes
-- Use the script from `jamf/extension-attribute.sh`
-- Create Smart Groups based on violation status
+## 📊 **Jamf Pro Integration**
 
-## 📊 Monitoring
+### Extension Attribute
+Creates comprehensive reporting in Jamf Pro computer records:
+- Monitoring status and version
+- Configuration Profile deployment status
+- Violation history and current unauthorized admins
+- Jamf Connect integration status
+- System health metrics
+
+### Smart Groups
+Automatic device grouping for:
+- **Critical Violations** - Immediate security attention required
+- **Configuration Status** - Profile deployment tracking
+- **Monitoring Modes** - Real-time vs periodic deployment
+- **Health Status** - System maintenance requirements
+
+### Automated Workflows
+- **Violation Detection** → **Smart Group Membership** → **Policy Triggers** → **Automated Response**
+- **Configuration Updates** → **Immediate Application** → **Inventory Updates** → **Reporting**
+
+## 📈 **Monitoring**
 
 ### Log Locations
 - **Main Activity**: `/var/log/jamf_connect_monitor/monitor.log`
 - **Violations**: `/var/log/jamf_connect_monitor/admin_violations.log`
+- **Real-time Events**: `/var/log/jamf_connect_monitor/realtime_monitor.log`
 - **Jamf Connect Events**: `/var/log/jamf_connect_monitor/jamf_connect_events.log`
 
 ### Real-time Monitoring
@@ -96,60 +139,87 @@ Create an Extension Attribute with the provided script:
 # Watch main activity
 tail -f /var/log/jamf_connect_monitor/monitor.log
 
-# Watch for violations
-tail -f /var/log/jamf_connect_monitor/admin_violations.log
+# Monitor real-time violations
+tail -f /var/log/jamf_connect_monitor/realtime_monitor.log
 ```
 
-## ⚙️ Configuration
+## ⚙️ **Configuration**
 
-### Basic Configuration
+### Configuration Profile Management (v2.0.0)
+All settings managed centrally via Jamf Pro Configuration Profiles:
+- **Notification Settings** - Webhook URLs, email recipients, templates
+- **Monitoring Behavior** - Real-time vs periodic, auto-remediation, grace periods
+- **Security Settings** - Violation reporting, log retention, excluded accounts
+- **Jamf Pro Integration** - Company branding, inventory updates, policy triggers
+
+### Legacy Configuration (v1.x compatibility)
 ```bash
-# Edit approved admin list
+# Manual approved admin management
 sudo nano /usr/local/etc/approved_admins.txt
-
-# Configure notifications (optional)
-sudo nano /usr/local/etc/jamf_connect_monitor.conf
 ```
 
-### Advanced Configuration
-- **Monitoring Interval**: Modify LaunchDaemon (default: 5 minutes)
-- **Webhook Notifications**: Add Slack/Teams webhook URL
-- **Email Alerts**: Configure SMTP settings
-- **Company Branding**: Customize company name and settings
+## 🔐 **Security Features**
 
-## 🔐 Security Features
+- ✅ **Configuration Profile Encryption** - Secure credential management via Jamf Pro
+- ✅ **Real-time Detection** - Immediate response to unauthorized elevations
+- ✅ **Audit Trail** - Complete logging of all elevation events and violations
+- ✅ **Tamper Resistant** - Root privilege requirement with protected configurations
+- ✅ **SIEM Ready** - Structured logging for security information systems
+- ✅ **Automated Response** - Zero-touch violation remediation
 
-- ✅ **Whitelisting**: Only pre-approved users can have admin rights
-- ✅ **Audit Trail**: Complete logging of all elevation events and violations
-- ✅ **Real-time Response**: Immediate detection and remediation
-- ✅ **SIEM Ready**: Structured logging for security information systems
-- ✅ **Tamper Resistant**: Runs as root with proper permission controls
+## 📈 **What Happens During Violations**
 
-## 📈 What Happens When Violations Occur
+1. **Detection** - Real-time or periodic detection of unauthorized admin account
+2. **Grace Period** - Configurable wait time for legitimate temporary elevation
+3. **Remediation** - Automatic removal of admin privileges (if enabled)
+4. **Notification** - Immediate alerts via configured Slack/Teams/email channels
+5. **Logging** - Detailed violation report with system context and user information
+6. **Jamf Pro Update** - Extension Attribute updates for Smart Group automation
+7. **Policy Triggers** - Optional additional policy execution for incident response
 
-1. **Detection**: Script detects unauthorized admin account
-2. **Logging**: Creates detailed violation report with timestamps
-3. **Notification**: Sends alerts via configured channels (Slack/Email)
-4. **Remediation**: Automatically removes admin privileges
-5. **Reporting**: Updates Jamf Pro Extension Attribute for visibility
-
-## 🗑️ Uninstallation
+## 🗑️ **Uninstallation**
 
 ```bash
-# Download uninstall script
+# Download and run uninstall script
 curl -o uninstall_script.sh https://github.com/MacJediWizard/jamf-connect-monitor/releases/latest/download/uninstall_script.sh
 sudo chmod +x uninstall_script.sh
 
-# Interactive uninstall
+# Interactive uninstall with configuration backup
 sudo ./uninstall_script.sh
 
-# OR use included uninstaller
-sudo /usr/local/share/jamf_connect_monitor/uninstall_script.sh --force
+# Silent uninstall for mass deployment
+sudo ./uninstall_script.sh --force
 ```
 
 Complete removal guide: [Uninstall Guide](docs/uninstall-guide.md)
 
-## 🤝 Contributing
+## 📖 **Documentation**
+
+- [Installation Guide](docs/installation-guide.md) - Complete deployment instructions
+- [Jamf Pro Deployment Guide](docs/jamf-pro-deployment.md) - Enterprise deployment strategies
+- [Configuration Profile Guide](docs/configuration-profiles.md) - Centralized management setup
+- [CLI Reference](docs/cli-reference.md) - Command line interface documentation
+- [Troubleshooting Guide](docs/troubleshooting.md) - Common issues and solutions
+- [Smart Groups Guide](docs/smart-groups.md) - Jamf Pro automation setup
+
+## 🚀 **Migration from v1.x to v2.0.0**
+
+### Automatic Upgrade
+The v2.0.0 package automatically migrates existing v1.x installations while preserving:
+- Approved administrator lists
+- Historical violation logs  
+- Monitoring configuration preferences
+
+### New Configuration Profile Features
+After upgrade, deploy Configuration Profile to enable:
+- Centralized webhook/email management
+- Real-time monitoring capabilities
+- Enhanced notification templates
+- Advanced security settings
+
+See [Migration Guide](docs/migration-guide.md) for detailed upgrade instructions.
+
+## 🤝 **Contributing**
 
 We welcome contributions! Please see our [Contributing Guidelines](CONTRIBUTING.md) for details.
 
@@ -159,26 +229,27 @@ We welcome contributions! Please see our [Contributing Guidelines](CONTRIBUTING.
 4. Push to the branch (`git push origin feature/amazing-feature`)
 5. Open a Pull Request
 
-## 📝 Changelog
+## 📝 **Changelog**
 
-See [CHANGELOG.md](CHANGELOG.md) for a detailed history of changes.
+See [CHANGELOG.md](CHANGELOG.md) for a detailed history of changes and upgrade notes.
 
-## 📄 License
+## 📄 **License**
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## 🆘 Support
+## 🆘 **Support**
 
 - **Issues**: [GitHub Issues](https://github.com/MacJediWizard/jamf-connect-monitor/issues)
 - **Documentation**: [Complete Guides](https://github.com/MacJediWizard/jamf-connect-monitor/tree/main/docs)
+- **Discussions**: [GitHub Discussions](https://github.com/MacJediWizard/jamf-connect-monitor/discussions)
 
-## ⭐ Acknowledgments
+## ⭐ **Acknowledgments**
 
-- Jamf Community for Extension Attribute examples
-- Apple System Administrators community
-- Open source contributors and testers
+- Jamf Community for Extension Attribute examples and Configuration Profile best practices
+- Apple System Administrators community for security monitoring guidance
+- Open source contributors and beta testers from the macOS enterprise community
 
-## 🏷️ Badges
+## 🏷️ **Project Status**
 
 ![GitHub release (latest by date)](https://img.shields.io/github/v/release/MacJediWizard/jamf-connect-monitor)
 ![GitHub all releases](https://img.shields.io/github/downloads/MacJediWizard/jamf-connect-monitor/total)
@@ -188,6 +259,9 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ---
 
 **Made with ❤️ for the macOS Administrator community**
+
+**Enterprise-grade security monitoring with Configuration Profile management and real-time detection capabilities.**
+
 ---
 
 Created with ❤️ by MacJediWizard

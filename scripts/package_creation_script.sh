@@ -1,18 +1,22 @@
 #!/bin/bash
 
 # Package Creation Script for Jamf Connect Monitor
-# This script creates a deployable .pkg file for Jamf Pro
+# This script creates a deployable .pkg file for Jamf Pro with Configuration Profile support
 
 set -e  # Exit on any error
 
 # Configuration
 PACKAGE_NAME="JamfConnectMonitor"
-PACKAGE_VERSION="1.0.2"
+PACKAGE_VERSION="2.0.0"
 PACKAGE_IDENTIFIER="com.macjediwizard.jamfconnectmonitor"
-BUILD_DIR="$(pwd)/build"
+
+# Get script directory and project root
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
+BUILD_DIR="$SCRIPT_DIR/build"
 PAYLOAD_DIR="$BUILD_DIR/payload"
-SCRIPTS_DIR="$BUILD_DIR/scripts"
-OUTPUT_DIR="$(pwd)/output"
+SCRIPTS_BUILD_DIR="$BUILD_DIR/scripts"
+OUTPUT_DIR="$SCRIPT_DIR/output"
 
 # Colors for output
 RED='\033[0;31m'
@@ -33,9 +37,10 @@ check_prerequisites() {
     
     # Check if required files exist
     local required_files=(
-        "./jamf_connect_monitor.sh"
-        "./preinstall_script.sh"
-        "./postinstall_script.sh"
+        "$PROJECT_ROOT/scripts/jamf_connect_monitor.sh"
+        "$PROJECT_ROOT/scripts/preinstall_script.sh"
+        "$PROJECT_ROOT/scripts/postinstall_script.sh"
+        "$PROJECT_ROOT/jamf_connect_monitor_schema.json"
     )
     
     for file in "${required_files[@]}"; do
@@ -64,7 +69,7 @@ setup_build_environment() {
     
     # Create directory structure
     mkdir -p "$PAYLOAD_DIR"
-    mkdir -p "$SCRIPTS_DIR"
+    mkdir -p "$SCRIPTS_BUILD_DIR"
     mkdir -p "$OUTPUT_DIR"
     
     # Create payload directory structure
@@ -131,7 +136,7 @@ create_default_config() {
     
     cat > "$PAYLOAD_DIR/usr/local/etc/jamf_connect_monitor.conf" << 'EOF'
 # Jamf Connect Monitor Default Configuration
-# This file will be customized during installation
+# This file will be customized during installation with Configuration Profile support
 
 [Settings]
 MonitoringInterval=300
@@ -139,19 +144,21 @@ LogRetentionDays=30
 AutoRemediation=true
 ViolationReporting=true
 
-[Notifications]
-WebhookURL=
-EmailRecipient=
+[ConfigurationProfile]
+Domain=com.macjediwizard.jamfconnectmonitor
+Enabled=true
+JsonSchemaVersion=2.0.0
 
 [System]
-CompanyName=YourCompany
+Version=2.0.0
 InstallDate=
-Version=1.0.1
+PackageIdentifier=com.macjediwizard.jamfconnectmonitor
 
 [Paths]
 ApprovedAdminsList=/usr/local/etc/approved_admins.txt
 LogDirectory=/var/log/jamf_connect_monitor
 ScriptPath=/usr/local/bin/jamf_connect_monitor.sh
+JsonSchema=/usr/local/share/jamf_connect_monitor/schema/jamf_connect_monitor_schema.json
 EOF
 
     print_status "$GREEN" "Default configuration created"
@@ -165,9 +172,37 @@ create_admin_template() {
 # Default Approved Administrators
 # This file will be populated with current admins during installation
 # Add one username per line
+# Configuration Profile support enables centralized management
 EOF
 
     print_status "$GREEN" "Admin template created"
+}
+
+# Create JSON schema for Configuration Profile
+create_json_schema() {
+    print_status "$BLUE" "Creating JSON schema for Configuration Profile..."
+    
+    local schema_dir="$PAYLOAD_DIR/usr/local/share/jamf_connect_monitor/schema"
+    mkdir -p "$schema_dir"
+    
+    if [[ -f "$PROJECT_ROOT/jamf_connect_monitor_schema.json" ]]; then
+        cp "$PROJECT_ROOT/jamf_connect_monitor_schema.json" "$schema_dir/"
+        print_status "$GREEN" "JSON schema copied from project"
+    else
+        print_status "$RED" "ERROR: jamf_connect_monitor_schema.json not found in project root"
+        print_status "$YELLOW" "Please ensure jamf_connect_monitor_schema.json exists in the project directory"
+        exit 1
+    fi
+    
+    # Verify JSON schema is valid
+    if command -v python3 &> /dev/null; then
+        python3 -m json.tool "$schema_dir/jamf_connect_monitor_schema.json" >/dev/null 2>&1
+        if [[ $? -eq 0 ]]; then
+            print_status "$GREEN" "JSON schema validation passed"
+        else
+            print_status "$YELLOW" "Warning: JSON schema validation failed, but continuing"
+        fi
+    fi
 }
 
 # Create documentation
@@ -175,30 +210,57 @@ create_documentation() {
     print_status "$BLUE" "Creating documentation..."
     
     cat > "$PAYLOAD_DIR/usr/local/share/jamf_connect_monitor/README.txt" << 'EOF'
-Jamf Connect Monitor - Version 1.0.1
+Jamf Connect Monitor - Version 2.0.0
 
 DESCRIPTION:
-This package installs a monitoring system that tracks Jamf Connect privilege 
-elevation events and automatically removes unauthorized admin accounts.
+This package installs an enterprise security monitoring system that tracks Jamf Connect 
+privilege elevation events and automatically removes unauthorized admin accounts with 
+real-time detection and Configuration Profile management.
+
+NEW IN VERSION 2.0.0:
+- Configuration Profile support for centralized webhook/email management
+- Real-time monitoring capabilities (immediate violation detection)
+- Enhanced notification templates (simple, detailed, security_report)
+- JSON Schema for easy Jamf Pro Application & Custom Settings deployment
+- Advanced security settings and compliance options
 
 COMPONENTS:
 - Monitor Script: /usr/local/bin/jamf_connect_monitor.sh
 - LaunchDaemon: /Library/LaunchDaemons/com.macjediwizard.jamfconnectmonitor.plist
-- Configuration: /usr/local/etc/jamf_connect_monitor.conf
+- Configuration Profile Domain: com.macjediwizard.jamfconnectmonitor
+- JSON Schema: /usr/local/share/jamf_connect_monitor/schema/jamf_connect_monitor_schema.json
 - Approved Admins: /usr/local/etc/approved_admins.txt
 - Logs: /var/log/jamf_connect_monitor/
 
+CONFIGURATION PROFILE DEPLOYMENT:
+1. In Jamf Pro: Computer Management > Configuration Profiles > New
+2. Add Application & Custom Settings payload
+3. Source: Custom Schema
+4. Preference Domain: com.macjediwizard.jamfconnectmonitor
+5. Upload JSON Schema from: /usr/local/share/jamf_connect_monitor/schema/jamf_connect_monitor_schema.json
+6. Configure settings through Jamf Pro interface
+7. Scope to target computers
+
 USAGE:
 - View status: sudo jamf_connect_monitor.sh status
+- Test config: sudo jamf_connect_monitor.sh test-config
 - Add admin: sudo jamf_connect_monitor.sh add-admin <username>
 - Remove admin: sudo jamf_connect_monitor.sh remove-admin <username>
+- Force check: sudo jamf_connect_monitor.sh force-check
 
 LOGS:
 - Monitor activity: /var/log/jamf_connect_monitor/monitor.log
 - Violations: /var/log/jamf_connect_monitor/admin_violations.log
+- Real-time events: /var/log/jamf_connect_monitor/realtime_monitor.log
 - Daemon output: /var/log/jamf_connect_monitor/daemon.log
 
-For support, contact your IT administrator.
+MONITORING MODES:
+- Periodic: Traditional 5-minute interval checking
+- Real-time: Immediate violation detection (like Jamf Protect)
+- Hybrid: Both periodic and real-time monitoring
+
+For support, contact your IT administrator or see documentation at:
+https://github.com/MacJediWizard/jamf-connect-monitor
 EOF
 
     # Create version file
@@ -207,6 +269,9 @@ Package: $PACKAGE_NAME
 Version: $PACKAGE_VERSION
 Build Date: $(date)
 Identifier: $PACKAGE_IDENTIFIER
+Configuration Profile Domain: com.macjediwizard.jamfconnectmonitor
+JSON Schema: Available for Jamf Pro Application & Custom Settings
+Features: Configuration Profile Support, Real-time Monitoring, Enhanced Notifications
 EOF
 
     print_status "$GREEN" "Documentation created"
@@ -217,24 +282,26 @@ copy_main_files() {
     print_status "$BLUE" "Copying main files..."
     
     # Copy monitor script
-    cp "./jamf_connect_monitor.sh" "$PAYLOAD_DIR/usr/local/bin/"
-    
-    # Copy uninstall script to share directory
-    if [[ -f "./uninstall_script.sh" ]]; then
-        cp "./uninstall_script.sh" "$PAYLOAD_DIR/usr/local/share/jamf_connect_monitor/"
-        print_status "$GREEN" "Uninstall script included"
+    if [[ -f "$PROJECT_ROOT/scripts/jamf_connect_monitor.sh" ]]; then
+        cp "$PROJECT_ROOT/scripts/jamf_connect_monitor.sh" "$PAYLOAD_DIR/usr/local/bin/"
+        print_status "$GREEN" "Monitor script copied"
     else
-        print_status "$YELLOW" "WARNING: uninstall_script.sh not found"
+        print_status "$RED" "ERROR: scripts/jamf_connect_monitor.sh not found"
+        exit 1
     fi
     
-    # Copy Extension Attribute script - fix path reference
+    # Copy uninstall script to share directory
+    if [[ -f "$PROJECT_ROOT/scripts/uninstall_script.sh" ]]; then
+        cp "$PROJECT_ROOT/scripts/uninstall_script.sh" "$PAYLOAD_DIR/usr/local/share/jamf_connect_monitor/"
+        print_status "$GREEN" "Uninstall script included"
+    else
+        print_status "$YELLOW" "WARNING: scripts/uninstall_script.sh not found"
+    fi
+    
+    # Copy Extension Attribute script - check multiple possible locations
     local ea_script_path=""
-    if [[ -f "../jamf/extension-attribute.sh" ]]; then
-        ea_script_path="../jamf/extension-attribute.sh"
-    elif [[ -f "jamf/extension-attribute.sh" ]]; then
-        ea_script_path="jamf/extension-attribute.sh"
-    elif [[ -f "./jamf/extension-attribute.sh" ]]; then
-        ea_script_path="./jamf/extension-attribute.sh"
+    if [[ -f "$PROJECT_ROOT/jamf/extension-attribute.sh" ]]; then
+        ea_script_path="$PROJECT_ROOT/jamf/extension-attribute.sh"
     fi
     
     if [[ -n "$ea_script_path" && -f "$ea_script_path" ]]; then
@@ -242,7 +309,9 @@ copy_main_files() {
         chmod +x "$PAYLOAD_DIR/usr/local/etc/jamf_ea_admin_violations.sh"
         print_status "$GREEN" "Extension Attribute script included"
     else
-        print_status "$YELLOW" "WARNING: Extension Attribute script not found"
+        print_status "$RED" "ERROR: Extension Attribute script not found"
+        print_status "$YELLOW" "Expected location: jamf/extension-attribute.sh"
+        exit 1
     fi
     
     print_status "$GREEN" "Main files copied"
@@ -253,12 +322,24 @@ prepare_scripts() {
     print_status "$BLUE" "Preparing installation scripts..."
     
     # Copy pre-install script
-    cp "./preinstall_script.sh" "$SCRIPTS_DIR/preinstall"
-    chmod +x "$SCRIPTS_DIR/preinstall"
+    if [[ -f "$PROJECT_ROOT/scripts/preinstall_script.sh" ]]; then
+        cp "$PROJECT_ROOT/scripts/preinstall_script.sh" "$SCRIPTS_BUILD_DIR/preinstall"
+        chmod +x "$SCRIPTS_BUILD_DIR/preinstall"
+        print_status "$GREEN" "Pre-install script prepared"
+    else
+        print_status "$RED" "ERROR: scripts/preinstall_script.sh not found"
+        exit 1
+    fi
     
     # Copy post-install script  
-    cp "./postinstall_script.sh" "$SCRIPTS_DIR/postinstall"
-    chmod +x "$SCRIPTS_DIR/postinstall"
+    if [[ -f "$PROJECT_ROOT/scripts/postinstall_script.sh" ]]; then
+        cp "$PROJECT_ROOT/scripts/postinstall_script.sh" "$SCRIPTS_BUILD_DIR/postinstall"
+        chmod +x "$SCRIPTS_BUILD_DIR/postinstall"
+        print_status "$GREEN" "Post-install script prepared"
+    else
+        print_status "$RED" "ERROR: scripts/postinstall_script.sh not found"
+        exit 1
+    fi
     
     print_status "$GREEN" "Installation scripts prepared"
 }
@@ -278,6 +359,10 @@ set_payload_permissions() {
     
     # Make scripts executable
     chmod +x "$PAYLOAD_DIR/usr/local/bin/jamf_connect_monitor.sh"
+    chmod +x "$PAYLOAD_DIR/usr/local/etc/jamf_ea_admin_violations.sh"
+    
+    # Set LaunchDaemon permissions
+    chmod 644 "$PAYLOAD_DIR/Library/LaunchDaemons/com.macjediwizard.jamfconnectmonitor.plist"
     
     print_status "$GREEN" "Permissions set"
 }
@@ -290,7 +375,7 @@ build_package() {
     
     pkgbuild \
         --root "$PAYLOAD_DIR" \
-        --scripts "$SCRIPTS_DIR" \
+        --scripts "$SCRIPTS_BUILD_DIR" \
         --identifier "$PACKAGE_IDENTIFIER" \
         --version "$PACKAGE_VERSION" \
         --install-location "/" \
@@ -304,6 +389,10 @@ build_package() {
         shasum -a 256 "$package_path" > "$package_path.sha256"
         print_status "$GREEN" "Checksum created: $package_path.sha256"
         
+        # Copy JSON schema to output for easy access
+        cp "$PROJECT_ROOT/jamf_connect_monitor_schema.json" "$OUTPUT_DIR/"
+        print_status "$GREEN" "JSON schema copied to output directory"
+        
         return 0
     else
         print_status "$RED" "ERROR: Package creation failed"
@@ -316,8 +405,18 @@ create_jamf_instructions() {
     print_status "$BLUE" "Creating Jamf Pro instructions..."
     
     cat > "$OUTPUT_DIR/Jamf_Pro_Deployment_Instructions.txt" << EOF
-JAMF PRO DEPLOYMENT INSTRUCTIONS
+JAMF PRO DEPLOYMENT INSTRUCTIONS - VERSION 2.0.0
 Package: ${PACKAGE_NAME}-${PACKAGE_VERSION}.pkg
+
+🚀 NEW FEATURES IN 2.0.0:
+- Configuration Profile support for centralized webhook/email management
+- Real-time monitoring capabilities (immediate violation detection)
+- Enhanced notification templates
+- JSON Schema for easy Jamf Pro deployment
+
+====================================================================
+PHASE 1: PACKAGE DEPLOYMENT
+====================================================================
 
 1. UPLOAD PACKAGE:
    - Log into Jamf Pro
@@ -326,25 +425,9 @@ Package: ${PACKAGE_NAME}-${PACKAGE_VERSION}.pkg
    - Set Category: "Security" or "Utilities"
    - Set Priority: 10
 
-2. CREATE EXTENSION ATTRIBUTE:
-   - Go to Settings > Computer Management > Extension Attributes
-   - Create new attribute:
-     * Display Name: "Admin Account Violations"
-     * Description: "Monitors unauthorized admin account violations"
-     * Data Type: "String"
-     * Input Type: "Script"
-     * Script: Use the jamf_ea_admin_violations.sh script content
-
-3. CREATE SMART GROUPS:
-   - "Jamf Connect Monitor - Installed"
-     * Criteria: "Admin Account Violations" "is not" "Not configured"
-   
-   - "Jamf Connect Monitor - Violations Detected"  
-     * Criteria: "Admin Account Violations" "contains" "Unauthorized Admins:"
-
-4. CREATE POLICY:
+2. CREATE DEPLOYMENT POLICY:
    - General:
-     * Display Name: "Install Jamf Connect Monitor"
+     * Display Name: "Deploy Jamf Connect Monitor v2.0.0"
      * Category: "Security"
      * Trigger: "Enrollment Complete", "Recurring Check-in"
      * Execution Frequency: "Once per computer"
@@ -353,43 +436,118 @@ Package: ${PACKAGE_NAME}-${PACKAGE_VERSION}.pkg
      * Add: ${PACKAGE_NAME}-${PACKAGE_VERSION}.pkg
      * Action: "Install"
    
-   - Scripts (if using parameters):
-     * Parameter 4: Webhook URL (optional)
-     * Parameter 5: Email recipient (optional)  
-     * Parameter 6: Monitoring interval in seconds (default: 300)
-     * Parameter 7: Company name (default: YourCompany)
-   
    - Scope:
      * Target: Computers with Jamf Connect installed
-     * Exclusions: "Jamf Connect Monitor - Installed" smart group
+     * Exclusions: Create Smart Group "Jamf Connect Monitor - Installed v2.0"
 
-5. MONITORING:
-   - Check "Jamf Connect Monitor - Violations Detected" smart group regularly
-   - Review Extension Attribute data for violation reports
-   - Monitor log files on individual machines if needed
+====================================================================
+PHASE 2: CONFIGURATION PROFILE DEPLOYMENT
+====================================================================
 
-6. MAINTENANCE:
-   - Update approved admin lists as staff changes
-   - Review violation reports monthly
-   - Update package when new versions are available
+3. CREATE CONFIGURATION PROFILE:
+   - Navigate: Computer Management > Configuration Profiles > New
+   - General Settings:
+     * Display Name: "Jamf Connect Monitor Configuration"
+     * Description: "Security monitoring settings with webhook/email configuration"
+     * Category: "Security"
+     * Level: "Computer Level"
+     * Distribution Method: "Install Automatically"
 
-PACKAGE PARAMETERS:
-- Parameter 4: Slack/Teams Webhook URL
-- Parameter 5: Email recipient for notifications
-- Parameter 6: Monitoring interval (seconds, default 300)
-- Parameter 7: Company name for branding
+4. ADD APPLICATION & CUSTOM SETTINGS PAYLOAD:
+   - Click "Add" > "Application & Custom Settings"
+   - Source: "Custom Schema"
+   - Preference Domain: "com.macjediwizard.jamfconnectmonitor"
+   
+   - Upload JSON Schema:
+     * Use file: jamf_connect_monitor_schema.json (included in output directory)
+     * Or extract from deployed device: /usr/local/share/jamf_connect_monitor/schema/jamf_connect_monitor_schema.json
+   
+   - Configure Key Settings:
+     ┌─ Notification Settings ─────────────────────────────────┐
+     │ Webhook URL: https://hooks.slack.com/services/YOUR/URL  │
+     │ Email Recipient: security@yourcompany.com               │
+     │ Notification Template: detailed                         │
+     │ Notification Cooldown: 15 minutes                      │
+     └─────────────────────────────────────────────────────────┘
+     
+     ┌─ Monitoring Behavior ───────────────────────────────────┐
+     │ Monitoring Mode: realtime (or periodic)                │
+     │ Auto Remediation: true                                  │
+     │ Grace Period: 5 minutes                                │
+     │ Monitor Jamf Connect Only: true                        │
+     └─────────────────────────────────────────────────────────┘
+     
+     ┌─ Jamf Pro Integration ──────────────────────────────────┐
+     │ Company Name: Your Company Name                         │
+     │ IT Contact Email: ithelp@yourcompany.com               │
+     │ Update Inventory on Violation: true                    │
+     └─────────────────────────────────────────────────────────┘
 
-VERIFICATION:
-After deployment, verify installation on a test machine:
-sudo /usr/local/bin/jamf_connect_monitor.sh status
+5. SCOPE CONFIGURATION PROFILE:
+   - Target: Smart Group "Jamf Connect Monitor - Installed v2.0"
+   - This ensures only devices with monitoring get the configuration
 
-LOG LOCATIONS:
-- /var/log/jamf_connect_monitor/monitor.log
-- /var/log/jamf_connect_monitor/admin_violations.log
-- /var/log/jamf_connect_monitor_install.log
+====================================================================
+PHASE 3: EXTENSION ATTRIBUTE SETUP
+====================================================================
+
+6. CREATE/UPDATE EXTENSION ATTRIBUTE:
+   - Navigate: Settings > Computer Management > Extension Attributes
+   - Create new attribute:
+     * Display Name: "[ Jamf Connect ] - Monitor Status v2.0"
+     * Description: "Enhanced monitoring status with Configuration Profile support"
+     * Data Type: "String"
+     * Input Type: "Script"
+     * Script: Use enhanced Extension Attribute script from package
+
+====================================================================
+PHASE 4: SMART GROUPS FOR MONITORING
+====================================================================
+
+7. CREATE ESSENTIAL SMART GROUPS:
+
+   a) Jamf Connect Monitor - Installed v2.0
+      Criteria: Extension Attribute "[ Jamf Connect ] - Monitor Status v2.0" contains "Version: 2.0.0"
+   
+   b) Jamf Connect Monitor - Config Profile Active
+      Criteria: Extension Attribute "[ Jamf Connect ] - Monitor Status v2.0" contains "Profile: Deployed"
+   
+   c) Jamf Connect Monitor - CRITICAL VIOLATIONS
+      Criteria: Extension Attribute "[ Jamf Connect ] - Monitor Status v2.0" contains "Unauthorized:"
+      AND does not contain "Unauthorized: 0"
+      ** CONFIGURE ALERTS FOR THIS GROUP **
+   
+   d) Jamf Connect Monitor - Real-time Active
+      Criteria: Extension Attribute "[ Jamf Connect ] - Monitor Status v2.0" contains "Real-time: Active"
+
+====================================================================
+VALIDATION & TESTING
+====================================================================
+
+8. TEST DEPLOYMENT:
+   - Deploy to 5-10 test machines first
+   - Verify package installation: sudo jamf_connect_monitor.sh status
+   - Test configuration: sudo jamf_connect_monitor.sh test-config
+   - Check Extension Attribute population in Jamf Pro
+   - Verify Smart Group membership
+
+CONFIGURATION PROFILE BENEFITS:
+✅ Centralized webhook/email management
+✅ No hardcoded credentials in scripts
+✅ Real-time configuration updates
+✅ Department-specific settings per Smart Group
+✅ Enhanced security with encrypted preferences
+
+Package Information:
+- Version: ${PACKAGE_VERSION}
+- Identifier: ${PACKAGE_IDENTIFIER}
+- Configuration Domain: com.macjediwizard.jamfconnectmonitor
+- JSON Schema: Included for Jamf Pro deployment
+
+Created with ❤️ by MacJediWizard
 EOF
 
-    print_status "$GREEN" "Jamf Pro instructions created"
+    print_status "$GREEN" "Enhanced Jamf Pro instructions created"
 }
 
 # Create deployment summary
@@ -409,26 +567,36 @@ create_deployment_summary() {
     echo "  📦 $package_path"
     echo "  🔐 $package_path.sha256"
     echo "  📋 $OUTPUT_DIR/Jamf_Pro_Deployment_Instructions.txt"
+    echo "  📄 $OUTPUT_DIR/jamf_connect_monitor_schema.json"
+    echo
+    print_status "$BLUE" "Configuration Profile Features:"
+    echo "  ✅ JSON Schema for Jamf Pro Application & Custom Settings"
+    echo "  ✅ Centralized webhook/email management"
+    echo "  ✅ Real-time monitoring configuration"
+    echo "  ✅ Enhanced notification templates"
+    echo "  ✅ Enterprise security settings"
     echo
     print_status "$BLUE" "Next Steps:"
     echo "  1. Upload package to Jamf Pro"
-    echo "  2. Create Extension Attribute using provided script"
-    echo "  3. Create Smart Groups for monitoring"
-    echo "  4. Create deployment policy"
-    echo "  5. Test on pilot machines"
+    echo "  2. Create Configuration Profile using JSON Schema"
+    echo "  3. Configure webhook/email settings via Jamf Pro interface"
+    echo "  4. Update Extension Attribute with v2.0.0 script"
+    echo "  5. Create Smart Groups for automated monitoring"
+    echo "  6. Test on pilot machines before fleet deployment"
     echo
-    print_status "$GREEN" "Ready for silent deployment via Jamf Pro!"
+    print_status "$GREEN" "Ready for enterprise deployment with Configuration Profile management!"
 }
 
 # Main execution
 main() {
-    print_status "$GREEN" "Starting Jamf Connect Monitor package creation"
+    print_status "$GREEN" "Starting Jamf Connect Monitor v2.0.0 package creation"
     
     check_prerequisites
     setup_build_environment
     create_launch_daemon
     create_default_config
     create_admin_template
+    create_json_schema
     create_documentation
     copy_main_files
     prepare_scripts
@@ -437,6 +605,7 @@ main() {
     if build_package; then
         create_jamf_instructions
         create_deployment_summary
+        print_status "$GREEN" "Package creation completed successfully!"
     else
         print_status "$RED" "Package creation failed"
         exit 1
@@ -450,7 +619,7 @@ case "${1:-build}" in
         ;;
     "clean")
         print_status "$YELLOW" "Cleaning build directories..."
-        rm -rf "$BUILD_DIR" "$OUTPUT_DIR"
+        rm -rf "$SCRIPT_DIR/build" "$SCRIPT_DIR/output"
         print_status "$GREEN" "Clean completed"
         ;;
     "help")
@@ -459,6 +628,12 @@ case "${1:-build}" in
         echo "  build   Create deployment package (default)"
         echo "  clean   Remove build directories"
         echo "  help    Show this help"
+        echo
+        echo "v2.0.0 Features:"
+        echo "  • Configuration Profile support"
+        echo "  • JSON Schema for Jamf Pro deployment"
+        echo "  • Real-time monitoring capabilities"
+        echo "  • Enhanced notification templates"
         ;;
     *)
         echo "Unknown command: $1"

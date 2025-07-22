@@ -1,0 +1,259 @@
+{
+  "title": "Jamf Connect Monitor Configuration",
+  "description": "Enterprise security monitoring settings for Jamf Connect privilege elevation detection and automated admin account remediation.",
+  "properties": {
+    "NotificationSettings": {
+      "title": "📢 Notification Settings",
+      "description": "Configure how security violations are reported",
+      "type": "object",
+      "properties": {
+        "WebhookURL": {
+          "title": "Slack/Teams Webhook URL",
+          "description": "Complete webhook URL for real-time security alerts",
+          "type": "string",
+          "format": "uri",
+          "property_order": 10,
+          "options": {
+            "infoText": "Example: https://hooks.slack.com/services/T00000000/B00000000/XXXXXXXXXXXXXXXXXXXXXXXX"
+          }
+        },
+        "EmailRecipient": {
+          "title": "Security Team Email",
+          "description": "Email address for violation reports and alerts",
+          "type": "string",
+          "format": "email",
+          "property_order": 20,
+          "options": {
+            "infoText": "Example: security@yourcompany.com"
+          }
+        },
+        "NotificationTemplate": {
+          "title": "Notification Style",
+          "description": "Choose notification detail level",
+          "type": "string",
+          "enum": ["simple", "detailed", "security_report"],
+          "enum_titles": ["Simple Alert", "Detailed Report", "Full Security Report"],
+          "default": "detailed",
+          "property_order": 30,
+          "options": {
+            "infoText": "Detailed includes hostname, user, timing. Security Report includes full system context."
+          }
+        },
+        "NotificationCooldownMinutes": {
+          "title": "Notification Cooldown (Minutes)",
+          "description": "Prevent spam by limiting notification frequency per device",
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 60,
+          "default": 15,
+          "property_order": 40,
+          "options": {
+            "infoText": "Prevents notification spam during repeated violations"
+          }
+        }
+      },
+      "property_order": 10
+    },
+    "MonitoringBehavior": {
+      "title": "🔍 Monitoring Behavior",
+      "description": "Configure how monitoring operates",
+      "type": "object",
+      "properties": {
+        "MonitoringMode": {
+          "title": "Monitoring Mode",
+          "description": "Choose between periodic checks or real-time monitoring",
+          "type": "string",
+          "enum": ["periodic", "realtime", "hybrid"],
+          "enum_titles": ["Periodic (5 min)", "Real-time", "Hybrid (Both)"],
+          "default": "realtime",
+          "property_order": 10,
+          "options": {
+            "infoText": "Real-time provides immediate detection but uses more resources"
+          }
+        },
+        "AutoRemediation": {
+          "title": "Automatic Admin Removal",
+          "description": "Automatically remove unauthorized admin privileges",
+          "type": "boolean",
+          "default": true,
+          "property_order": 20,
+          "options": {
+            "infoText": "When enabled, unauthorized admin accounts are immediately demoted"
+          }
+        },
+        "GracePeriodMinutes": {
+          "title": "Grace Period (Minutes)",
+          "description": "Wait time before removing admin privileges",
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 30,
+          "default": 5,
+          "property_order": 30,
+          "options": {
+            "infoText": "Allows brief admin access for legitimate elevation before removal"
+          }
+        },
+        "MonitorJamfConnectOnly": {
+          "title": "Monitor Jamf Connect Events Only",
+          "description": "Only monitor elevations through Jamf Connect, ignore manual admin changes",
+          "type": "boolean",
+          "default": true,
+          "property_order": 40,
+          "options": {
+            "infoText": "Recommended: Focus on Jamf Connect elevation violations only"
+          }
+        }
+      },
+      "property_order": 20
+    },
+    "SecuritySettings": {
+      "title": "🔐 Security Settings",
+      "description": "Advanced security and compliance options",
+      "type": "object", 
+      "properties": {
+        "RequireConfirmation": {
+          "title": "Require Confirmation Before Removal",
+          "description": "Prompt before removing admin privileges (disables auto-remediation)",
+          "type": "boolean",
+          "default": false,
+          "property_order": 10,
+          "options": {
+            "infoText": "Only enable for testing - disables automatic security response"
+          }
+        },
+        "ViolationReporting": {
+          "title": "Enable Violation Reporting",
+          "description": "Create detailed logs and reports for security violations",
+          "type": "boolean",
+          "default": true,
+          "property_order": 20
+        },
+        "LogRetentionDays": {
+          "title": "Log Retention (Days)",
+          "description": "How long to keep monitoring and violation logs",
+          "type": "integer",
+          "minimum": 7,
+          "maximum": 365,
+          "default": 30,
+          "property_order": 30,
+          "options": {
+            "infoText": "Longer retention helpful for security audits and compliance"
+          }
+        },
+        "ExcludeSystemAccounts": {
+          "title": "Excluded System Accounts",
+          "description": "System accounts to ignore during monitoring",
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": ["_mbsetupuser", "root", "daemon"],
+          "property_order": 40,
+          "options": {
+            "infoText": "Default exclusions prevent false alerts for system accounts"
+          }
+        }
+      },
+      "property_order": 30
+    },
+    "JamfProIntegration": {
+      "title": "☁️ Jamf Pro Integration",
+      "description": "Configure integration with Jamf Pro services",
+      "type": "object",
+      "properties": {
+        "UpdateInventoryOnViolation": {
+          "title": "Update Inventory on Violations",
+          "description": "Automatically update Jamf Pro inventory when violations occur",
+          "type": "boolean",
+          "default": true,
+          "property_order": 10,
+          "options": {
+            "infoText": "Ensures Extension Attributes reflect current violation status"
+          }
+        },
+        "TriggerPolicyOnViolation": {
+          "title": "Policy Trigger for Violations",
+          "description": "Custom trigger to execute additional policies during violations",
+          "type": "string",
+          "property_order": 20,
+          "options": {
+            "infoText": "Example: security_incident_response"
+          }
+        },
+        "CompanyName": {
+          "title": "Company Name",
+          "description": "Organization name for branding in reports and notifications",
+          "type": "string",
+          "default": "Your Company",
+          "property_order": 30,
+          "options": {
+            "infoText": "Appears in security reports and notification messages"
+          }
+        },
+        "ITContactEmail": {
+          "title": "IT Support Email", 
+          "description": "IT contact information for user notifications",
+          "type": "string",
+          "format": "email",
+          "property_order": 40,
+          "options": {
+            "infoText": "Included in user-facing security messages"
+          }
+        }
+      },
+      "property_order": 40
+    },
+    "AdvancedSettings": {
+      "title": "⚙️ Advanced Settings",
+      "description": "Expert configuration options",
+      "type": "object",
+      "properties": {
+        "DebugLogging": {
+          "title": "Enable Debug Logging",
+          "description": "Verbose logging for troubleshooting (increases log size)",
+          "type": "boolean",
+          "default": false,
+          "property_order": 10,
+          "options": {
+            "infoText": "Only enable during troubleshooting - significantly increases log volume"
+          }
+        },
+        "MonitoringInterval": {
+          "title": "Periodic Check Interval (Seconds)",
+          "description": "How often to check for violations in periodic mode",
+          "type": "integer",
+          "minimum": 60,
+          "maximum": 3600,
+          "default": 300,
+          "property_order": 20,
+          "options": {
+            "infoText": "Only applies when Monitoring Mode is Periodic or Hybrid"
+          }
+        },
+        "MaxNotificationsPerHour": {
+          "title": "Max Notifications Per Hour",
+          "description": "Rate limit to prevent notification flooding",
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 60,
+          "default": 10,
+          "property_order": 30,
+          "options": {
+            "infoText": "Prevents overwhelming security team during major incidents"
+          }
+        },
+        "AutoPopulateApprovedAdmins": {
+          "title": "Auto-populate Approved Admin List",
+          "description": "Automatically create approved admin list from current administrators during installation",
+          "type": "boolean",
+          "default": true,
+          "property_order": 40,
+          "options": {
+            "infoText": "Recommended: Creates baseline from current admin accounts"
+          }
+        }
+      },
+      "property_order": 50
+    }
+  }
+}
