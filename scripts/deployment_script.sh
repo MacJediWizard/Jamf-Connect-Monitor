@@ -138,7 +138,7 @@ deploy_monitor_script() {
 create_launch_daemon() {
     print_status "$BLUE" "Creating LaunchDaemon..."
     
-    local plist_path="/Library/LaunchDaemons/com.company.jamfconnectmonitor.plist"
+    local plist_path="/Library/LaunchDaemons/com.macjediwizard.jamfconnectmonitor.plist"
     
     cat > "$plist_path" << EOF
 <?xml version="1.0" encoding="UTF-8"?>
@@ -146,7 +146,7 @@ create_launch_daemon() {
 <plist version="1.0">
 <dict>
     <key>Label</key>
-    <string>com.company.jamfconnectmonitor</string>
+    <string>com.macjediwizard.jamfconnectmonitor</string>
     
     <key>ProgramArguments</key>
     <array>
@@ -206,7 +206,7 @@ initialize_monitoring() {
 start_daemon() {
     print_status "$BLUE" "Starting monitoring daemon..."
     
-    local plist_path="/Library/LaunchDaemons/com.company.jamfconnectmonitor.plist"
+    local plist_path="/Library/LaunchDaemons/com.macjediwizard.jamfconnectmonitor.plist"
     
     # Unload if already loaded (for reinstalls)
     launchctl unload "$plist_path" 2>/dev/null || true
@@ -215,7 +215,7 @@ start_daemon() {
     launchctl load "$plist_path"
     
     # Verify it's loaded
-    if launchctl list | grep -q "com.company.jamfconnectmonitor"; then
+    if launchctl list | grep -q "com.macjediwizard.jamfconnectmonitor"; then
         print_status "$GREEN" "Monitoring daemon started successfully"
     else
         error_exit "Failed to start monitoring daemon"
@@ -255,7 +255,7 @@ verify_installation() {
     fi
     
     # Check LaunchDaemon
-    if [[ -f "/Library/LaunchDaemons/com.company.jamfconnectmonitor.plist" ]]; then
+    if [[ -f "/Library/LaunchDaemons/com.macjediwizard.jamfconnectmonitor.plist" ]]; then
         print_status "$GREEN" "✓ LaunchDaemon plist installed"
     else
         print_status "$RED" "✗ LaunchDaemon plist not found"
@@ -263,7 +263,7 @@ verify_installation() {
     fi
     
     # Check if daemon is running
-    if launchctl list | grep -q "com.company.jamfconnectmonitor"; then
+    if launchctl list | grep -q "com.macjediwizard.jamfconnectmonitor"; then
         print_status "$GREEN" "✓ Monitoring daemon is running"
     else
         print_status "$RED" "✗ Monitoring daemon is not running"
@@ -387,8 +387,8 @@ case "${1:-install}" in
         ;;
     "uninstall")
         print_status "$YELLOW" "Uninstalling Jamf Connect Monitor..."
-        launchctl unload /Library/LaunchDaemons/com.company.jamfconnectmonitor.plist 2>/dev/null || true
-        rm -f /Library/LaunchDaemons/com.company.jamfconnectmonitor.plist
+        launchctl unload /Library/LaunchDaemons/com.macjediwizard.jamfconnectmonitor.plist 2>/dev/null || true
+        rm -f /Library/LaunchDaemons/com.macjediwizard.jamfconnectmonitor.plist
         rm -f /usr/local/bin/jamf_connect_monitor.sh
         rm -rf /var/log/jamf_connect_monitor
         rm -f /usr/local/etc/approved_admins.txt

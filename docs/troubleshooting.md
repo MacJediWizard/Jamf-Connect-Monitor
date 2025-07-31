@@ -13,7 +13,7 @@
 **Symptoms**: No log entries, violations not detected
 **Solutions**:
 1. Check daemon status: `sudo launchctl list | grep jamfconnectmonitor`
-2. Load daemon: `sudo launchctl load /Library/LaunchDaemons/com.company.jamfconnectmonitor.plist`
+2. Load daemon: `sudo launchctl load /Library/LaunchDaemons/com.macjediwizard.jamfconnectmonitor.plist`
 3. Check logs: `tail -f /var/log/jamf_connect_monitor/monitor.log`
 
 ### False Violation Alerts

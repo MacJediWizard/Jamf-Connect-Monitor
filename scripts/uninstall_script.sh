@@ -55,7 +55,7 @@ stop_daemon() {
     
     local daemon_paths=(
         "/Library/LaunchDaemons/com.macjediwizard.jamfconnectmonitor.plist"
-        "/Library/LaunchDaemons/com.company.jamfconnectmonitor.plist"
+        "/Library/LaunchDaemons/com.macjediwizard.jamfconnectmonitor.plist"
     )
     
     for daemon_path in "${daemon_paths[@]}"; do
@@ -98,7 +98,7 @@ remove_launch_daemons() {
     
     local daemon_paths=(
         "/Library/LaunchDaemons/com.macjediwizard.jamfconnectmonitor.plist"
-        "/Library/LaunchDaemons/com.company.jamfconnectmonitor.plist"
+        "/Library/LaunchDaemons/com.macjediwizard.jamfconnectmonitor.plist"
         "/Library/LaunchDaemons/com.yourcompany.jamfconnectmonitor.plist"
     )
     
@@ -246,7 +246,7 @@ remove_package_receipts() {
     
     local package_ids=(
         "com.macjediwizard.jamfconnectmonitor"
-        "com.company.jamfconnectmonitor"
+        "com.macjediwizard.jamfconnectmonitor"
         "com.yourcompany.jamfconnectmonitor"
     )
     
@@ -392,7 +392,7 @@ verify_removal() {
     
     # Check package receipts
     local remaining_packages=""
-    for pkg_id in "com.macjediwizard.jamfconnectmonitor" "com.company.jamfconnectmonitor"; do
+    for pkg_id in "com.macjediwizard.jamfconnectmonitor" "com.macjediwizard.jamfconnectmonitor"; do
         if pkgutil --pkg-info "$pkg_id" &>/dev/null; then
             remaining_packages="$remaining_packages $pkg_id"
             ((issues++))

@@ -16,9 +16,9 @@ log_message() {
 log_message "Starting pre-installation tasks"
 
 # Stop existing monitoring if running
-if launchctl list | grep -q "com.company.jamfconnectmonitor"; then
+if launchctl list | grep -q "com.macjediwizard.jamfconnectmonitor"; then
     log_message "Stopping existing monitoring daemon"
-    launchctl unload /Library/LaunchDaemons/com.company.jamfconnectmonitor.plist 2>/dev/null || true
+    launchctl unload /Library/LaunchDaemons/com.macjediwizard.jamfconnectmonitor.plist 2>/dev/null || true
     sleep 2
 fi
 
