@@ -66,6 +66,20 @@ configure_monitoring_script() {
     chmod +x "$MONITOR_SCRIPT"
     chown root:wheel "$MONITOR_SCRIPT"
     
+    # FIX: Set permissions for Extension Attribute script
+    if [[ -f "/usr/local/etc/jamf_ea_admin_violations.sh" ]]; then
+        chmod +x "/usr/local/etc/jamf_ea_admin_violations.sh"
+        chown root:wheel "/usr/local/etc/jamf_ea_admin_violations.sh"
+        log_message "Set permissions for Extension Attribute script"
+    fi
+    
+    # FIX: Set permissions for uninstall script
+    if [[ -f "/usr/local/share/jamf_connect_monitor/uninstall_script.sh" ]]; then
+        chmod +x "/usr/local/share/jamf_connect_monitor/uninstall_script.sh"
+        chown root:wheel "/usr/local/share/jamf_connect_monitor/uninstall_script.sh"
+        log_message "Set permissions for uninstall script"
+    fi
+    
     log_message "Monitor script configuration completed"
 }
 

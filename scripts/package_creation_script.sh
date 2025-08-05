@@ -362,6 +362,12 @@ set_payload_permissions() {
     chmod +x "$PAYLOAD_DIR/usr/local/bin/jamf_connect_monitor.sh"
     chmod +x "$PAYLOAD_DIR/usr/local/etc/jamf_ea_admin_violations.sh"
     
+    # FIX: Make uninstall script executable
+    if [[ -f "$PAYLOAD_DIR/usr/local/share/jamf_connect_monitor/uninstall_script.sh" ]]; then
+      chmod +x "$PAYLOAD_DIR/usr/local/share/jamf_connect_monitor/uninstall_script.sh"
+      print_status "$GREEN" "Set execute permissions for uninstall script"
+    fi
+    
     # Set LaunchDaemon permissions
     chmod 644 "$PAYLOAD_DIR/Library/LaunchDaemons/com.macjediwizard.jamfconnectmonitor.plist"
     
