@@ -7,7 +7,7 @@ set -e  # Exit on any error
 
 # Configuration
 PACKAGE_NAME="JamfConnectMonitor"
-PACKAGE_VERSION="2.0.0"
+PACKAGE_VERSION="2.0.1"
 PACKAGE_IDENTIFIER="com.macjediwizard.jamfconnectmonitor"
 
 # Get script directory and project root

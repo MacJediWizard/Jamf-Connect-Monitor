@@ -1,11 +1,11 @@
 #!/bin/bash
 
 # Jamf Pro Extension Attribute - Admin Account Violations
-# Version: 2.0.0 - Enhanced with Configuration Profile support
+# Version: 2.0.1 - Enhanced Configuration Profile parsing fix
 # Author: MacJediWizard
 # Description: Reports unauthorized admin account violations, monitoring status, and configuration
 # Compatible with: Jamf Pro 10.19+ and macOS 10.14+
-# Last Updated: 2025-07-14
+# Last Updated: 2025-08-05
 
 REPORT_LOG="/var/log/jamf_connect_monitor/admin_violations.log"
 REALTIME_LOG="/var/log/jamf_connect_monitor/realtime_monitor.log"
@@ -32,7 +32,7 @@ get_approved_admins() {
     fi
 }
 
-# Function to check Configuration Profile deployment status
+# Function to check Configuration Profile deployment status - ENHANCED FIX
 get_config_profile_status() {
     local webhook_status="Not Configured"
     local email_status="Not Configured"
@@ -40,23 +40,51 @@ get_config_profile_status() {
     local monitoring_mode="Unknown"
     local company_name="Unknown"
     
-    if defaults read "$CONFIG_DOMAIN" >/dev/null 2>&1; then
+    # Try multiple methods to read Configuration Profile
+    local config_data=""
+    
+    # Method 1: Try standard location
+    if config_data=$(defaults read "$CONFIG_DOMAIN" 2>/dev/null); then
         profile_version="Deployed"
-        
-        # Check notification settings
-        if defaults read "$CONFIG_DOMAIN" NotificationSettings.WebhookURL 2>/dev/null | grep -q "http"; then
+        # Method 2: Try managed preferences location  
+    elif config_data=$(defaults read "/Library/Managed Preferences/$CONFIG_DOMAIN" 2>/dev/null); then
+        profile_version="Deployed"
+        # Method 3: Try with different approach
+    elif sudo -u root defaults read "$CONFIG_DOMAIN" >/dev/null 2>&1; then
+        profile_version="Deployed"
+        config_data=$(sudo -u root defaults read "$CONFIG_DOMAIN" 2>/dev/null)
+    fi
+    
+    # If we found config data, parse it
+    if [[ "$profile_version" == "Deployed" && -n "$config_data" ]]; then
+        # Parse webhook
+        if echo "$config_data" | grep -q "WebhookURL" && echo "$config_data" | grep -q "http"; then
             webhook_status="Configured"
         fi
         
-        if defaults read "$CONFIG_DOMAIN" NotificationSettings.EmailRecipient 2>/dev/null | grep -q "@"; then
+        # Parse email
+        if echo "$config_data" | grep -q "EmailRecipient" && echo "$config_data" | grep -q "@"; then
             email_status="Configured"
         fi
         
-        # Get monitoring mode
-        monitoring_mode=$(defaults read "$CONFIG_DOMAIN" MonitoringBehavior.MonitoringMode 2>/dev/null || echo "periodic")
+        # Parse monitoring mode - ENHANCED AND ROBUST
+        if echo "$config_data" | grep -q "MonitoringMode"; then
+            # Extract any occurrence of periodic, realtime, or hybrid after MonitoringMode
+            monitoring_mode=$(echo "$config_data" | grep -A2 -B2 "MonitoringMode" | grep -o -E "(periodic|realtime|hybrid)" | head -1)
+            # If that didn't work, try more aggressive parsing
+            if [[ -z "$monitoring_mode" ]]; then
+                monitoring_mode=$(echo "$config_data" | sed -n '/MonitoringMode/,+2p' | grep -o -E "[a-z]+" | grep -E "(periodic|realtime|hybrid)" | head -1)
+            fi
+            # Final fallback
+            [[ -z "$monitoring_mode" ]] && monitoring_mode="periodic"
+        else
+            monitoring_mode="periodic"
+        fi
         
-        # Get company name
-        company_name=$(defaults read "$CONFIG_DOMAIN" JamfProIntegration.CompanyName 2>/dev/null || echo "Not Set")
+        # Parse company name
+        if echo "$config_data" | grep -q "CompanyName"; then
+            company_name=$(echo "$config_data" | grep "CompanyName" | cut -d'"' -f2 2>/dev/null || echo "Not Set")
+        fi
     fi
     
     echo "Profile: $profile_version, Webhook: $webhook_status, Email: $email_status, Mode: $monitoring_mode, Company: $company_name"
@@ -180,11 +208,14 @@ get_health_metrics() {
         log_size=$(du -sh /var/log/jamf_connect_monitor 2>/dev/null | cut -f1 || echo "0MB")
     fi
     
-    # Test configuration profile reading
+    # Test configuration profile reading - FIXED
+    config_test="Failed"
     if defaults read "$CONFIG_DOMAIN" >/dev/null 2>&1; then
         config_test="OK"
-    else
-        config_test="Failed"
+    elif defaults read "/Library/Managed Preferences/$CONFIG_DOMAIN" >/dev/null 2>&1; then
+        config_test="OK"
+    elif sudo -u root defaults read "$CONFIG_DOMAIN" >/dev/null 2>&1; then
+        config_test="OK"
     fi
     
     echo "Last Check: $last_check, Daemon: $daemon_health, Logs: $log_size, Config Test: $config_test"

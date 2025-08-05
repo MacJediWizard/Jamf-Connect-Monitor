@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Jamf Connect Elevation Monitor & Admin Account Remediation Script
-# Version: 2.0.0 - Enhanced with Configuration Profile support and real-time monitoring
+# Version: 2.0.1 - Enhanced with Configuration Profile support and real-time monitoring
 # Author: MacJediWizard
 
 # Configuration Variables

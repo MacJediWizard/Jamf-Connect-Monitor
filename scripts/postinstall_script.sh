@@ -171,7 +171,7 @@ EmailRecipient=$EMAIL_RECIPIENT
 [System]
 CompanyName=$COMPANY_NAME
 InstallDate=$(date '+%Y-%m-%d %H:%M:%S')
-Version=1.0.2
+Version=2.0.1
 
 [Paths]
 ApprovedAdminsList=$APPROVED_ADMINS
@@ -233,7 +233,7 @@ update_jamf_inventory() {
     # Create a receipt file for Jamf Pro to track installation
     cat > "/usr/local/share/jamf_connect_monitor/install_receipt.txt" << EOF
 Installation Date: $(date)
-Version: 1.0.1
+Version: 2.0.1
 Monitoring Interval: $MONITORING_INTERVAL
 Approved Admins: $(wc -l < "$APPROVED_ADMINS" | tr -d ' ')
 Webhook Configured: $([[ -n "$WEBHOOK_URL" ]] && echo "Yes" || echo "No")

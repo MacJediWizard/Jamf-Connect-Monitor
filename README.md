@@ -1,4 +1,4 @@
-# Jamf Connect Privilege Monitor v2.0.0
+# Jamf Connect Privilege Monitor v2.0.1
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Jamf Pro Compatible](https://img.shields.io/badge/Jamf%20Pro-10.19%2B-blue.svg)](https://jamf.com)
@@ -6,13 +6,12 @@
 
 A comprehensive monitoring and automated remediation system for Jamf Connect privilege elevation events with **enterprise Configuration Profile management** and **real-time detection capabilities**.
 
-## 🚀 **New in v2.0.0**
+## 🚀 **New in v2.0.1**
 
-- **Configuration Profile Support** - Centralized webhook/email management via Jamf Pro
-- **Real-time Monitoring** - Immediate violation detection (like Jamf Protect)
-- **JSON Schema Integration** - Easy Jamf Pro Application & Custom Settings deployment
-- **Enhanced Notifications** - Professional security report templates
-- **Smart Group Automation** - Advanced Jamf Pro integration workflows
+- **Enhanced Configuration Profile Parsing** - Fixed empty monitoring mode display in Extension Attribute
+- **Improved Smart Group Compatibility** - Reliable population with robust plist format handling
+- **Better Extension Attribute Data** - Multiple fallback strategies ensure consistent reporting
+- **Seamless v2.0.0 Upgrade** - Automatic upgrade preserving all existing configurations
 
 ## 🌟 **Features**
 
@@ -49,7 +48,7 @@ cd jamf-connect-monitor
 sudo ./scripts/package_creation_script.sh build
 
 # Install the generated package
-sudo installer -pkg output/JamfConnectMonitor-2.0.0.pkg -target /
+sudo installer -pkg output/JamfConnectMonitor-2.0.1.pkg -target /
 ```
 
 ## 📱 **Configuration Profile Deployment**
@@ -145,7 +144,7 @@ tail -f /var/log/jamf_connect_monitor/realtime_monitor.log
 
 ## ⚙️ **Configuration**
 
-### Configuration Profile Management (v2.0.0)
+### Configuration Profile Management (v2.0.0+)
 All settings managed centrally via Jamf Pro Configuration Profiles:
 - **Notification Settings** - Webhook URLs, email recipients, templates
 - **Monitoring Behavior** - Real-time vs periodic, auto-remediation, grace periods
@@ -202,10 +201,10 @@ Complete removal guide: [Uninstall Guide](docs/uninstall-guide.md)
 - [Troubleshooting Guide](docs/troubleshooting.md) - Common issues and solutions
 - [Smart Groups Guide](docs/smart-groups.md) - Jamf Pro automation setup
 
-## 🚀 **Migration from v1.x to v2.0.0**
+## 🚀 **Migration from v1.x to v2.0.1**
 
 ### Automatic Upgrade
-The v2.0.0 package automatically migrates existing v1.x installations while preserving:
+The v2.0.1 package automatically migrates existing v1.x installations while preserving:
 - Approved administrator lists
 - Historical violation logs  
 - Monitoring configuration preferences

@@ -1,9 +1,9 @@
-# Jamf Connect Monitor v2.0.0 - Complete Installation Guide
+# Jamf Connect Monitor v2.x - Complete Installation Guide
 
 ## Overview
-This guide provides comprehensive installation instructions for deploying Jamf Connect Monitor v2.0.0 with Configuration Profile management and real-time monitoring capabilities across your macOS fleet.
+This guide provides comprehensive installation instructions for deploying Jamf Connect Monitor v2.x with Configuration Profile management and real-time monitoring capabilities across your macOS fleet.
 
-## What's New in v2.0.0
+## What's New in v2.x
 
 ### Enterprise Configuration Management
 - **Configuration Profiles** - Centralized webhook/email management via Jamf Pro
@@ -41,16 +41,16 @@ This guide provides comprehensive installation instructions for deploying Jamf C
 #### Step 1: Download Release Assets
 1. Go to [GitHub Releases](https://github.com/MacJediWizard/jamf-connect-monitor/releases/latest)
 2. Download required files:
-   - `JamfConnectMonitor-2.0.0.pkg` (Main installation package)
+   - `JamfConnectMonitor-2.0.1.pkg` (or latest 2.x version)
    - `jamf_connect_monitor_schema.json` (Configuration Profile schema)
-   - `JamfConnectMonitor-2.0.0.pkg.sha256` (Verification checksum)
+   - `JamfConnectMonitor-2.0.1.pkg.sha256` (Verification checksum)
 
 #### Step 2: Verify Package Integrity
 ```bash
-# Verify package checksum
-shasum -a 256 -c JamfConnectMonitor-2.0.0.pkg.sha256
+# Verify package checksum (adjust version as needed)
+shasum -a 256 -c JamfConnectMonitor-2.0.1.pkg.sha256
 
-# Expected output: JamfConnectMonitor-2.0.0.pkg: OK
+# Expected output: JamfConnectMonitor-2.0.1.pkg: OK
 ```
 
 #### Step 3: Upload to Jamf Pro
@@ -60,7 +60,7 @@ shasum -a 256 -c JamfConnectMonitor-2.0.0.pkg.sha256
 
 2. **Package Configuration:**
    ```
-   Display Name: Jamf Connect Monitor v2.0.0
+   Display Name: Jamf Connect Monitor v2.x
    Category: Security
    Priority: 10
    Description: "Enterprise security monitoring with Configuration Profile support"
@@ -113,7 +113,7 @@ shasum -a 256 -c JamfConnectMonitor-2.0.0.pkg.sha256
 
 2. **Configuration:**
    ```
-   Display Name: [ Jamf Connect ] - Monitor Status v2.0
+   Display Name: [ Jamf Connect ] - Monitor Status v2.x
    Description: Enhanced monitoring status with Configuration Profile support
    Data Type: String
    Input Type: Script
@@ -121,16 +121,16 @@ shasum -a 256 -c JamfConnectMonitor-2.0.0.pkg.sha256
 
 3. **Script Content:** Use the enhanced Extension Attribute script from the package
 
-#### Step 6: Create Smart Groups
-**Essential Smart Groups for v2.0.0:**
+#### Step 6: Create Smart Groups (Flexible v2.x)
+**Essential Smart Groups for v2.x:**
 
 ```
-Jamf Connect Monitor - Installed v2.0
-├── Criteria: Extension Attribute "[ Jamf Connect ] - Monitor Status v2.0" contains "Version: 2.0.0"
-└── Purpose: Track v2.0.0 installations
+Jamf Connect Monitor - Installed v2.x
+├── Criteria: Extension Attribute "[ Jamf Connect ] - Monitor Status v2.x" contains "Version: 2."
+└── Purpose: Track all v2.x installations
 
 Jamf Connect Monitor - Config Profile Active
-├── Criteria: Extension Attribute "[ Jamf Connect ] - Monitor Status v2.0" contains "Profile: Deployed"
+├── Criteria: Extension Attribute "[ Jamf Connect ] - Monitor Status v2.x" contains "Profile: Deployed"
 └── Purpose: Verify Configuration Profile deployment
 
 Jamf Connect Monitor - CRITICAL VIOLATIONS
@@ -141,17 +141,17 @@ Jamf Connect Monitor - CRITICAL VIOLATIONS
 #### Step 7: Create Deployment Policy
 1. **General Settings:**
    ```
-   Display Name: Deploy Jamf Connect Monitor v2.0.0
+   Display Name: Deploy Jamf Connect Monitor v2.x
    Category: Security
    Trigger: Enrollment Complete, Recurring Check-in
    Execution Frequency: Once per computer
    ```
 
-2. **Packages:** Add "Jamf Connect Monitor v2.0.0"
+2. **Packages:** Add "Jamf Connect Monitor v2.x"
 
 3. **Scope:** 
    - Target: Computers with Jamf Connect installed
-   - Exclusions: "Jamf Connect Monitor - Installed v2.0"
+   - Exclusions: "Jamf Connect Monitor - Installed v2.x"
 
 4. **Maintenance:** Enable "Update Inventory"
 
@@ -159,11 +159,11 @@ Jamf Connect Monitor - CRITICAL VIOLATIONS
 
 #### Single Device Installation
 ```bash
-# Download package
-curl -LO https://github.com/MacJediWizard/jamf-connect-monitor/releases/download/v2.0.0/JamfConnectMonitor-2.0.0.pkg
+# Download package (adjust version as needed)
+curl -LO https://github.com/MacJediWizard/jamf-connect-monitor/releases/download/v2.0.1/JamfConnectMonitor-2.0.1.pkg
 
 # Install package
-sudo installer -pkg JamfConnectMonitor-2.0.0.pkg -target /
+sudo installer -pkg JamfConnectMonitor-2.0.1.pkg -target /
 
 # Verify installation
 sudo jamf_connect_monitor.sh status
@@ -189,8 +189,8 @@ cd jamf-connect-monitor
 # Build package
 sudo ./scripts/package_creation_script.sh build
 
-# Install locally
-sudo installer -pkg output/JamfConnectMonitor-2.0.0.pkg -target /
+# Install locally (adjust version as needed)
+sudo installer -pkg output/JamfConnectMonitor-2.0.1.pkg -target /
 ```
 
 ## Post-Installation Configuration
@@ -200,8 +200,8 @@ sudo installer -pkg output/JamfConnectMonitor-2.0.0.pkg -target /
 # Check version and status
 sudo jamf_connect_monitor.sh status
 
-# Expected output for v2.0.0:
-# === Jamf Connect Elevation Monitor Status (v2.0.0) ===
+# Expected output for v2.x:
+# === Jamf Connect Elevation Monitor Status (v2.x) ===
 # Configuration Profile: Active (or Not deployed)
 # Company: Your Company Name
 # Monitoring Mode: realtime (or periodic)
@@ -234,11 +234,12 @@ sudo defaults read com.macjediwizard.jamfconnectmonitor
 # Test Extension Attribute manually
 sudo /usr/local/etc/jamf_ea_admin_violations.sh
 
-# Expected output format for v2.0.0:
-# <r>=== JAMF CONNECT MONITOR STATUS v2.0 ===
-# Version: 2.0.0, Periodic: Running, Real-time: Not Running
+# Expected output format for v2.x:
+# <result>=== JAMF CONNECT MONITOR STATUS v2.0 ===
+# Version: 2.x, Periodic: Running, Real-time: Not Running
 # Configuration: Profile: Deployed, Webhook: Configured, Email: Configured
 # ...
+# </result>
 ```
 
 ### Smart Group Validation
@@ -248,7 +249,7 @@ sudo /usr/local/etc/jamf_ea_admin_violations.sh
 
 ## Configuration Management
 
-### v2.0.0 Configuration Profile Features
+### v2.x Configuration Profile Features
 
 #### Centralized Webhook Management
 - **No Script Editing:** Webhook URLs managed via Jamf Pro interface
@@ -285,7 +286,7 @@ sudo jamf_connect_monitor.sh remove-admin username
 - **Detection Time:** Up to 5 minutes
 - **Best For:** Standard environments, resource-constrained systems
 
-### Real-time Monitoring (New in v2.0.0)
+### Real-time Monitoring (v2.x Feature)
 - **Detection:** Immediate via log streaming
 - **Resource Usage:** Moderate - continuous background monitoring
 - **Detection Time:** Seconds
@@ -297,6 +298,20 @@ sudo jamf_connect_monitor.sh remove-admin username
 - **Detection Time:** Immediate with backup checks
 - **Best For:** Critical systems requiring maximum security coverage
 
+## Version-Specific Installation Notes
+
+### v2.0.1 Updates
+- Enhanced Configuration Profile parsing for monitoring modes
+- Fixed empty monitoring mode display in Extension Attribute
+- Improved Smart Group compatibility and reliability
+- Better handling of different plist formats
+
+### v2.0.0 Introduction
+- Initial Configuration Profile support
+- Real-time monitoring capabilities
+- JSON Schema for Jamf Pro deployment
+- Enhanced notification templates
+
 ## Troubleshooting Installation
 
 ### Common Installation Issues
@@ -306,8 +321,8 @@ sudo jamf_connect_monitor.sh remove-admin username
 # Check installer logs
 tail -f /var/log/install.log
 
-# Verify package signature
-pkgutil --check-signature JamfConnectMonitor-2.0.0.pkg
+# Verify package signature (adjust version as needed)
+pkgutil --check-signature JamfConnectMonitor-2.0.1.pkg
 
 # Check disk space
 df -h /usr/local
@@ -375,16 +390,16 @@ curl -X POST -H 'Content-type: application/json' \
 echo "Test email from Jamf Connect Monitor" | mail -s "Test Subject" "your-email@company.com"
 ```
 
-## Migration from v1.x
+## Migration from v1.x to v2.x
 
 ### Automatic Migration Process
-v2.0.0 automatically preserves existing v1.x configurations:
+v2.x automatically preserves existing v1.x configurations:
 - **Approved Admin Lists** - Maintained during upgrade
-- **Historical Logs** - Preserved with new v2.0.0 logging enhancements
+- **Historical Logs** - Preserved with new v2.x logging enhancements
 - **LaunchDaemon Settings** - Updated with backward compatibility
 
 ### Enhanced Features After Migration
-After upgrading to v2.0.0, deploy Configuration Profile to enable:
+After upgrading to v2.x, deploy Configuration Profile to enable:
 - **Centralized webhook/email management**
 - **Real-time monitoring capabilities**
 - **Enhanced notification templates**
@@ -396,7 +411,7 @@ After upgrading to v2.0.0, deploy Configuration Profile to enable:
 cat /usr/local/etc/approved_admins.txt
 
 # Check upgrade status
-sudo jamf_connect_monitor.sh status | grep "Version: 2.0.0"
+sudo jamf_connect_monitor.sh status | grep "Version: 2."
 
 # Test Configuration Profile integration
 sudo jamf_connect_monitor.sh test-config

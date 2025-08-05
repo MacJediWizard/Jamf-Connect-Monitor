@@ -13,6 +13,41 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Performance monitoring dashboard
 - Automated compliance reporting
 
+## [2.0.1] - 2025-08-05
+
+### 🔧 **Bug Fixes: Configuration Profile Parsing**
+
+### Fixed
+- **Extension Attribute Configuration Profile Parsing**
+  - Enhanced monitoring mode extraction from Configuration Profile data
+  - Fixed empty "Mode:" field display issue in Jamf Pro computer records
+  - Improved parsing to handle all plist formats (quoted, unquoted, with/without semicolons)
+  - Added multiple fallback strategies for robust Configuration Profile reading
+
+- **Smart Group Compatibility**
+  - Fixed Extension Attribute data format for consistent Smart Group population
+  - Enhanced monitoring mode detection ensures Smart Groups populate correctly
+  - Improved criteria matching for automated workflows
+
+### Enhanced
+- **Extension Attribute (`jamf/extension-attribute.sh`)**
+  - Robust Configuration Profile parsing with multiple extraction methods
+  - Better handling of different plist output formats from `defaults read`
+  - Enhanced fallback logic for monitoring mode detection
+  - Improved version detection for both 2.0.0 and 2.0.1 installations
+
+### Technical Details
+- **Configuration Profile Parsing Improvement:**
+  - Before: `Mode: ` (empty field)
+  - After: `Mode: periodic` (or realtime/hybrid)
+- **Parsing Strategy:** Uses pattern matching for "periodic", "realtime", or "hybrid" keywords in Configuration Profile data
+- **Fallback Logic:** Multiple parsing attempts ensure reliable data extraction across different macOS versions and plist formats
+
+### Compatibility
+- **Seamless Upgrade:** v2.0.1 automatically upgrades v2.0.0 installations
+- **Configuration Preservation:** All existing Configuration Profiles and settings maintained
+- **Smart Group Migration:** Existing Smart Groups work immediately after Extension Attribute update
+
 ## [2.0.0] - 2025-07-14
 
 ### 🚀 **Major Release: Configuration Profile Management & Real-time Monitoring**
@@ -228,6 +263,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Version History Summary
 
+- **2.0.1**: Configuration Profile parsing fixes, Smart Group compatibility improvements
 - **2.0.0**: Configuration Profile management, real-time monitoring, enterprise features
 - **1.0.2**: Documentation improvements and package creation fixes
 - **1.0.1**: Enhanced documentation and professional branding
@@ -236,14 +272,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Upgrade Path
 
-### From v1.x to v2.0.0
-1. **Deploy v2.0.0 package** - Automatic migration of existing installations
+### From v2.0.0 to v2.0.1
+1. **Upload v2.0.1 package** - Seamless upgrade of existing v2.0.0 installations
+2. **Update Extension Attribute** - Apply enhanced Configuration Profile parsing in Jamf Pro
+3. **Verify Smart Groups** - Confirm proper population with fixed monitoring mode display
+4. **No Configuration Profile changes needed** - All existing settings preserved
+
+### From v1.x to v2.0.0+
+1. **Deploy v2.0.1 package** - Automatic migration of existing installations
 2. **Deploy Configuration Profile** - Enable centralized management features
 3. **Update Extension Attribute** - Enhanced Smart Group compatibility
 4. **Configure real-time monitoring** - Optional immediate detection capabilities
 
 ### Configuration Profile Migration
-v2.0.0 introduces Configuration Profile management for:
+v2.0.0+ introduces Configuration Profile management for:
 - Webhook URLs (no more hardcoded credentials)
 - Email notification settings
 - Monitoring behavior configuration
@@ -251,6 +293,9 @@ v2.0.0 introduces Configuration Profile management for:
 - Advanced security and compliance settings
 
 ## Breaking Changes
+
+### v2.0.1
+- **No Breaking Changes:** Seamless upgrade from v2.0.0 with all configuration preservation
 
 ### v2.0.0
 - **Configuration Profile Domain:** New domain `com.macjediwizard.jamfconnectmonitor`

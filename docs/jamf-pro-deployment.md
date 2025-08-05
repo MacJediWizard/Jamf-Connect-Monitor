@@ -1,7 +1,7 @@
-# Jamf Pro Deployment Guide v2.0.0
+# Jamf Pro Deployment Guide v2.x
 
 ## Overview
-This guide provides detailed instructions for deploying Jamf Connect Monitor v2.0.0 through Jamf Pro with complete Configuration Profile automation and real-time monitoring capabilities.
+This guide provides detailed instructions for deploying Jamf Connect Monitor v2.x through Jamf Pro with complete Configuration Profile automation and real-time monitoring capabilities.
 
 ## Prerequisites
 
@@ -10,7 +10,7 @@ This guide provides detailed instructions for deploying Jamf Connect Monitor v2.
 - **Admin Privileges**: Full administrator access to Jamf Pro
 - **Target Environment**: macOS 10.14+ with Jamf Connect installed
 
-### New in v2.0.0
+### v2.x Features
 - **Configuration Profile Support** - Centralized webhook/email management
 - **JSON Schema Integration** - Easy Application & Custom Settings deployment  
 - **Real-time Monitoring** - Immediate violation detection capabilities
@@ -23,7 +23,7 @@ This guide provides detailed instructions for deploying Jamf Connect Monitor v2.
 #### 1.1 Upload Installation Package
 1. **Download Package:**
    - Go to [GitHub Releases](https://github.com/MacJediWizard/jamf-connect-monitor/releases/latest)
-   - Download `JamfConnectMonitor-2.0.0.pkg`
+   - Download `JamfConnectMonitor-2.0.1.pkg` (or latest 2.x version)
    - Download `jamf_connect_monitor_schema.json`
 
 2. **Upload to Jamf Pro:**
@@ -31,7 +31,7 @@ This guide provides detailed instructions for deploying Jamf Connect Monitor v2.
    - Click **"New"**
    - **Configuration:**
      ```
-     Display Name: Jamf Connect Monitor v2.0.0
+     Display Name: Jamf Connect Monitor v2.x
      Category: Security
      Priority: 10
      Description: Enterprise security monitoring with Configuration Profile support
@@ -39,11 +39,11 @@ This guide provides detailed instructions for deploying Jamf Connect Monitor v2.
 
 #### 1.2 Package Verification
 ```bash
-# Verify package integrity
-pkgutil --check-signature JamfConnectMonitor-2.0.0.pkg
+# Verify package integrity (adjust version as needed)
+pkgutil --check-signature JamfConnectMonitor-2.0.1.pkg
 
 # Check package contents
-pkgutil --payload-files JamfConnectMonitor-2.0.0.pkg | grep schema
+pkgutil --payload-files JamfConnectMonitor-2.0.1.pkg | grep schema
 # Should show: usr/local/share/jamf_connect_monitor/schema/jamf_connect_monitor_schema.json
 ```
 
@@ -93,7 +93,7 @@ Update Inventory on Violation: true
 
 #### 2.3 Scope Configuration Profile
 ```
-Target: "Jamf Connect Monitor - Installed v2.0" Smart Group
+Target: "Jamf Connect Monitor - Installed v2.x" Smart Group
 Exclusions: None (unless testing specific groups)
 ```
 
@@ -103,12 +103,12 @@ Exclusions: None (unless testing specific groups)
 1. **Navigate:** Settings → Computer Management → Extension Attributes → New
 2. **Configuration:**
    ```
-   Display Name: [ Jamf Connect ] - Monitor Status v2.0
+   Display Name: [ Jamf Connect ] - Monitor Status v2.x
    Description: Enhanced monitoring status with Configuration Profile support
    Data Type: String
    Input Type: Script
    ```
-3. **Script:** Use the enhanced Extension Attribute script (v2.0.0 format)
+3. **Script:** Use the enhanced Extension Attribute script (v2.x format)
 
 #### 3.2 Extension Attribute Features
 - **Configuration Profile Status** - Reports profile deployment
@@ -117,29 +117,29 @@ Exclusions: None (unless testing specific groups)
 - **Health Metrics** - System performance and status
 - **Smart Group Compatibility** - Enhanced data format for automation
 
-### Phase 4: Smart Group Configuration
+### Phase 4: Smart Group Configuration (Flexible v2.x)
 
 #### 4.1 Essential Smart Groups
 
-**Jamf Connect Monitor - Installed v2.0**
+**Jamf Connect Monitor - Installed v2.x**
 ```
-Name: Jamf Connect Monitor - Installed v2.0
-Criteria: Extension Attribute "[ Jamf Connect ] - Monitor Status v2.0" contains "Version: 2.0.0"
-Purpose: Track v2.0.0 installations and scope Configuration Profiles
+Name: Jamf Connect Monitor - Installed v2.x
+Criteria: Extension Attribute "[ Jamf Connect ] - Monitor Status v2.x" contains "Version: 2."
+Purpose: Track all v2.x installations and scope Configuration Profiles
 ```
 
 **Jamf Connect Monitor - Config Profile Active**
 ```
 Name: Jamf Connect Monitor - Config Profile Active
-Criteria: Extension Attribute "[ Jamf Connect ] - Monitor Status v2.0" contains "Profile: Deployed"
+Criteria: Extension Attribute "[ Jamf Connect ] - Monitor Status v2.x" contains "Profile: Deployed"
 Purpose: Verify Configuration Profile deployment success
 ```
 
 **Jamf Connect Monitor - CRITICAL VIOLATIONS**
 ```
 Name: Jamf Connect Monitor - CRITICAL VIOLATIONS
-Criteria: Extension Attribute "[ Jamf Connect ] - Monitor Status v2.0" contains "Unauthorized:"
-AND Extension Attribute "[ Jamf Connect ] - Monitor Status v2.0" does not contain "Unauthorized: 0"
+Criteria: Extension Attribute "[ Jamf Connect ] - Monitor Status v2.x" contains "Unauthorized:"
+AND Extension Attribute "[ Jamf Connect ] - Monitor Status v2.x" does not contain "Unauthorized: 0"
 Purpose: Immediate security incident response
 ⚠️ CONFIGURE WEBHOOK ALERTS FOR THIS GROUP
 ```
@@ -147,7 +147,7 @@ Purpose: Immediate security incident response
 **Jamf Connect Monitor - Real-time Active**
 ```
 Name: Jamf Connect Monitor - Real-time Active
-Criteria: Extension Attribute "[ Jamf Connect ] - Monitor Status v2.0" contains "Real-time: Active"
+Criteria: Extension Attribute "[ Jamf Connect ] - Monitor Status v2.x" contains "Real-time: Active"
 Purpose: Track real-time monitoring deployment and performance impact
 ```
 
@@ -156,16 +156,16 @@ Purpose: Track real-time monitoring deployment and performance impact
 **Jamf Connect Monitor - Notifications Configured**
 ```
 Name: Jamf Connect Monitor - Notifications Configured
-Criteria: Extension Attribute "[ Jamf Connect ] - Monitor Status v2.0" contains "Webhook: Configured"
-OR Extension Attribute "[ Jamf Connect ] - Monitor Status v2.0" contains "Email: Configured"
+Criteria: Extension Attribute "[ Jamf Connect ] - Monitor Status v2.x" contains "Webhook: Configured"
+OR Extension Attribute "[ Jamf Connect ] - Monitor Status v2.x" contains "Email: Configured"
 Purpose: Verify notification system deployment
 ```
 
 **Jamf Connect Monitor - Needs Attention**
 ```
 Name: Jamf Connect Monitor - Needs Attention
-Criteria: Extension Attribute "[ Jamf Connect ] - Monitor Status v2.0" contains "Daemon: Not Running"
-OR Extension Attribute "[ Jamf Connect ] - Monitor Status v2.0" contains "Profile: Not Deployed"
+Criteria: Extension Attribute "[ Jamf Connect ] - Monitor Status v2.x" contains "Daemon: Not Running"
+OR Extension Attribute "[ Jamf Connect ] - Monitor Status v2.x" contains "Profile: Not Deployed"
 Purpose: Proactive maintenance and troubleshooting
 ```
 
@@ -174,7 +174,7 @@ Purpose: Proactive maintenance and troubleshooting
 #### 5.1 Main Deployment Policy
 1. **General Settings:**
    ```
-   Display Name: Deploy Jamf Connect Monitor v2.0.0
+   Display Name: Deploy Jamf Connect Monitor v2.x
    Category: Security
    Trigger: Enrollment Complete, Recurring Check-in
    Execution Frequency: Once per computer
@@ -182,14 +182,14 @@ Purpose: Proactive maintenance and troubleshooting
 
 2. **Packages:**
    ```
-   Package: Jamf Connect Monitor v2.0.0
+   Package: Jamf Connect Monitor v2.x (latest version)
    Action: Install
    ```
 
 3. **Scope:**
    ```
    Target: "Jamf Connect Devices" smart group
-   Exclusions: "Jamf Connect Monitor - Installed v2.0"
+   Exclusions: "Jamf Connect Monitor - Installed v2.x"
    ```
 
 4. **Maintenance:**
@@ -212,7 +212,7 @@ Purpose: Proactive maintenance and troubleshooting
 
 3. **Scope:**
    ```
-   Target: "Jamf Connect Monitor - Installed v2.0"
+   Target: "Jamf Connect Monitor - Installed v2.x"
    Exclusions: "Jamf Connect Monitor - Config Profile Active"
    ```
 
@@ -222,8 +222,8 @@ Purpose: Proactive maintenance and troubleshooting
 1. **Create Test Policy** scoped to 5-10 test machines
 2. **Test Scenarios:**
    ```bash
-   # Test 1: Package installation
-   sudo installer -pkg JamfConnectMonitor-2.0.0.pkg -target /
+   # Test 1: Package installation (adjust version as needed)
+   sudo installer -pkg JamfConnectMonitor-2.0.1.pkg -target /
    
    # Test 2: Configuration Profile reading
    sudo jamf_connect_monitor.sh test-config
@@ -239,9 +239,9 @@ Purpose: Proactive maintenance and troubleshooting
    ```
 
 3. **Validation Checklist:**
-   - [ ] Package installs successfully with v2.0.0 components
+   - [ ] Package installs successfully with v2.x components
    - [ ] Configuration Profile deploys and applies settings
-   - [ ] Extension Attribute populates with v2.0.0 data format
+   - [ ] Extension Attribute populates with v2.x data format
    - [ ] Smart Groups show correct membership
    - [ ] Webhook/email notifications deliver successfully
    - [ ] Real-time monitoring active (if configured)
@@ -308,7 +308,7 @@ For organizations wanting immediate violation detection:
 #### 8.1 Daily Operations Dashboard
 **Create Jamf Pro Dashboard Widgets:**
 - **Critical Violations:** Count of "CRITICAL VIOLATIONS" Smart Group (goal: 0)
-- **Deployment Progress:** "Installed v2.0" vs "Config Profile Active"
+- **Deployment Progress:** "Installed v2.x" vs "Config Profile Active"
 - **Monitoring Modes:** "Real-time Active" vs "Periodic Only"
 - **System Health:** "Healthy" vs "Needs Attention"
 
@@ -338,6 +338,20 @@ For organizations wanting immediate violation detection:
 - **User-Friendly Interface:** Point-and-click configuration management
 - **Version Control:** Configuration Profile versioning and rollback capabilities
 - **Audit Trail:** Complete change history via Jamf Pro logs
+
+## Version-Specific Deployment Notes
+
+### v2.0.1 Improvements
+- Enhanced Configuration Profile parsing for monitoring mode
+- Fixed empty monitoring mode display in Extension Attribute
+- Improved Smart Group compatibility and reliability
+- Better handling of different plist formats
+
+### v2.0.0 Features
+- Initial Configuration Profile support
+- Real-time monitoring capabilities
+- JSON Schema for Jamf Pro deployment
+- Enhanced notification templates
 
 ## Troubleshooting Deployment
 
