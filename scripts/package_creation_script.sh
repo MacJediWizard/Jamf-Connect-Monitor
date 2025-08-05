@@ -40,6 +40,7 @@ check_prerequisites() {
         "$PROJECT_ROOT/scripts/jamf_connect_monitor.sh"
         "$PROJECT_ROOT/scripts/preinstall_script.sh"
         "$PROJECT_ROOT/scripts/postinstall_script.sh"
+        "$PROJECT_ROOT/jamf/extension-attribute.sh"
         "$PROJECT_ROOT/jamf_connect_monitor_schema.json"
     )
     
