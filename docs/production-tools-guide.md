@@ -87,7 +87,7 @@ sudo ./tools/verify_monitoring.sh --quick
 ✅ Extension Attribute runs successfully
 ✅ Version detected: Version: 2.0.1, Periodic: Running
 ✅ Monitoring mode detected: Mode: periodic
-✅ Company name: Success Academies (from Configuration Profile)
+✅ Company name: [Your Company Name] (from Configuration Profile)
 ✅ Configuration Profile integration: Working (Method 2)
 ✅ LaunchDaemon status: Loaded and running
 ✅ Recent monitoring activity: Last check 2 minutes ago

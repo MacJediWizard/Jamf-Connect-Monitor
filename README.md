@@ -9,7 +9,7 @@ A comprehensive monitoring and automated remediation system for Jamf Connect pri
 
 ## 🎯 **v2.0.1 Production Ready - All Critical Fixes Verified**
 
-**✅ ENTERPRISE TESTED:** All critical issues resolved and verified working in Success Academies production environment  
+**✅ ENTERPRISE TESTED:** All critical issues resolved and verified working in enterprise production environment  
 **✅ ACL CLEARING:** Fixed script execution permissions with comprehensive Extended Attribute cleanup  
 **✅ CONFIGURATION PROFILE:** Standardized reading methods - shows actual company names instead of "Your Company"  
 **✅ AUTO-VERSION DETECTION:** Future-proof version management - works automatically with all v2.x+ releases  
@@ -19,7 +19,7 @@ A comprehensive monitoring and automated remediation system for Jamf Connect pri
 
 ### **Critical Production Fixes**
 - **✅ ACL Clearing** - Eliminates `@` symbols in file permissions preventing script execution
-- **✅ Configuration Profile Integration** - Company names display correctly (e.g., "Success Academies" not "Your Company")  
+- **✅ Configuration Profile Integration** - Company names display correctly (e.g., "[Your Company Name]" not "Your Company")  
 - **✅ Extension Attribute Auto-Detection** - Version displays as "Version: 2.0.1" automatically
 - **✅ Smart Group Compatibility** - Enhanced data format ensures proper population
 - **✅ Future-Proof Architecture** - Works automatically with v2.0.2, v2.1.0, v3.0.0+ without updates
@@ -259,7 +259,7 @@ sudo ./tools/verify_monitoring.sh
 ✅ Extension Attribute runs successfully
 ✅ Version detected: Version: 2.0.1, Periodic: Running
 ✅ Monitoring mode detected: Mode: periodic
-✅ Company name: Success Academies (from Configuration Profile)
+✅ Company name: [Your Company Name] (from Configuration Profile)
 🎉 MONITORING APPEARS TO BE WORKING CORRECTLY
 ```
 
@@ -382,7 +382,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - Jamf Community for Extension Attribute examples and Configuration Profile best practices
 - Apple System Administrators community for security monitoring guidance
 - Open source contributors and beta testers from the macOS enterprise community
-- **Success Academies** for enterprise environment testing and validation
+- Enterprise environments for production testing and validation
 
 ## 🏷️ **Project Status**
 
@@ -395,7 +395,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 **✅ v2.0.1 VERIFIED WORKING IN ENTERPRISE ENVIRONMENT**
 
-- **Enterprise Tested:** Success Academies production environment
+- **Enterprise Tested:** enterprise production environment
 - **All Critical Fixes Applied:** ACL clearing, Configuration Profile integration, auto-version detection
 - **Verification Tools Included:** Complete diagnostic and validation scripts
 - **Future-Proof Design:** Works automatically with all future v2.x+ versions

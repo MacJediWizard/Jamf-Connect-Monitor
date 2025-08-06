@@ -17,7 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### 🔧 **Production-Ready Release: All Critical Fixes Verified**
 
-This release addresses critical production issues identified during enterprise deployment, with all fixes verified working in the Success Academies environment.
+This release addresses critical production issues identified during enterprise deployment, with all fixes verified working in enterprise environments.
 
 ### Fixed
 
@@ -34,7 +34,7 @@ This release addresses critical production issues identified during enterprise d
 - **Solution:** Standardized all scripts to use verified working methods (Methods 2 & 4)
   - Method 2: `defaults read "/Library/Managed Preferences/com.macjediwizard.jamfconnectmonitor"`
   - Method 4: `sudo defaults read "/Library/Managed Preferences/com.macjediwizard.jamfconnectmonitor"`
-- **Verification:** Company name now correctly displays "Success Academies" instead of "Your Company"
+- **Verification:** Company name now correctly displays configured company name instead of "Your Company"
 - **Impact:** Configuration Profile integration now works consistently across all components
 
 #### **Critical Issue 3: Extension Attribute Auto-Version Detection**
@@ -42,7 +42,7 @@ This release addresses critical production issues identified during enterprise d
 - **Root Cause:** Extension Attribute script lacked dynamic version detection from main script
 - **Solution:** Implemented auto-detection system that reads VERSION variable from main script
 - **Enhanced Monitoring Mode Detection:** Robust Configuration Profile parsing with multiple fallback strategies
-- **Verification:** Extension Attribute now shows `Version: 2.0.1, Mode: periodic, Company: Success Academies`
+- **Verification:** Extension Attribute now shows proper version, mode, and company information
 - **Impact:** Future-proof version management - works automatically with v2.0.2, v2.1.0, v3.0.0+
 
 ### Added
@@ -80,7 +80,7 @@ This release addresses critical production issues identified during enterprise d
 - **Auto-Version Detection** - Dynamically reads version from main script installation
 - **Enhanced Monitoring Mode Detection** - Pattern matching for "periodic", "realtime", or "hybrid" keywords
 - **Better Error Handling** - Graceful degradation when Configuration Profile unavailable
-- **Production-Tested Output Format** - Verified working with Success Academies Jamf Pro environment
+- **Production-Tested Output Format** - Verified working with enterprise Jamf Pro environments
 
 #### **Main Monitor Script (`scripts/jamf_connect_monitor.sh`)**
 - **Standardized Configuration Profile Access** - Uses same proven methods as Extension Attribute
@@ -109,8 +109,8 @@ Company Name: "Your Company" (fallback value)
 Configuration: Profile: Not Deployed (false negative)
 
 # AFTER (v2.0.1 - WORKING):
-Company Name: "Success Academies" (actual Configuration Profile value)
-Configuration: Profile: Deployed, Mode: periodic, Company: Success Academies
+Company Name: "[Configured Company Name]" (actual Configuration Profile value)
+Configuration: Profile: Deployed, Mode: periodic, Company: [Configured Company Name]
 ```
 
 #### **ACL Clearing Implementation**
@@ -145,7 +145,7 @@ xattr -c /usr/local/share/jamf_connect_monitor/uninstall_script.sh
 - **Zero Downtime** - Monitoring continues during upgrade process
 
 #### **Enterprise Environment Verification**
-- **Success Academies Environment** - All fixes verified working in production Jamf Pro setup
+- **Enterprise Production Environment** - All fixes verified working in production Jamf Pro setup
 - **Configuration Profile Active** - Confirmed working with enterprise managed preferences
 - **Extension Attribute Population** - Verified correct data display in Jamf Pro computer records
 - **Smart Group Automation** - Confirmed proper population with flexible v2.x criteria
@@ -183,7 +183,7 @@ xattr -c /usr/local/share/jamf_connect_monitor/uninstall_script.sh
 #### **Verification and Validation**
 - **Built-in Testing** - New verification script validates all components after upgrade
 - **Comprehensive Diagnostics** - Tools to verify ACL clearing and Configuration Profile integration
-- **Enterprise Validation** - Production-tested in Success Academies environment
+- **Enterprise Validation** - Production-tested in enterprise environments
 
 ## [2.0.0] - 2025-07-14
 
@@ -519,7 +519,7 @@ sudo ./tools/verify_monitoring.sh
 ✅ Extension Attribute runs successfully
 ✅ Version detected: Version: 2.0.1, Periodic: Running
 ✅ Monitoring mode detected: Mode: periodic
-✅ Company name: Success Academies (from Configuration Profile)
+✅ Company name: [Your Company Name]/(from Configuration Profile)
 🎉 MONITORING APPEARS TO BE WORKING CORRECTLY
 ```
 
@@ -527,7 +527,7 @@ sudo ./tools/verify_monitoring.sh
 - **Post-Installation Validation** - Run after package deployment to verify success
 - **Troubleshooting Support** - Identifies specific issues with detailed diagnostics
 - **Jamf Pro Integration** - Can be deployed as script for automated validation
-- **Production Testing** - Verified working in Success Academies enterprise environment
+- **Production Testing** - Verified working in enterprise environments
 
 ## Support
 
