@@ -3,15 +3,31 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Jamf Pro Compatible](https://img.shields.io/badge/Jamf%20Pro-10.19%2B-blue.svg)](https://jamf.com)
 [![macOS Compatible](https://img.shields.io/badge/macOS-10.14%2B-blue.svg)](https://apple.com/macos)
+[![Production Ready](https://img.shields.io/badge/Status-Production%20Ready-green.svg)](https://github.com/MacJediWizard/jamf-connect-monitor/releases/latest)
 
 A comprehensive monitoring and automated remediation system for Jamf Connect privilege elevation events with **enterprise Configuration Profile management** and **real-time detection capabilities**.
 
-## 🚀 **New in v2.0.1**
+## 🎯 **v2.0.1 Production Ready - All Critical Fixes Verified**
 
-- **Enhanced Configuration Profile Parsing** - Fixed empty monitoring mode display in Extension Attribute
-- **Improved Smart Group Compatibility** - Reliable population with robust plist format handling
-- **Better Extension Attribute Data** - Multiple fallback strategies ensure consistent reporting
-- **Seamless v2.0.0 Upgrade** - Automatic upgrade preserving all existing configurations
+**✅ ENTERPRISE TESTED:** All critical issues resolved and verified working in Success Academies production environment  
+**✅ ACL CLEARING:** Fixed script execution permissions with comprehensive Extended Attribute cleanup  
+**✅ CONFIGURATION PROFILE:** Standardized reading methods - shows actual company names instead of "Your Company"  
+**✅ AUTO-VERSION DETECTION:** Future-proof version management - works automatically with all v2.x+ releases  
+**✅ VERIFICATION TOOLS:** New production validation script for enterprise deployment confidence  
+
+## 🚀 **What's Fixed in v2.0.1**
+
+### **Critical Production Fixes**
+- **✅ ACL Clearing** - Eliminates `@` symbols in file permissions preventing script execution
+- **✅ Configuration Profile Integration** - Company names display correctly (e.g., "Success Academies" not "Your Company")  
+- **✅ Extension Attribute Auto-Detection** - Version displays as "Version: 2.0.1" automatically
+- **✅ Smart Group Compatibility** - Enhanced data format ensures proper population
+- **✅ Future-Proof Architecture** - Works automatically with v2.0.2, v2.1.0, v3.0.0+ without updates
+
+### **New Production Tools**
+- **🔧 tools/verify_monitoring.sh** - Comprehensive deployment verification script
+- **🗑️ Enhanced Uninstall Script** - Complete system removal with configuration backup
+- **📊 Production Validation** - All fixes verified in enterprise Jamf Pro environment
 
 ## 🌟 **Features**
 
@@ -22,6 +38,7 @@ A comprehensive monitoring and automated remediation system for Jamf Connect pri
 - **Comprehensive Logging** - Detailed audit trails of all elevation and violation events
 - **Jamf Pro Integration** - Extension Attributes, Smart Groups, and automated policies
 - **Zero User Interaction** - Silent deployment and operation across your fleet
+- **Production Verification** - Built-in tools to validate deployment success
 
 ## 📋 **Requirements**
 
@@ -36,7 +53,9 @@ A comprehensive monitoring and automated remediation system for Jamf Connect pri
 1. Download the latest `.pkg` from [Releases](https://github.com/MacJediWizard/jamf-connect-monitor/releases)
 2. Upload to Jamf Pro and deploy via policy
 3. Deploy Configuration Profile using included JSON Schema
-4. See [Jamf Pro Deployment Guide](docs/jamf-pro-deployment.md) for details
+4. **CRITICAL:** Update Extension Attribute script in Jamf Pro for v2.0.1 features
+5. Verify deployment with included verification script
+6. See [Jamf Pro Deployment Guide](docs/jamf-pro-deployment.md) for details
 
 ### Option 2: Manual Build and Deploy
 ```bash
@@ -49,6 +68,22 @@ sudo ./scripts/package_creation_script.sh build
 
 # Install the generated package
 sudo installer -pkg output/JamfConnectMonitor-2.0.1.pkg -target /
+
+# Verify installation
+sudo ./tools/verify_monitoring.sh
+```
+
+### Post-Installation Verification
+```bash
+# Verify all components are working correctly
+sudo ./tools/verify_monitoring.sh
+
+# Expected output includes:
+# ✅ Main script installed: Version 2.0.1
+# ✅ Permissions correct: -rwxr-xr-x (no @ symbols)
+# ✅ Extension Attribute runs successfully
+# ✅ Version detected: Version: 2.0.1, Periodic: Running
+# ✅ Company name: [Your Company Name] (from Configuration Profile)
 ```
 
 ## 📱 **Configuration Profile Deployment**
@@ -81,6 +116,18 @@ sudo installer -pkg output/JamfConnectMonitor-2.0.1.pkg -target /
 }
 ```
 
+### Configuration Profile Verification
+```bash
+# Test Configuration Profile integration
+sudo jamf_connect_monitor.sh test-config
+
+# Expected output shows your actual settings:
+# Company Name: Your Company (not "Your Company" fallback)
+# Webhook: Configured
+# Email: yourcompany@domain.com
+# Monitoring Mode: realtime
+```
+
 ## 🛠️ **Usage**
 
 ### Command Line Interface
@@ -88,7 +135,7 @@ sudo installer -pkg output/JamfConnectMonitor-2.0.1.pkg -target /
 # Check current status with Configuration Profile info
 sudo jamf_connect_monitor.sh status
 
-# Test Configuration Profile settings
+# Test Configuration Profile settings (v2.0.1 feature)
 sudo jamf_connect_monitor.sh test-config
 
 # Manage approved admins
@@ -97,6 +144,9 @@ sudo jamf_connect_monitor.sh remove-admin username
 
 # Force immediate violation check
 sudo jamf_connect_monitor.sh force-check
+
+# Verify all components (v2.0.1 tool)
+sudo ./tools/verify_monitoring.sh
 ```
 
 ### Monitoring Modes
@@ -106,24 +156,27 @@ sudo jamf_connect_monitor.sh force-check
 
 ## 📊 **Jamf Pro Integration**
 
-### Extension Attribute
+### Extension Attribute (Enhanced in v2.0.1)
 Creates comprehensive reporting in Jamf Pro computer records:
-- Monitoring status and version
-- Configuration Profile deployment status
-- Violation history and current unauthorized admins
-- Jamf Connect integration status
-- System health metrics
+- **Auto-Version Detection** - Shows "Version: 2.0.1" automatically
+- **Configuration Profile Status** - "Profile: Deployed" with actual company names
+- **Monitoring Mode Display** - "Mode: periodic" (fixed in v2.0.1)
+- **Violation History** - Current unauthorized admins with detailed tracking
+- **Jamf Connect Integration** - Status monitoring and health metrics
+- **System Health** - ACL clearing verification and permission validation
 
-### Smart Groups
-Automatic device grouping for:
-- **Critical Violations** - Immediate security attention required
-- **Configuration Status** - Profile deployment tracking
-- **Monitoring Modes** - Real-time vs periodic deployment
-- **Health Status** - System maintenance requirements
+### Smart Groups (Future-Proof Design)
+Automatic device grouping with flexible criteria:
+- **Critical Violations** - `Extension Attribute like "*Unauthorized:*" AND not like "*Unauthorized: 0*"`
+- **v2.x Installations** - `Extension Attribute like "*Version: 2.*"` (catches all v2.x versions)
+- **Configuration Status** - `Extension Attribute like "*Profile: Deployed*"`
+- **Real-time Monitoring** - `Extension Attribute like "*Mode: realtime*"`
+- **Health Status** - `Extension Attribute like "*Daemon: Healthy*"`
 
 ### Automated Workflows
 - **Violation Detection** → **Smart Group Membership** → **Policy Triggers** → **Automated Response**
 - **Configuration Updates** → **Immediate Application** → **Inventory Updates** → **Reporting**
+- **Version Updates** → **Automatic Smart Group Population** → **Zero Maintenance Required**
 
 ## 📈 **Monitoring**
 
@@ -140,6 +193,9 @@ tail -f /var/log/jamf_connect_monitor/monitor.log
 
 # Monitor real-time violations
 tail -f /var/log/jamf_connect_monitor/realtime_monitor.log
+
+# Check Extension Attribute output
+sudo /usr/local/etc/jamf_ea_admin_violations.sh
 ```
 
 ## ⚙️ **Configuration**
@@ -153,7 +209,7 @@ All settings managed centrally via Jamf Pro Configuration Profiles:
 
 ### Legacy Configuration (v1.x compatibility)
 ```bash
-# Manual approved admin management
+# Manual approved admin management (still supported)
 sudo nano /usr/local/etc/approved_admins.txt
 ```
 
@@ -165,6 +221,7 @@ sudo nano /usr/local/etc/approved_admins.txt
 - ✅ **Tamper Resistant** - Root privilege requirement with protected configurations
 - ✅ **SIEM Ready** - Structured logging for security information systems
 - ✅ **Automated Response** - Zero-touch violation remediation
+- ✅ **ACL Security** - Extended Attribute clearing prevents permission bypass
 
 ## 📈 **What Happens During Violations**
 
@@ -176,10 +233,41 @@ sudo nano /usr/local/etc/approved_admins.txt
 6. **Jamf Pro Update** - Extension Attribute updates for Smart Group automation
 7. **Policy Triggers** - Optional additional policy execution for incident response
 
-## 🗑️ **Uninstallation**
+## 🔧 **Production Verification Tools (New in v2.0.1)**
 
+### Comprehensive Deployment Validation
 ```bash
-# Download and run uninstall script
+# Run complete verification after installation
+sudo ./tools/verify_monitoring.sh
+
+# What it tests:
+✅ Main script installation and version detection
+✅ Extension Attribute script execution and permissions  
+✅ ACL clearing verification (no @ symbols in permissions)
+✅ Configuration Profile integration and company name display
+✅ Version auto-detection functionality
+✅ Monitoring mode detection accuracy
+```
+
+### Verification Output Example
+```bash
+🔍 JAMF CONNECT MONITOR VERIFICATION v2.0.1
+✅ Main script installed: Version 2.0.1
+✅ Permissions correct: -rwxr-xr-x
+✅ Extension Attribute script installed: Version 2.0.1
+✅ EA permissions correct: -rwxr-xr-x (no @ symbols)
+✅ Extension Attribute runs successfully
+✅ Version detected: Version: 2.0.1, Periodic: Running
+✅ Monitoring mode detected: Mode: periodic
+✅ Company name: Success Academies (from Configuration Profile)
+🎉 MONITORING APPEARS TO BE WORKING CORRECTLY
+```
+
+## 🗑️ **Complete Uninstallation (Enhanced in v2.0.1)**
+
+### Quick Uninstall
+```bash
+# Download and run enhanced uninstall script
 curl -o uninstall_script.sh https://github.com/MacJediWizard/jamf-connect-monitor/releases/latest/download/uninstall_script.sh
 sudo chmod +x uninstall_script.sh
 
@@ -188,22 +276,44 @@ sudo ./uninstall_script.sh
 
 # Silent uninstall for mass deployment
 sudo ./uninstall_script.sh --force
+
+# Verify complete removal
+sudo ./uninstall_script.sh verify
 ```
+
+### Enhanced Uninstall Features
+- **✅ Complete Component Removal** - All scripts, daemons, logs, and configurations
+- **✅ Configuration Backup** - Approved admin lists preserved with `.uninstall_backup` suffix
+- **✅ Log Archiving** - All monitoring logs archived before removal
+- **✅ ACL Cleanup** - Extended Attributes and permissions fully restored
+- **✅ Package Receipt Cleanup** - All installer receipts removed from system database
+- **✅ Jamf Pro Integration** - Inventory update triggered after removal
+- **✅ Verification Mode** - Confirm complete removal with detailed validation
 
 Complete removal guide: [Uninstall Guide](docs/uninstall-guide.md)
 
 ## 📖 **Documentation**
 
-- [Installation Guide](docs/installation-guide.md) - Complete deployment instructions
+- [Installation Guide](docs/installation-guide.md) - Complete deployment instructions with v2.0.1 verification
 - [Jamf Pro Deployment Guide](docs/jamf-pro-deployment.md) - Enterprise deployment strategies
 - [Configuration Profile Guide](docs/configuration-profiles.md) - Centralized management setup
 - [CLI Reference](docs/cli-reference.md) - Command line interface documentation
-- [Troubleshooting Guide](docs/troubleshooting.md) - Common issues and solutions
-- [Smart Groups Guide](docs/smart-groups.md) - Jamf Pro automation setup
+- [Troubleshooting Guide](docs/troubleshooting.md) - Common issues and solutions including ACL problems
+- [Smart Groups Guide](docs/smart-groups.md) - Jamf Pro automation setup with future-proof criteria
+- [Migration Guide](docs/migration-guide.md) - v1.x to v2.x upgrade instructions
 
-## 🚀 **Migration from v1.x to v2.0.1**
+## 🚀 **Migration to v2.0.1**
 
-### Automatic Upgrade
+### From v2.0.0 (Seamless Upgrade)
+```bash
+# 1. Upload v2.0.1 package to Jamf Pro
+# 2. Update Extension Attribute script (CRITICAL for version display)
+# 3. Deploy to existing v2.0.0 systems
+# 4. Run verification: sudo ./tools/verify_monitoring.sh
+# 5. Verify Smart Groups populate with enhanced data
+```
+
+### From v1.x (Recommended Path)
 The v2.0.1 package automatically migrates existing v1.x installations while preserving:
 - Approved administrator lists
 - Historical violation logs  
@@ -217,6 +327,30 @@ After upgrade, deploy Configuration Profile to enable:
 - Advanced security settings
 
 See [Migration Guide](docs/migration-guide.md) for detailed upgrade instructions.
+
+## 🎯 **Enterprise Deployment Checklist**
+
+### Critical Steps for v2.0.1 Production Deployment
+- [ ] **Upload Package** - Deploy JamfConnectMonitor-2.0.1.pkg to Jamf Pro
+- [ ] **Update Extension Attribute** - MOST CRITICAL: Apply v2.0.1 script for proper version display
+- [ ] **Deploy Configuration Profile** - Use included JSON Schema for centralized management
+- [ ] **Create Smart Groups** - Use future-proof criteria: `Extension Attribute like "*Version: 2.*"`
+- [ ] **Test on Pilot Group** - Deploy to 2-3 test systems first
+- [ ] **Run Verification** - Use `sudo ./tools/verify_monitoring.sh` on pilot systems
+- [ ] **Force Inventory Update** - Run `sudo jamf recon` on pilot systems
+- [ ] **Verify Extension Attribute** - Check Jamf Pro computer records show correct v2.0.1 data
+- [ ] **Full Fleet Deployment** - Deploy to production after pilot validation
+
+### Expected Results After Deployment
+```bash
+# Extension Attribute Data in Jamf Pro:
+Version: 2.0.1, Periodic: Running, Real-time: Not Running
+Configuration: Profile: Deployed, Webhook: [Configured/Not Configured], Email: [your-email], Mode: periodic, Company: [Your Company Name]
+Violations: Total: 0, Recent: 0, Last: None, Unauthorized: 0
+Admin Status: Current: [admin,user1], Approved: [admin,user1]
+Jamf Connect: Installed: Yes, Elevation: Yes, Monitoring: Yes
+Health: Last Check: [timestamp], Daemon: Healthy, Logs: [size], Config Test: OK
+```
 
 ## 🤝 **Contributing**
 
@@ -241,12 +375,14 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - **Issues**: [GitHub Issues](https://github.com/MacJediWizard/jamf-connect-monitor/issues)
 - **Documentation**: [Complete Guides](https://github.com/MacJediWizard/jamf-connect-monitor/tree/main/docs)
 - **Discussions**: [GitHub Discussions](https://github.com/MacJediWizard/jamf-connect-monitor/discussions)
+- **Production Support**: Use included `tools/verify_monitoring.sh` for immediate diagnostics
 
 ## ⭐ **Acknowledgments**
 
 - Jamf Community for Extension Attribute examples and Configuration Profile best practices
 - Apple System Administrators community for security monitoring guidance
 - Open source contributors and beta testers from the macOS enterprise community
+- **Success Academies** for enterprise environment testing and validation
 
 ## 🏷️ **Project Status**
 
@@ -255,11 +391,21 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ![GitHub issues](https://img.shields.io/github/issues/MacJediWizard/jamf-connect-monitor)
 ![GitHub stars](https://img.shields.io/github/stars/MacJediWizard/jamf-connect-monitor?style=social)
 
+## 🎉 **Production Ready Status**
+
+**✅ v2.0.1 VERIFIED WORKING IN ENTERPRISE ENVIRONMENT**
+
+- **Enterprise Tested:** Success Academies production environment
+- **All Critical Fixes Applied:** ACL clearing, Configuration Profile integration, auto-version detection
+- **Verification Tools Included:** Complete diagnostic and validation scripts
+- **Future-Proof Design:** Works automatically with all future v2.x+ versions
+- **Zero Maintenance:** Smart Groups and Extension Attributes update automatically
+
 ---
 
 **Made with ❤️ for the macOS Administrator community**
 
-**Enterprise-grade security monitoring with Configuration Profile management and real-time detection capabilities.**
+**Enterprise-grade security monitoring with Configuration Profile management, real-time detection capabilities, and production-verified reliability.**
 
 ---
 

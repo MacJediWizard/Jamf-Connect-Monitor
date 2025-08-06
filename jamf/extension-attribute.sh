@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Jamf Pro Extension Attribute - Admin Account Violations
-# Version: 2.0.1 - Enhanced Configuration Profile parsing fix
+# Version: 2.0.1 - Working Configuration Profile detection
 # Author: MacJediWizard
 # Description: Reports unauthorized admin account violations, monitoring status, and configuration
 # Compatible with: Jamf Pro 10.19+ and macOS 10.14+
@@ -32,7 +32,35 @@ get_approved_admins() {
     fi
 }
 
-# Function to check Configuration Profile deployment status - ENHANCED FIX
+# Function to auto-detect version from main script
+get_version_from_main_script() {
+    local version="Unknown"
+    
+    if [[ -f "/usr/local/bin/jamf_connect_monitor.sh" ]]; then
+        # Method 1: Extract from VERSION= variable (preferred for v2.0.1+)
+        version=$(grep "^VERSION=" /usr/local/bin/jamf_connect_monitor.sh 2>/dev/null | cut -d'"' -f2)
+        
+        # Method 2: Extract from header comment (fallback)
+        if [[ -z "$version" || "$version" == "" ]]; then
+            version=$(head -10 /usr/local/bin/jamf_connect_monitor.sh | grep -o '[0-9]\+\.[0-9]\+\.[0-9]\+' | head -1)
+        fi
+        
+        # Method 3: Check for v2.x indicators if version still not found
+        if [[ -z "$version" || "$version" == "" ]]; then
+            if grep -q "Configuration Profile" /usr/local/bin/jamf_connect_monitor.sh 2>/dev/null; then
+                version="2.x"
+            else
+                version="1.x"
+            fi
+        fi
+    else
+        version="Not Installed"
+    fi
+    
+    echo "$version"
+}
+
+# Function to check Configuration Profile deployment status - WORKING VERSION
 get_config_profile_status() {
     local webhook_status="Not Configured"
     local email_status="Not Configured"
@@ -40,40 +68,45 @@ get_config_profile_status() {
     local monitoring_mode="Unknown"
     local company_name="Unknown"
     
-    # Try multiple methods to read Configuration Profile
+    # Use the working methods from diagnostic
     local config_data=""
     
-    # Method 1: Try standard location
-    if config_data=$(defaults read "$CONFIG_DOMAIN" 2>/dev/null); then
+    # Method 2: Managed Preferences path (WORKS)
+    if config_data=$(defaults read "/Library/Managed Preferences/$CONFIG_DOMAIN" 2>/dev/null); then
         profile_version="Deployed"
-        # Method 2: Try managed preferences location  
-    elif config_data=$(defaults read "/Library/Managed Preferences/$CONFIG_DOMAIN" 2>/dev/null); then
+    # Method 4: Full path managed preferences (WORKS) 
+    elif config_data=$(sudo defaults read "/Library/Managed Preferences/$CONFIG_DOMAIN" 2>/dev/null); then
         profile_version="Deployed"
-        # Method 3: Try with different approach
-    elif sudo -u root defaults read "$CONFIG_DOMAIN" >/dev/null 2>&1; then
+    # Method 3: Root context (backup)
+    elif config_data=$(sudo defaults read "$CONFIG_DOMAIN" 2>/dev/null); then
         profile_version="Deployed"
-        config_data=$(sudo -u root defaults read "$CONFIG_DOMAIN" 2>/dev/null)
     fi
     
-    # If we found config data, parse it
+    # Parse configuration data if found
     if [[ "$profile_version" == "Deployed" && -n "$config_data" ]]; then
-        # Parse webhook
+        # Parse webhook - look for WebhookURL with actual URL
         if echo "$config_data" | grep -q "WebhookURL" && echo "$config_data" | grep -q "http"; then
             webhook_status="Configured"
         fi
         
-        # Parse email
+        # Parse email - look for EmailRecipient with @ symbol
         if echo "$config_data" | grep -q "EmailRecipient" && echo "$config_data" | grep -q "@"; then
             email_status="Configured"
         fi
         
-        # Parse monitoring mode - ENHANCED AND ROBUST
+        # Parse monitoring mode - enhanced detection
         if echo "$config_data" | grep -q "MonitoringMode"; then
-            # Extract any occurrence of periodic, realtime, or hybrid after MonitoringMode
+            # Look for periodic, realtime, or hybrid
             monitoring_mode=$(echo "$config_data" | grep -A2 -B2 "MonitoringMode" | grep -o -E "(periodic|realtime|hybrid)" | head -1)
-            # If that didn't work, try more aggressive parsing
+            # Alternative parsing method
             if [[ -z "$monitoring_mode" ]]; then
-                monitoring_mode=$(echo "$config_data" | sed -n '/MonitoringMode/,+2p' | grep -o -E "[a-z]+" | grep -E "(periodic|realtime|hybrid)" | head -1)
+                if echo "$config_data" | grep -q "periodic"; then
+                    monitoring_mode="periodic"
+                elif echo "$config_data" | grep -q "realtime"; then
+                    monitoring_mode="realtime"
+                elif echo "$config_data" | grep -q "hybrid"; then
+                    monitoring_mode="hybrid"
+                fi
             fi
             # Final fallback
             [[ -z "$monitoring_mode" ]] && monitoring_mode="periodic"
@@ -83,23 +116,19 @@ get_config_profile_status() {
         
         # Parse company name
         if echo "$config_data" | grep -q "CompanyName"; then
-            company_name=$(echo "$config_data" | grep "CompanyName" | cut -d'"' -f2 2>/dev/null || echo "Not Set")
+            company_name=$(echo "$config_data" | grep -A1 "CompanyName" | grep -o '"[^"]*"' | head -1 | tr -d '"')
+            [[ -z "$company_name" ]] && company_name="Configured"
         fi
     fi
     
     echo "Profile: $profile_version, Webhook: $webhook_status, Email: $email_status, Mode: $monitoring_mode, Company: $company_name"
 }
 
-# Function to get comprehensive monitoring status
+# Function to get comprehensive monitoring status with auto-detection
 get_monitoring_status() {
     local periodic_status="Not Running"
     local realtime_status="Not Running"
-    local version="Unknown"
-    
-    # Check for version 2.0.0 script
-    if [[ -f "/usr/local/bin/jamf_connect_monitor.sh" ]]; then
-        version=$(grep "Version: 2.0.0" /usr/local/bin/jamf_connect_monitor.sh >/dev/null 2>&1 && echo "2.0.0" || echo "1.x")
-    fi
+    local version=$(get_version_from_main_script)
     
     # Check periodic monitoring (LaunchDaemon)
     if launchctl list | grep -q "com.macjediwizard.jamfconnectmonitor"; then
@@ -208,20 +237,20 @@ get_health_metrics() {
         log_size=$(du -sh /var/log/jamf_connect_monitor 2>/dev/null | cut -f1 || echo "0MB")
     fi
     
-    # Test configuration profile reading - FIXED
+    # Test configuration profile reading using working methods
     config_test="Failed"
-    if defaults read "$CONFIG_DOMAIN" >/dev/null 2>&1; then
+    if defaults read "/Library/Managed Preferences/$CONFIG_DOMAIN" >/dev/null 2>&1; then
         config_test="OK"
-    elif defaults read "/Library/Managed Preferences/$CONFIG_DOMAIN" >/dev/null 2>&1; then
+    elif sudo defaults read "/Library/Managed Preferences/$CONFIG_DOMAIN" >/dev/null 2>&1; then
         config_test="OK"
-    elif sudo -u root defaults read "$CONFIG_DOMAIN" >/dev/null 2>&1; then
+    elif sudo defaults read "$CONFIG_DOMAIN" >/dev/null 2>&1; then
         config_test="OK"
     fi
     
     echo "Last Check: $last_check, Daemon: $daemon_health, Logs: $log_size, Config Test: $config_test"
 }
 
-# Main execution - Enhanced format for v2.0.0
+# Main execution - Enhanced format for v2.x with working Configuration Profile detection
 main() {
     local monitoring_status=$(get_monitoring_status)
     local config_status=$(get_config_profile_status)  
@@ -231,7 +260,7 @@ main() {
     local health_metrics=$(get_health_metrics)
     
     # Enhanced result format for better Smart Group compatibility
-    local result="=== JAMF CONNECT MONITOR STATUS v2.0 ===
+    local result="=== JAMF CONNECT MONITOR STATUS v2.x ===
 $monitoring_status
 Configuration: $config_status
 Violations: $violation_summary

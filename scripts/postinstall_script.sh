@@ -11,6 +11,9 @@ MONITOR_SCRIPT="/usr/local/bin/jamf_connect_monitor.sh"
 LAUNCH_DAEMON="/Library/LaunchDaemons/com.macjediwizard.jamfconnectmonitor.plist"
 APPROVED_ADMINS="/usr/local/etc/approved_admins.txt"
 
+# Centralized version management
+PACKAGE_VERSION="2.0.1"
+
 # Configuration from Jamf Pro Parameters (if provided)
 WEBHOOK_URL="${4:-}"          # Parameter 4
 EMAIL_RECIPIENT="${5:-}"      # Parameter 5
@@ -23,7 +26,7 @@ log_message() {
     echo "[$timestamp] [POSTINSTALL] $1" | tee -a "$LOG_FILE"
 }
 
-log_message "Starting post-installation configuration"
+log_message "Starting post-installation configuration for v$PACKAGE_VERSION"
 
 # Verify package installation
 verify_installation() {
@@ -51,33 +54,37 @@ configure_monitoring_script() {
         return 1
     fi
     
-    # Update configuration variables in the script
+    # Update configuration variables in the script (for legacy compatibility)
     if [[ -n "$WEBHOOK_URL" ]]; then
         sed -i '' "s|^WEBHOOK_URL=.*|WEBHOOK_URL=\"$WEBHOOK_URL\"|" "$MONITOR_SCRIPT"
-        log_message "Configured webhook URL"
+        log_message "Configured webhook URL (legacy method)"
     fi
     
     if [[ -n "$EMAIL_RECIPIENT" ]]; then
         sed -i '' "s|^EMAIL_RECIPIENT=.*|EMAIL_RECIPIENT=\"$EMAIL_RECIPIENT\"|" "$MONITOR_SCRIPT"
-        log_message "Configured email recipient: $EMAIL_RECIPIENT"
+        log_message "Configured email recipient (legacy method): $EMAIL_RECIPIENT"
     fi
     
     # Set permissions
     chmod +x "$MONITOR_SCRIPT"
     chown root:wheel "$MONITOR_SCRIPT"
     
-    # FIX: Set permissions for Extension Attribute script
+    # FIX: Set permissions for Extension Attribute script and clear ACLs
     if [[ -f "/usr/local/etc/jamf_ea_admin_violations.sh" ]]; then
         chmod +x "/usr/local/etc/jamf_ea_admin_violations.sh"
         chown root:wheel "/usr/local/etc/jamf_ea_admin_violations.sh"
-        log_message "Set permissions for Extension Attribute script"
+        # Clear any extended attributes/ACLs that may cause execution issues
+        xattr -c "/usr/local/etc/jamf_ea_admin_violations.sh" 2>/dev/null || true
+        log_message "Set permissions and cleared ACLs for Extension Attribute script"
     fi
     
-    # FIX: Set permissions for uninstall script
+    # FIX: Set permissions for uninstall script and clear ACLs
     if [[ -f "/usr/local/share/jamf_connect_monitor/uninstall_script.sh" ]]; then
         chmod +x "/usr/local/share/jamf_connect_monitor/uninstall_script.sh"
         chown root:wheel "/usr/local/share/jamf_connect_monitor/uninstall_script.sh"
-        log_message "Set permissions for uninstall script"
+        # Clear any extended attributes/ACLs that may cause execution issues
+        xattr -c "/usr/local/share/jamf_connect_monitor/uninstall_script.sh" 2>/dev/null || true
+        log_message "Set permissions and cleared ACLs for uninstall script"
     fi
     
     log_message "Monitor script configuration completed"
@@ -106,15 +113,18 @@ create_approved_admin_list() {
         log_message "Generated admin list from current system"
     fi
     
-    # Set permissions
+    # Set permissions and clear ACLs
     chmod 644 "$APPROVED_ADMINS"
     chown root:wheel "$APPROVED_ADMINS"
+    xattr -c "$APPROVED_ADMINS" 2>/dev/null || true
     
     local admin_count=$(wc -l < "$APPROVED_ADMINS" | tr -d ' ')
     log_message "Approved admin list created with $admin_count users"
     
-    # Log the admins for audit purposes
-    log_message "Approved admins: $(tr '\n' ', ' < "$APPROVED_ADMINS" | sed 's/,$//')"
+    # Log the admins for audit purposes (first 3 for security)
+    local admin_preview=$(head -3 "$APPROVED_ADMINS" | tr '\n' ',' | sed 's/,$//')
+    [[ $admin_count -gt 3 ]] && admin_preview="$admin_preview... (+$((admin_count-3)) more)"
+    log_message "Approved admins preview: $admin_preview"
 }
 
 # Configure LaunchDaemon with custom settings
@@ -134,7 +144,7 @@ configure_launch_daemon() {
         log_message "Set monitoring interval to $MONITORING_INTERVAL seconds"
     fi
     
-    # Update company name in label if specified
+    # Update company name in label if specified (for legacy compatibility)
     if [[ "$COMPANY_NAME" != "YourCompany" ]]; then
         local new_label="com.${COMPANY_NAME,,}.jamfconnectmonitor"
         /usr/libexec/PlistBuddy -c "Set :Label $new_label" "$LAUNCH_DAEMON" 2>/dev/null || {
@@ -143,9 +153,10 @@ configure_launch_daemon() {
         log_message "Updated daemon label to $new_label"
     fi
     
-    # Set permissions
+    # Set permissions and clear ACLs
     chown root:wheel "$LAUNCH_DAEMON"
     chmod 644 "$LAUNCH_DAEMON"
+    xattr -c "$LAUNCH_DAEMON" 2>/dev/null || true
     
     log_message "LaunchDaemon configuration completed"
 }
@@ -171,7 +182,7 @@ EmailRecipient=$EMAIL_RECIPIENT
 [System]
 CompanyName=$COMPANY_NAME
 InstallDate=$(date '+%Y-%m-%d %H:%M:%S')
-Version=2.0.1
+Version=$PACKAGE_VERSION
 
 [Paths]
 ApprovedAdminsList=$APPROVED_ADMINS
@@ -181,6 +192,7 @@ EOF
     
     chmod 644 "$CONFIG_FILE"
     chown root:wheel "$CONFIG_FILE"
+    xattr -c "$CONFIG_FILE" 2>/dev/null || true
     
     log_message "Configuration file created"
 }
@@ -196,8 +208,8 @@ initialize_monitoring() {
         log_message "WARNING: Initial monitoring run failed"
     fi
     
-    # Display current status
-    "$MONITOR_SCRIPT" status | while read line; do
+    # Display current status (first 5 lines to avoid log spam)
+    "$MONITOR_SCRIPT" status | head -5 | while read line; do
         log_message "STATUS: $line"
     done
 }
@@ -233,12 +245,15 @@ update_jamf_inventory() {
     # Create a receipt file for Jamf Pro to track installation
     cat > "/usr/local/share/jamf_connect_monitor/install_receipt.txt" << EOF
 Installation Date: $(date)
-Version: 2.0.1
+Version: $PACKAGE_VERSION
 Monitoring Interval: $MONITORING_INTERVAL
 Approved Admins: $(wc -l < "$APPROVED_ADMINS" | tr -d ' ')
 Webhook Configured: $([[ -n "$WEBHOOK_URL" ]] && echo "Yes" || echo "No")
 Email Configured: $([[ -n "$EMAIL_RECIPIENT" ]] && echo "Yes" || echo "No")
 EOF
+    
+    # Clear ACLs on receipt file
+    xattr -c "/usr/local/share/jamf_connect_monitor/install_receipt.txt" 2>/dev/null || true
     
     # Update inventory if jamf binary exists
     if command -v jamf &> /dev/null; then
@@ -259,7 +274,7 @@ cleanup_temp_files() {
     log_message "Temporary files cleaned up"
 }
 
-# Send installation notification
+# Send installation notification (generic, no customer info)
 send_installation_notification() {
     if [[ -n "$WEBHOOK_URL" ]]; then
         local hostname=$(hostname)
@@ -269,7 +284,7 @@ send_installation_notification() {
                 \"color\": \"good\",
                 \"fields\": [
                     {\"title\": \"Hostname\", \"value\": \"$hostname\", \"short\": true},
-                    {\"title\": \"Version\", \"value\": \"1.0.1\", \"short\": true},
+                    {\"title\": \"Version\", \"value\": \"$PACKAGE_VERSION\", \"short\": true},
                     {\"title\": \"Monitoring Interval\", \"value\": \"$MONITORING_INTERVAL seconds\", \"short\": true},
                     {\"title\": \"Install Date\", \"value\": \"$(date)\", \"short\": true}
                 ]
@@ -286,7 +301,7 @@ send_installation_notification() {
 # Main execution
 main() {
     log_message "=== Starting Jamf Connect Monitor Post-Installation ==="
-    log_message "Parameters - Webhook: $([[ -n "$WEBHOOK_URL" ]] && echo "Configured" || echo "None"), Email: $([[ -n "$EMAIL_RECIPIENT" ]] && echo "$EMAIL_RECIPIENT" || echo "None"), Interval: $MONITORING_INTERVAL"
+    log_message "Parameters - Webhook: $([[ -n "$WEBHOOK_URL" ]] && echo "Configured" || echo "None"), Email: $([[ -n "$EMAIL_RECIPIENT" ]] && echo "Configured" || echo "None"), Interval: $MONITORING_INTERVAL"
     
     # Verify package installation
     if ! verify_installation; then

@@ -4,8 +4,11 @@
 # Version: 2.0.1 - Enhanced with Configuration Profile support and real-time monitoring
 # Author: MacJediWizard
 
-# Configuration Variables
+# Centralized Version Management
+VERSION="2.0.1"
 SCRIPT_NAME="JamfConnectMonitor"
+
+# Configuration Variables
 LOG_DIR="/var/log/jamf_connect_monitor"
 ELEVATION_LOG="/Library/Logs/JamfConnect/UserElevationReasons.log"
 ADMIN_WHITELIST="/usr/local/etc/approved_admins.txt"
@@ -16,36 +19,77 @@ LOCKFILE="/tmp/jamf_connect_monitor.lock"
 # Configuration Profile domain
 CONFIG_PROFILE_DOMAIN="com.macjediwizard.jamfconnectmonitor"
 
-# Read configuration from managed preferences (Configuration Profile)
+# Read configuration from managed preferences (Configuration Profile) - USING WORKING METHODS
 read_configuration() {
-    # Notification Settings
-    WEBHOOK_URL=$(defaults read "$CONFIG_PROFILE_DOMAIN" NotificationSettings.WebhookURL 2>/dev/null || echo "")
-    EMAIL_RECIPIENT=$(defaults read "$CONFIG_PROFILE_DOMAIN" NotificationSettings.EmailRecipient 2>/dev/null || echo "")
-    NOTIFICATION_TEMPLATE=$(defaults read "$CONFIG_PROFILE_DOMAIN" NotificationSettings.NotificationTemplate 2>/dev/null || echo "detailed")
-    NOTIFICATION_COOLDOWN=$(defaults read "$CONFIG_PROFILE_DOMAIN" NotificationSettings.NotificationCooldownMinutes 2>/dev/null || echo "15")
+    local config_data=""
+    local config_source=""
     
-    # Monitoring Behavior
-    MONITORING_MODE=$(defaults read "$CONFIG_PROFILE_DOMAIN" MonitoringBehavior.MonitoringMode 2>/dev/null || echo "periodic")
-    AUTO_REMEDIATION=$(defaults read "$CONFIG_PROFILE_DOMAIN" MonitoringBehavior.AutoRemediation 2>/dev/null || echo "true")
-    GRACE_PERIOD_MINUTES=$(defaults read "$CONFIG_PROFILE_DOMAIN" MonitoringBehavior.GracePeriodMinutes 2>/dev/null || echo "5")
-    MONITOR_JAMF_CONNECT_ONLY=$(defaults read "$CONFIG_PROFILE_DOMAIN" MonitoringBehavior.MonitorJamfConnectOnly 2>/dev/null || echo "true")
+    # Use the same working methods as Extension Attribute (Methods 2 & 4)
+    if config_data=$(defaults read "/Library/Managed Preferences/$CONFIG_PROFILE_DOMAIN" 2>/dev/null); then
+        config_source="Method 2 (Managed Preferences)"
+    elif config_data=$(sudo defaults read "/Library/Managed Preferences/$CONFIG_PROFILE_DOMAIN" 2>/dev/null); then
+        config_source="Method 4 (sudo Managed Preferences)"
+    elif config_data=$(defaults read "$CONFIG_PROFILE_DOMAIN" 2>/dev/null); then
+        config_source="Method 1 (Standard)"
+    fi
     
-    # Security Settings
-    REQUIRE_CONFIRMATION=$(defaults read "$CONFIG_PROFILE_DOMAIN" SecuritySettings.RequireConfirmation 2>/dev/null || echo "false")
-    VIOLATION_REPORTING=$(defaults read "$CONFIG_PROFILE_DOMAIN" SecuritySettings.ViolationReporting 2>/dev/null || echo "true")
-    LOG_RETENTION_DAYS=$(defaults read "$CONFIG_PROFILE_DOMAIN" SecuritySettings.LogRetentionDays 2>/dev/null || echo "30")
-    
-    # Jamf Pro Integration
-    UPDATE_INVENTORY_ON_VIOLATION=$(defaults read "$CONFIG_PROFILE_DOMAIN" JamfProIntegration.UpdateInventoryOnViolation 2>/dev/null || echo "true")
-    TRIGGER_POLICY_ON_VIOLATION=$(defaults read "$CONFIG_PROFILE_DOMAIN" JamfProIntegration.TriggerPolicyOnViolation 2>/dev/null || echo "")
-    COMPANY_NAME=$(defaults read "$CONFIG_PROFILE_DOMAIN" JamfProIntegration.CompanyName 2>/dev/null || echo "Your Company")
-    IT_CONTACT_EMAIL=$(defaults read "$CONFIG_PROFILE_DOMAIN" JamfProIntegration.ITContactEmail 2>/dev/null || echo "")
-    
-    # Advanced Settings
-    DEBUG_LOGGING=$(defaults read "$CONFIG_PROFILE_DOMAIN" AdvancedSettings.DebugLogging 2>/dev/null || echo "false")
-    MONITORING_INTERVAL=$(defaults read "$CONFIG_PROFILE_DOMAIN" AdvancedSettings.MonitoringInterval 2>/dev/null || echo "300")
-    MAX_NOTIFICATIONS_PER_HOUR=$(defaults read "$CONFIG_PROFILE_DOMAIN" AdvancedSettings.MaxNotificationsPerHour 2>/dev/null || echo "10")
-    AUTO_POPULATE_APPROVED_ADMINS=$(defaults read "$CONFIG_PROFILE_DOMAIN" AdvancedSettings.AutoPopulateApprovedAdmins 2>/dev/null || echo "true")
+    if [[ -n "$config_data" ]]; then
+        log_message "INFO" "Configuration Profile found via $config_source"
+        
+        # Parse settings from the config data using robust extraction
+        # Notification Settings
+        WEBHOOK_URL=$(echo "$config_data" | grep -A1 "WebhookURL" | grep -o 'https://[^"]*' | head -1 || echo "")
+        EMAIL_RECIPIENT=$(echo "$config_data" | grep -A1 "EmailRecipient" | grep -o '[a-zA-Z0-9._%+-]*@[a-zA-Z0-9.-]*\.[a-zA-Z]*' | head -1 || echo "")
+        NOTIFICATION_TEMPLATE=$(echo "$config_data" | grep -A1 "NotificationTemplate" | grep -o '"[^"]*"' | tr -d '"' | grep -E "(simple|detailed|security_report)" | head -1 || echo "detailed")
+        NOTIFICATION_COOLDOWN=$(echo "$config_data" | grep -A1 "NotificationCooldownMinutes" | grep -o '[0-9]*' | head -1 || echo "15")
+        
+        # Monitoring Behavior
+        MONITORING_MODE=$(echo "$config_data" | grep -A1 "MonitoringMode" | grep -o -E "(periodic|realtime|hybrid)" | head -1 || echo "periodic")
+        AUTO_REMEDIATION=$(echo "$config_data" | grep -A1 "AutoRemediation" | grep -o -E "(true|false)" | head -1 || echo "true")
+        GRACE_PERIOD_MINUTES=$(echo "$config_data" | grep -A1 "GracePeriodMinutes" | grep -o '[0-9]*' | head -1 || echo "5")
+        MONITOR_JAMF_CONNECT_ONLY=$(echo "$config_data" | grep -A1 "MonitorJamfConnectOnly" | grep -o -E "(true|false)" | head -1 || echo "true")
+        
+        # Security Settings
+        REQUIRE_CONFIRMATION=$(echo "$config_data" | grep -A1 "RequireConfirmation" | grep -o -E "(true|false)" | head -1 || echo "false")
+        VIOLATION_REPORTING=$(echo "$config_data" | grep -A1 "ViolationReporting" | grep -o -E "(true|false)" | head -1 || echo "true")
+        LOG_RETENTION_DAYS=$(echo "$config_data" | grep -A1 "LogRetentionDays" | grep -o '[0-9]*' | head -1 || echo "30")
+        
+        # Jamf Pro Integration - FIXED COMPANY NAME READING
+        UPDATE_INVENTORY_ON_VIOLATION=$(echo "$config_data" | grep -A1 "UpdateInventoryOnViolation" | grep -o -E "(true|false)" | head -1 || echo "true")
+        TRIGGER_POLICY_ON_VIOLATION=$(echo "$config_data" | grep -A1 "TriggerPolicyOnViolation" | grep -o '"[^"]*"' | tr -d '"' | head -1 || echo "")
+        COMPANY_NAME=$(echo "$config_data" | grep -A1 "CompanyName" | grep -o '"[^"]*"' | tr -d '"' | head -1 || echo "Your Company")
+        IT_CONTACT_EMAIL=$(echo "$config_data" | grep -A1 "ITContactEmail" | grep -o '[a-zA-Z0-9._%+-]*@[a-zA-Z0-9.-]*\.[a-zA-Z]*' | head -1 || echo "")
+        
+        # Advanced Settings
+        DEBUG_LOGGING=$(echo "$config_data" | grep -A1 "DebugLogging" | grep -o -E "(true|false)" | head -1 || echo "false")
+        MONITORING_INTERVAL=$(echo "$config_data" | grep -A1 "MonitoringInterval" | grep -o '[0-9]*' | head -1 || echo "300")
+        MAX_NOTIFICATIONS_PER_HOUR=$(echo "$config_data" | grep -A1 "MaxNotificationsPerHour" | grep -o '[0-9]*' | head -1 || echo "10")
+        AUTO_POPULATE_APPROVED_ADMINS=$(echo "$config_data" | grep -A1 "AutoPopulateApprovedAdmins" | grep -o -E "(true|false)" | head -1 || echo "true")
+        
+    else
+        # Fallback to default values if no Configuration Profile found
+        log_message "INFO" "No Configuration Profile found, using default values"
+        
+        WEBHOOK_URL=""
+        EMAIL_RECIPIENT=""
+        NOTIFICATION_TEMPLATE="detailed"
+        NOTIFICATION_COOLDOWN="15"
+        MONITORING_MODE="periodic"
+        AUTO_REMEDIATION="true"
+        GRACE_PERIOD_MINUTES="5"
+        MONITOR_JAMF_CONNECT_ONLY="true"
+        REQUIRE_CONFIRMATION="false"
+        VIOLATION_REPORTING="true"
+        LOG_RETENTION_DAYS="30"
+        UPDATE_INVENTORY_ON_VIOLATION="true"
+        TRIGGER_POLICY_ON_VIOLATION=""
+        COMPANY_NAME="Your Company"
+        IT_CONTACT_EMAIL=""
+        DEBUG_LOGGING="false"
+        MONITORING_INTERVAL="300"
+        MAX_NOTIFICATIONS_PER_HOUR="10"
+        AUTO_POPULATE_APPROVED_ADMINS="true"
+    fi
     
     log_message "INFO" "Configuration loaded from managed preferences"
     if [[ "$DEBUG_LOGGING" == "true" ]]; then
@@ -104,7 +148,10 @@ initialize_admin_whitelist() {
         # Check if auto-population is enabled
         if [[ "$AUTO_POPULATE_APPROVED_ADMINS" == "true" ]]; then
             # Get excluded system accounts from configuration
-            local excluded_accounts=$(defaults read "$CONFIG_PROFILE_DOMAIN" SecuritySettings.ExcludeSystemAccounts 2>/dev/null)
+            local excluded_accounts=""
+            if defaults read "/Library/Managed Preferences/$CONFIG_PROFILE_DOMAIN" SecuritySettings.ExcludeSystemAccounts >/dev/null 2>&1; then
+                excluded_accounts=$(defaults read "/Library/Managed Preferences/$CONFIG_PROFILE_DOMAIN" SecuritySettings.ExcludeSystemAccounts 2>/dev/null)
+            fi
             
             # Get current admin users (excluding system accounts)
             local current_admins=$(dscl . -read /Groups/admin GroupMembership 2>/dev/null | \
@@ -315,7 +362,7 @@ $(tail -n 10 "$JAMF_LOG" 2>/dev/null || echo "No recent activity")
 System Information:
 macOS Version: $(sw_vers -productVersion)
 Build: $(sw_vers -buildVersion)
-Configuration Profile: $([[ -n "$(defaults read "$CONFIG_PROFILE_DOMAIN" 2>/dev/null)" ]] && echo "Active" || echo "Not deployed")
+Configuration Profile: $([[ -n "$(defaults read "/Library/Managed Preferences/$CONFIG_PROFILE_DOMAIN" 2>/dev/null || sudo defaults read "/Library/Managed Preferences/$CONFIG_PROFILE_DOMAIN" 2>/dev/null)" ]] && echo "Active" || echo "Not deployed")
 "
     
     # Log the violation
@@ -444,13 +491,13 @@ IMMEDIATE ACTIONS REQUIRED:
 4. Update approved admin list if this was legitimate
 
 SYSTEM INFORMATION:
-- Monitoring Version: v2.0.0
-- Configuration Profile: $([[ -n "$(defaults read "$CONFIG_PROFILE_DOMAIN" 2>/dev/null)" ]] && echo "Active" || echo "Not deployed")
+- Monitoring Version: v$VERSION
+- Configuration Profile: $([[ -n "$(defaults read "/Library/Managed Preferences/$CONFIG_PROFILE_DOMAIN" 2>/dev/null || sudo defaults read "/Library/Managed Preferences/$CONFIG_PROFILE_DOMAIN" 2>/dev/null)" ]] && echo "Active" || echo "Not deployed")
 - Real-time Monitoring: $([[ "$MONITORING_MODE" == "realtime" ]] && echo "Enabled" || echo "Disabled")
 
 IT Support Contact: $IT_CONTACT_EMAIL
 Report Generated: $(date)
-Monitoring System: Jamf Connect Monitor v2.0.0
+Monitoring System: Jamf Connect Monitor v$VERSION
 
 This is an automated security notification from $COMPANY_NAME's admin monitoring system.
 Do not reply to this email - contact IT support for assistance."
@@ -551,10 +598,10 @@ remove_approved_admin() {
     fi
 }
 
-# Enhanced status display with configuration information
+# Enhanced status display with working configuration information
 show_status() {
-    echo "=== Jamf Connect Elevation Monitor Status (v2.0.0) ==="
-    echo "Configuration Profile: $([[ -n "$(defaults read "$CONFIG_PROFILE_DOMAIN" 2>/dev/null)" ]] && echo "Active" || echo "Not deployed")"
+    echo "=== Jamf Connect Elevation Monitor Status (v$VERSION) ==="
+    echo "Configuration Profile: $([[ -n "$(defaults read "/Library/Managed Preferences/$CONFIG_PROFILE_DOMAIN" 2>/dev/null || sudo defaults read "/Library/Managed Preferences/$CONFIG_PROFILE_DOMAIN" 2>/dev/null)" ]] && echo "Active" || echo "Not deployed")"
     echo "Company: $COMPANY_NAME"
     echo "Monitoring Mode: $MONITORING_MODE"
     echo "Auto Remediation: $AUTO_REMEDIATION"
@@ -588,7 +635,7 @@ show_status() {
 
 # Main monitoring function with enhanced configuration
 main_monitor() {
-    log_message "INFO" "Starting Jamf Connect elevation monitoring (v2.0.0)"
+    log_message "INFO" "Starting Jamf Connect elevation monitoring (v$VERSION)"
     
     # Read configuration from managed preferences
     read_configuration
@@ -605,7 +652,7 @@ main_monitor() {
     log_message "INFO" "Monitoring cycle completed"
 }
 
-# Command line interface (enhanced)
+# Command line interface (enhanced with working Configuration Profile support)
 case "${1:-monitor}" in
     "monitor")
         check_lock
@@ -637,7 +684,7 @@ case "${1:-monitor}" in
     "test-config")
         read_configuration
         echo "=== Configuration Profile Test ==="
-        echo "Profile Status: $([[ -n "$(defaults read "$CONFIG_PROFILE_DOMAIN" 2>/dev/null)" ]] && echo "Deployed" || echo "Not deployed")"
+        echo "Profile Status: $([[ -n "$(defaults read "/Library/Managed Preferences/$CONFIG_PROFILE_DOMAIN" 2>/dev/null || sudo defaults read "/Library/Managed Preferences/$CONFIG_PROFILE_DOMAIN" 2>/dev/null)" ]] && echo "Deployed" || echo "Not deployed")"
         echo
         echo "Notification Settings:"
         echo "  Webhook: $([[ -n "$WEBHOOK_URL" ]] && echo "Configured" || echo "None")"
@@ -679,7 +726,7 @@ case "${1:-monitor}" in
         echo "  test-config    Test configuration profile settings"
         echo "  help           Show this help message"
         echo
-        echo "Version 2.0.0 Features:"
+        echo "Version $VERSION Features:"
         echo "  • Configuration Profile support for centralized management"
         echo "  • Real-time monitoring capabilities"
         echo "  • Enhanced notification templates"

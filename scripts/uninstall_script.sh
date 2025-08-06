@@ -55,7 +55,7 @@ stop_daemon() {
     
     local daemon_paths=(
         "/Library/LaunchDaemons/com.macjediwizard.jamfconnectmonitor.plist"
-        "/Library/LaunchDaemons/com.macjediwizard.jamfconnectmonitor.plist"
+        "/Library/LaunchDaemons/com.yourcompany.jamfconnectmonitor.plist"
     )
     
     for daemon_path in "${daemon_paths[@]}"; do
@@ -98,13 +98,14 @@ remove_launch_daemons() {
     
     local daemon_paths=(
         "/Library/LaunchDaemons/com.macjediwizard.jamfconnectmonitor.plist"
-        "/Library/LaunchDaemons/com.macjediwizard.jamfconnectmonitor.plist"
         "/Library/LaunchDaemons/com.yourcompany.jamfconnectmonitor.plist"
     )
     
     local removed_count=0
     for daemon_path in "${daemon_paths[@]}"; do
         if [[ -f "$daemon_path" ]]; then
+            # Clear ACLs before removal
+            xattr -c "$daemon_path" 2>/dev/null || true
             rm -f "$daemon_path"
             print_status "$GREEN" "✓ Removed: $daemon_path"
             ((removed_count++))
@@ -126,11 +127,14 @@ remove_scripts() {
         "/usr/local/bin/jamf_connect_monitor.sh"
         "/usr/local/etc/jamf_ea_admin_violations.sh"
         "/usr/local/share/jamf_connect_monitor/uninstall.sh"
+        "/usr/local/share/jamf_connect_monitor/uninstall_script.sh"
     )
     
     local removed_count=0
     for script_file in "${script_files[@]}"; do
         if [[ -f "$script_file" ]]; then
+            # Clear ACLs before removal
+            xattr -c "$script_file" 2>/dev/null || true
             rm -f "$script_file"
             print_status "$GREEN" "✓ Removed: $script_file"
             ((removed_count++))
@@ -153,6 +157,7 @@ remove_configuration() {
         "/usr/local/etc/approved_admins.txt.backup"
         "/usr/local/etc/approved_admins_template.txt"
         "/usr/local/etc/jamf_connect_monitor.conf"
+        "/etc/newsyslog.d/jamf_connect_monitor.conf"
     )
     
     local removed_count=0
@@ -161,6 +166,8 @@ remove_configuration() {
             # Create backup before removal
             local backup_file="${config_file}.uninstall_backup.$(date +%Y%m%d_%H%M%S)"
             cp "$config_file" "$backup_file" 2>/dev/null || true
+            # Clear ACLs and remove
+            xattr -c "$config_file" 2>/dev/null || true
             rm -f "$config_file"
             print_status "$GREEN" "✓ Removed: $config_file (backed up to $backup_file)"
             ((removed_count++))
@@ -246,7 +253,6 @@ remove_package_receipts() {
     
     local package_ids=(
         "com.macjediwizard.jamfconnectmonitor"
-        "com.macjediwizard.jamfconnectmonitor"
         "com.yourcompany.jamfconnectmonitor"
     )
     
@@ -296,6 +302,8 @@ clean_system_caches() {
     
     for pref_file in "${pref_files[@]}"; do
         if [[ -f "$pref_file" ]]; then
+            # Clear ACLs before removal
+            xattr -c "$pref_file" 2>/dev/null || true
             rm -f "$pref_file"
             print_status "$GREEN" "✓ Removed preference file: $pref_file"
         fi
@@ -356,13 +364,16 @@ verify_removal() {
     
     local issues=0
     
-    # Check for remaining files
+    # Check for remaining files (comprehensive list)
     local check_paths=(
         "/usr/local/bin/jamf_connect_monitor.sh"
         "/Library/LaunchDaemons/com.macjediwizard.jamfconnectmonitor.plist"
         "/usr/local/etc/approved_admins.txt"
+        "/usr/local/etc/jamf_ea_admin_violations.sh"
         "/usr/local/etc/jamf_connect_monitor.conf"
+        "/usr/local/share/jamf_connect_monitor"
         "/var/log/jamf_connect_monitor"
+        "/etc/newsyslog.d/jamf_connect_monitor.conf"
     )
     
     for check_path in "${check_paths[@]}"; do
@@ -392,7 +403,7 @@ verify_removal() {
     
     # Check package receipts
     local remaining_packages=""
-    for pkg_id in "com.macjediwizard.jamfconnectmonitor" "com.macjediwizard.jamfconnectmonitor"; do
+    for pkg_id in "com.macjediwizard.jamfconnectmonitor" "com.yourcompany.jamfconnectmonitor"; do
         if pkgutil --pkg-info "$pkg_id" &>/dev/null; then
             remaining_packages="$remaining_packages $pkg_id"
             ((issues++))
@@ -404,6 +415,20 @@ verify_removal() {
     else
         print_status "$GREEN" "✓ No package receipts found"
     fi
+    
+    # Check for temporary files
+    local temp_files=(
+        "/tmp/jamf_monitor_current_admins.txt"
+        "/tmp/jamf_monitor_config.env"
+        "/tmp/jamf_connect_monitor.lock"
+    )
+    
+    for temp_file in "${temp_files[@]}"; do
+        if [[ -f "$temp_file" ]]; then
+            rm -f "$temp_file"
+            print_status "$YELLOW" "✓ Cleaned temporary file: $temp_file"
+        fi
+    done
     
     return $issues
 }
@@ -420,6 +445,8 @@ show_removal_summary() {
     echo "  ✓ Application directories"
     echo "  ✓ Package receipts"
     echo "  ✓ System cache entries"
+    echo "  ✓ LaunchDaemon cache refresh"
+    echo "  ✓ Extended attributes/ACLs cleared"
     echo
     
     if [[ -n "$archive_dir" ]]; then
@@ -438,6 +465,7 @@ show_removal_summary() {
     echo "  • All monitoring stopped"
     echo "  • All files removed"
     echo "  • System caches cleared"
+    echo "  • Extended attributes cleared"
     echo "  • Jamf Pro inventory updated"
     echo
     
@@ -455,6 +483,7 @@ confirm_uninstall() {
         echo "  • Configuration files and approved admin lists"
         echo "  • Log files (will be archived)"
         echo "  • Package receipts"
+        echo "  • Extended attributes and ACLs"
         echo
         print_status "$BLUE" "Jamf Connect application will NOT be affected."
         echo

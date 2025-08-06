@@ -7,7 +7,6 @@ set -e  # Exit on any error
 
 # Configuration
 PACKAGE_NAME="JamfConnectMonitor"
-PACKAGE_VERSION="2.0.1"
 PACKAGE_IDENTIFIER="com.macjediwizard.jamfconnectmonitor"
 
 # Get script directory and project root
@@ -17,6 +16,24 @@ BUILD_DIR="$SCRIPT_DIR/build"
 PAYLOAD_DIR="$BUILD_DIR/payload"
 SCRIPTS_BUILD_DIR="$BUILD_DIR/scripts"
 OUTPUT_DIR="$SCRIPT_DIR/output"
+
+# Auto-extract version from main script (centralized version management)
+if [[ -f "$PROJECT_ROOT/scripts/jamf_connect_monitor.sh" ]]; then
+    PACKAGE_VERSION=$(grep "^VERSION=" "$PROJECT_ROOT/scripts/jamf_connect_monitor.sh" | cut -d'"' -f2)
+    if [[ -z "$PACKAGE_VERSION" ]]; then
+        # Fallback to header comment
+        PACKAGE_VERSION=$(head -10 "$PROJECT_ROOT/scripts/jamf_connect_monitor.sh" | grep -o '[0-9]\+\.[0-9]\+\.[0-9]\+' | head -1)
+    fi
+    if [[ -z "$PACKAGE_VERSION" ]]; then
+        echo "ERROR: Could not extract version from main script"
+        exit 1
+    fi
+else
+    echo "ERROR: Main script not found at $PROJECT_ROOT/scripts/jamf_connect_monitor.sh"
+    exit 1
+fi
+
+echo "Auto-detected package version: $PACKAGE_VERSION"
 
 # Colors for output
 RED='\033[0;31m'
@@ -135,7 +152,7 @@ EOF
 create_default_config() {
     print_status "$BLUE" "Creating default configuration..."
     
-    cat > "$PAYLOAD_DIR/usr/local/etc/jamf_connect_monitor.conf" << 'EOF'
+    cat > "$PAYLOAD_DIR/usr/local/etc/jamf_connect_monitor.conf" << EOF
 # Jamf Connect Monitor Default Configuration
 # This file will be customized during installation with Configuration Profile support
 
@@ -148,10 +165,10 @@ ViolationReporting=true
 [ConfigurationProfile]
 Domain=com.macjediwizard.jamfconnectmonitor
 Enabled=true
-JsonSchemaVersion=2.0.0
+JsonSchemaVersion=$PACKAGE_VERSION
 
 [System]
-Version=2.0.0
+Version=$PACKAGE_VERSION
 InstallDate=
 PackageIdentifier=com.macjediwizard.jamfconnectmonitor
 
@@ -210,20 +227,21 @@ create_json_schema() {
 create_documentation() {
     print_status "$BLUE" "Creating documentation..."
     
-    cat > "$PAYLOAD_DIR/usr/local/share/jamf_connect_monitor/README.txt" << 'EOF'
-Jamf Connect Monitor - Version 2.0.0
+    cat > "$PAYLOAD_DIR/usr/local/share/jamf_connect_monitor/README.txt" << EOF
+Jamf Connect Monitor - Version $PACKAGE_VERSION
 
 DESCRIPTION:
 This package installs an enterprise security monitoring system that tracks Jamf Connect 
 privilege elevation events and automatically removes unauthorized admin accounts with 
 real-time detection and Configuration Profile management.
 
-NEW IN VERSION 2.0.0:
+VERSION $PACKAGE_VERSION FEATURES:
 - Configuration Profile support for centralized webhook/email management
 - Real-time monitoring capabilities (immediate violation detection)
 - Enhanced notification templates (simple, detailed, security_report)
 - JSON Schema for easy Jamf Pro Application & Custom Settings deployment
 - Advanced security settings and compliance options
+- Auto-detection version management (future-proof for all releases)
 
 COMPONENTS:
 - Monitor Script: /usr/local/bin/jamf_connect_monitor.sh
@@ -257,7 +275,7 @@ LOGS:
 
 MONITORING MODES:
 - Periodic: Traditional 5-minute interval checking
-- Real-time: Immediate violation detection (like Jamf Protect)
+- Real-time: Immediate violation detection
 - Hybrid: Both periodic and real-time monitoring
 
 For support, contact your IT administrator or see documentation at:
@@ -272,7 +290,7 @@ Build Date: $(date)
 Identifier: $PACKAGE_IDENTIFIER
 Configuration Profile Domain: com.macjediwizard.jamfconnectmonitor
 JSON Schema: Available for Jamf Pro Application & Custom Settings
-Features: Configuration Profile Support, Real-time Monitoring, Enhanced Notifications
+Features: Configuration Profile Support, Real-time Monitoring, Enhanced Notifications, Auto-Detection
 EOF
 
     print_status "$GREEN" "Documentation created"
@@ -362,7 +380,7 @@ set_payload_permissions() {
     chmod +x "$PAYLOAD_DIR/usr/local/bin/jamf_connect_monitor.sh"
     chmod +x "$PAYLOAD_DIR/usr/local/etc/jamf_ea_admin_violations.sh"
     
-    # FIX: Make uninstall script executable
+    # Make uninstall script executable
     if [[ -f "$PAYLOAD_DIR/usr/local/share/jamf_connect_monitor/uninstall_script.sh" ]]; then
       chmod +x "$PAYLOAD_DIR/usr/local/share/jamf_connect_monitor/uninstall_script.sh"
       print_status "$GREEN" "Set execute permissions for uninstall script"
@@ -412,14 +430,15 @@ create_jamf_instructions() {
     print_status "$BLUE" "Creating Jamf Pro instructions..."
     
     cat > "$OUTPUT_DIR/Jamf_Pro_Deployment_Instructions.txt" << EOF
-JAMF PRO DEPLOYMENT INSTRUCTIONS - VERSION 2.0.0
+JAMF PRO DEPLOYMENT INSTRUCTIONS - VERSION $PACKAGE_VERSION
 Package: ${PACKAGE_NAME}-${PACKAGE_VERSION}.pkg
 
-🚀 NEW FEATURES IN 2.0.0:
+🚀 VERSION $PACKAGE_VERSION FEATURES:
 - Configuration Profile support for centralized webhook/email management
 - Real-time monitoring capabilities (immediate violation detection)
-- Enhanced notification templates
+- Enhanced notification templates with company branding
 - JSON Schema for easy Jamf Pro deployment
+- Auto-detection version management (future-proof)
 
 ====================================================================
 PHASE 1: PACKAGE DEPLOYMENT
@@ -434,7 +453,7 @@ PHASE 1: PACKAGE DEPLOYMENT
 
 2. CREATE DEPLOYMENT POLICY:
    - General:
-     * Display Name: "Deploy Jamf Connect Monitor v2.0.0"
+     * Display Name: "Deploy Jamf Connect Monitor v$PACKAGE_VERSION"
      * Category: "Security"
      * Trigger: "Enrollment Complete", "Recurring Check-in"
      * Execution Frequency: "Once per computer"
@@ -445,7 +464,7 @@ PHASE 1: PACKAGE DEPLOYMENT
    
    - Scope:
      * Target: Computers with Jamf Connect installed
-     * Exclusions: Create Smart Group "Jamf Connect Monitor - Installed v2.0"
+     * Exclusions: Create Smart Group "Jamf Connect Monitor - Installed v2.x"
 
 ====================================================================
 PHASE 2: CONFIGURATION PROFILE DEPLOYMENT
@@ -491,7 +510,7 @@ PHASE 2: CONFIGURATION PROFILE DEPLOYMENT
      └─────────────────────────────────────────────────────────┘
 
 5. SCOPE CONFIGURATION PROFILE:
-   - Target: Smart Group "Jamf Connect Monitor - Installed v2.0"
+   - Target: Smart Group "Jamf Connect Monitor - Installed v2.x"
    - This ensures only devices with monitoring get the configuration
 
 ====================================================================
@@ -501,31 +520,37 @@ PHASE 3: EXTENSION ATTRIBUTE SETUP
 6. CREATE/UPDATE EXTENSION ATTRIBUTE:
    - Navigate: Settings > Computer Management > Extension Attributes
    - Create new attribute:
-     * Display Name: "[ Jamf Connect ] - Monitor Status v2.0"
-     * Description: "Enhanced monitoring status with Configuration Profile support"
+     * Display Name: "[ Jamf Connect ] - Monitor Status v2.x"
+     * Description: "Enhanced monitoring status with auto-detection and Configuration Profile support"
      * Data Type: "String"
      * Input Type: "Script"
-     * Script: Use enhanced Extension Attribute script from package
+     * Script: Use the enhanced Extension Attribute script from package
+
+CRITICAL: The Extension Attribute now uses auto-detection and will work with
+all future versions (2.0.1, 2.0.2, 2.1.0, 3.0.0, etc.) without updates!
 
 ====================================================================
-PHASE 4: SMART GROUPS FOR MONITORING
+PHASE 4: SMART GROUPS FOR MONITORING (FLEXIBLE v2.x)
 ====================================================================
 
-7. CREATE ESSENTIAL SMART GROUPS:
+7. CREATE FLEXIBLE SMART GROUPS:
 
-   a) Jamf Connect Monitor - Installed v2.0
-      Criteria: Extension Attribute "[ Jamf Connect ] - Monitor Status v2.0" contains "Version: 2.0.0"
+   a) Jamf Connect Monitor - Installed v2.x (FLEXIBLE)
+      Criteria: Extension Attribute "[ Jamf Connect ] - Monitor Status v2.x" like "*Version: 2.*"
+      Purpose: Catches 2.0.0, 2.0.1, 2.0.2, 2.1.0, etc. automatically
    
    b) Jamf Connect Monitor - Config Profile Active
-      Criteria: Extension Attribute "[ Jamf Connect ] - Monitor Status v2.0" contains "Profile: Deployed"
+      Criteria: Extension Attribute "[ Jamf Connect ] - Monitor Status v2.x" like "*Profile: Deployed*"
+      Purpose: Verify Configuration Profile deployment success
    
    c) Jamf Connect Monitor - CRITICAL VIOLATIONS
-      Criteria: Extension Attribute "[ Jamf Connect ] - Monitor Status v2.0" contains "Unauthorized:"
-      AND does not contain "Unauthorized: 0"
+      Criteria: Extension Attribute "[ Jamf Connect ] - Monitor Status v2.x" like "*Unauthorized:*"
+      AND Extension Attribute does not contain "Unauthorized: 0"
       ** CONFIGURE ALERTS FOR THIS GROUP **
    
    d) Jamf Connect Monitor - Real-time Active
-      Criteria: Extension Attribute "[ Jamf Connect ] - Monitor Status v2.0" contains "Real-time: Active"
+      Criteria: Extension Attribute "[ Jamf Connect ] - Monitor Status v2.x" like "*Real-time: Active*"
+      Purpose: Track real-time monitoring deployment
 
 ====================================================================
 VALIDATION & TESTING
@@ -536,18 +561,33 @@ VALIDATION & TESTING
    - Verify package installation: sudo jamf_connect_monitor.sh status
    - Test configuration: sudo jamf_connect_monitor.sh test-config
    - Check Extension Attribute population in Jamf Pro
-   - Verify Smart Group membership
+   - Verify Smart Group membership with flexible criteria
 
-CONFIGURATION PROFILE BENEFITS:
-✅ Centralized webhook/email management
-✅ No hardcoded credentials in scripts
-✅ Real-time configuration updates
-✅ Department-specific settings per Smart Group
-✅ Enhanced security with encrypted preferences
+====================================================================
+VERSION MANAGEMENT BENEFITS
+====================================================================
+
+✅ CENTRALIZED VERSION CONTROL:
+- Single VERSION variable in main script controls everything
+- Package version auto-syncs from main script
+- Extension Attribute auto-detects any version
+- Future releases work without EA script updates
+
+✅ CONFIGURATION PROFILE BENEFITS:
+- Centralized webhook/email management
+- No hardcoded credentials in scripts
+- Real-time configuration updates
+- Department-specific settings per Smart Group
+- Enhanced security with encrypted preferences
+
+✅ SMART GROUP FUTURE-PROOFING:
+- Flexible criteria catch all v2.x versions automatically
+- No Smart Group updates needed for new releases
+- Automated workflows continue to work
 
 Package Information:
-- Version: ${PACKAGE_VERSION}
-- Identifier: ${PACKAGE_IDENTIFIER}
+- Version: $PACKAGE_VERSION (auto-detected from main script)
+- Identifier: $PACKAGE_IDENTIFIER
 - Configuration Domain: com.macjediwizard.jamfconnectmonitor
 - JSON Schema: Included for Jamf Pro deployment
 
@@ -569,6 +609,7 @@ create_deployment_summary() {
     echo "  Size: $package_size"
     echo "  Location: $package_path"
     echo "  Identifier: $PACKAGE_IDENTIFIER"
+    echo "  Version: $PACKAGE_VERSION (auto-detected from main script)"
     echo
     print_status "$BLUE" "Files Created:"
     echo "  📦 $package_path"
@@ -583,20 +624,28 @@ create_deployment_summary() {
     echo "  ✅ Enhanced notification templates"
     echo "  ✅ Enterprise security settings"
     echo
+    print_status "$BLUE" "Version Management (FUTURE-PROOF):"
+    echo "  ✅ Auto-synced from main script VERSION variable"
+    echo "  ✅ Single source of truth for all version references"
+    echo "  ✅ Extension Attribute auto-detects version"
+    echo "  ✅ Future versions (2.0.2, 2.1.0, 3.0.0) work automatically"
+    echo "  ✅ Smart Groups use flexible criteria for all v2.x+"
+    echo "  ✅ Zero maintenance version detection system"
+    echo
     print_status "$BLUE" "Next Steps:"
     echo "  1. Upload package to Jamf Pro"
     echo "  2. Create Configuration Profile using JSON Schema"
     echo "  3. Configure webhook/email settings via Jamf Pro interface"
-    echo "  4. Update Extension Attribute with v2.0.0 script"
-    echo "  5. Create Smart Groups for automated monitoring"
+    echo "  4. Update Extension Attribute with auto-detection script"
+    echo "  5. Create flexible Smart Groups for automated monitoring"
     echo "  6. Test on pilot machines before fleet deployment"
     echo
-    print_status "$GREEN" "Ready for enterprise deployment with Configuration Profile management!"
+    print_status "$GREEN" "Ready for enterprise deployment with future-proof centralized version management!"
 }
 
 # Main execution
 main() {
-    print_status "$GREEN" "Starting Jamf Connect Monitor v2.0.0 package creation"
+    print_status "$GREEN" "Starting Jamf Connect Monitor v$PACKAGE_VERSION package creation"
     
     check_prerequisites
     setup_build_environment
@@ -636,11 +685,12 @@ case "${1:-build}" in
         echo "  clean   Remove build directories"
         echo "  help    Show this help"
         echo
-        echo "v2.0.0 Features:"
-        echo "  • Configuration Profile support"
-        echo "  • JSON Schema for Jamf Pro deployment"
-        echo "  • Real-time monitoring capabilities"
-        echo "  • Enhanced notification templates"
+        echo "Centralized Version Management:"
+        echo "  • Version auto-extracted from main script VERSION variable"
+        echo "  • Single VERSION variable controls all references"
+        echo "  • Extension Attribute auto-detects any version"
+        echo "  • Future-proof for all v2.x and v3.x releases"
+        echo "  • Package version always matches script version"
         ;;
     *)
         echo "Unknown command: $1"

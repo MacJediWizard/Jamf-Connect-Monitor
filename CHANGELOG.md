@@ -15,38 +15,175 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [2.0.1] - 2025-08-05
 
-### 🔧 **Bug Fixes: Configuration Profile Parsing**
+### 🔧 **Production-Ready Release: All Critical Fixes Verified**
+
+This release addresses critical production issues identified during enterprise deployment, with all fixes verified working in the Success Academies environment.
 
 ### Fixed
-- **Extension Attribute Configuration Profile Parsing**
-  - Enhanced monitoring mode extraction from Configuration Profile data
-  - Fixed empty "Mode:" field display issue in Jamf Pro computer records
-  - Improved parsing to handle all plist formats (quoted, unquoted, with/without semicolons)
-  - Added multiple fallback strategies for robust Configuration Profile reading
 
-- **Smart Group Compatibility**
-  - Fixed Extension Attribute data format for consistent Smart Group population
-  - Enhanced monitoring mode detection ensures Smart Groups populate correctly
-  - Improved criteria matching for automated workflows
+#### **Critical Issue 1: ACL Clearing for Script Execution**
+- **Problem:** Extension Attribute script had `@` symbols in permissions causing execution failures in enterprise environments
+- **Root Cause:** macOS Extended Attributes (ACLs) preventing script execution after package installation
+- **Solution:** Added comprehensive `xattr -c` clearing in postinstall script for all installed components
+- **Verification:** File permissions now show clean `-rwxr-xr-x` without `@` symbols
+- **Impact:** Eliminates "Permission denied" errors during Extension Attribute execution
+
+#### **Critical Issue 2: Configuration Profile Reading Methods**
+- **Problem:** Main monitoring script used failing Configuration Profile reading method while Extension Attribute used working methods
+- **Root Cause:** Inconsistent Configuration Profile access methods between script components
+- **Solution:** Standardized all scripts to use verified working methods (Methods 2 & 4)
+  - Method 2: `defaults read "/Library/Managed Preferences/com.macjediwizard.jamfconnectmonitor"`
+  - Method 4: `sudo defaults read "/Library/Managed Preferences/com.macjediwizard.jamfconnectmonitor"`
+- **Verification:** Company name now correctly displays "Success Academies" instead of "Your Company"
+- **Impact:** Configuration Profile integration now works consistently across all components
+
+#### **Critical Issue 3: Extension Attribute Auto-Version Detection**
+- **Problem:** Version detection was hardcoded and monitoring mode displayed as empty
+- **Root Cause:** Extension Attribute script lacked dynamic version detection from main script
+- **Solution:** Implemented auto-detection system that reads VERSION variable from main script
+- **Enhanced Monitoring Mode Detection:** Robust Configuration Profile parsing with multiple fallback strategies
+- **Verification:** Extension Attribute now shows `Version: 2.0.1, Mode: periodic, Company: Success Academies`
+- **Impact:** Future-proof version management - works automatically with v2.0.2, v2.1.0, v3.0.0+
+
+### Added
+
+#### **New Production Tools**
+- **tools/verify_monitoring.sh** - Comprehensive verification script for production deployments
+  - Tests all critical components (main script, Extension Attribute, permissions, Configuration Profile)
+  - Validates ACL clearing and script execution capabilities
+  - Provides detailed diagnostic output for troubleshooting
+  - Verifies version detection and Configuration Profile integration
+  - Usage: `sudo ./tools/verify_monitoring.sh`
+
+#### **Enhanced Uninstall Script (`scripts/uninstall_script.sh`)**
+- **Complete System Removal** - Removes all components including new v2.0.1 enhancements
+- **Configuration Backup** - Preserves approved admin lists and settings with `.uninstall_backup` suffix
+- **Log Archiving** - Archives all logs to timestamped directory before removal
+- **Verification Mode** - `sudo ./uninstall_script.sh verify` to check removal completeness
+- **Silent Operation** - `sudo ./uninstall_script.sh --force` for automated mass uninstallation
+- **Package Receipt Cleanup** - Removes all package identifiers from system database
+- **ACL and Extended Attribute Cleanup** - Comprehensive system state restoration
+- **Multiple Package ID Support** - Handles legacy and current package identifiers
+- **Jamf Pro Integration** - Triggers inventory update after removal
+
+#### **Future-Proof Version Management Architecture**
+- **Centralized Version Reference** - All components read from single VERSION variable in main script
+- **Auto-Detection System** - Extension Attribute automatically detects version without hardcoding
+- **Package Creation Sync** - Package version auto-extracts from main script
+- **Smart Group Compatibility** - Flexible criteria work with all future v2.x+ versions
+- **Zero Maintenance** - No version updates needed in Extension Attribute for future releases
 
 ### Enhanced
-- **Extension Attribute (`jamf/extension-attribute.sh`)**
-  - Robust Configuration Profile parsing with multiple extraction methods
-  - Better handling of different plist output formats from `defaults read`
-  - Enhanced fallback logic for monitoring mode detection
-  - Improved version detection for both 2.0.0 and 2.0.1 installations
+
+#### **Extension Attribute (`jamf/extension-attribute.sh`)**
+- **Robust Configuration Profile Parsing** - Multiple extraction methods with comprehensive fallback logic
+- **Auto-Version Detection** - Dynamically reads version from main script installation
+- **Enhanced Monitoring Mode Detection** - Pattern matching for "periodic", "realtime", or "hybrid" keywords
+- **Better Error Handling** - Graceful degradation when Configuration Profile unavailable
+- **Production-Tested Output Format** - Verified working with Success Academies Jamf Pro environment
+
+#### **Main Monitor Script (`scripts/jamf_connect_monitor.sh`)**
+- **Standardized Configuration Profile Access** - Uses same proven methods as Extension Attribute
+- **Enhanced Error Logging** - Better diagnostic information for troubleshooting
+- **Improved Company Name Display** - Correctly reads and displays from Configuration Profile
+- **Consistent Method Implementation** - Unified approach across all script components
+
+#### **Package Creation (`scripts/package_creation_script.sh`)**
+- **ACL Prevention** - Ensures clean file permissions during package creation
+- **Enhanced Verification** - Comprehensive component validation before package build
+- **Production Documentation** - Detailed deployment instructions for enterprise environments
+- **Checksum Generation** - Automatic SHA256 verification for package integrity
+
+#### **Postinstall Script (`scripts/postinstall_script.sh`)**
+- **Comprehensive ACL Clearing** - `xattr -c` for all installed scripts and configuration files
+- **Enhanced Permission Setting** - Ensures proper execution permissions for all components
+- **Configuration Validation** - Verifies Configuration Profile accessibility after installation
+- **Production Logging** - Detailed installation logs for enterprise troubleshooting
 
 ### Technical Details
-- **Configuration Profile Parsing Improvement:**
-  - Before: `Mode: ` (empty field)
-  - After: `Mode: periodic` (or realtime/hybrid)
-- **Parsing Strategy:** Uses pattern matching for "periodic", "realtime", or "hybrid" keywords in Configuration Profile data
-- **Fallback Logic:** Multiple parsing attempts ensure reliable data extraction across different macOS versions and plist formats
+
+#### **Configuration Profile Integration Fixes**
+```bash
+# BEFORE (v2.0.0 - FAILING):
+Company Name: "Your Company" (fallback value)
+Configuration: Profile: Not Deployed (false negative)
+
+# AFTER (v2.0.1 - WORKING):
+Company Name: "Success Academies" (actual Configuration Profile value)
+Configuration: Profile: Deployed, Mode: periodic, Company: Success Academies
+```
+
+#### **ACL Clearing Implementation**
+```bash
+# Postinstall script now includes:
+xattr -c /usr/local/bin/jamf_connect_monitor.sh
+xattr -c /usr/local/etc/jamf_ea_admin_violations.sh
+xattr -c /usr/local/etc/approved_admins.txt
+xattr -c /usr/local/share/jamf_connect_monitor/uninstall_script.sh
+
+# Result: Clean permissions without @ symbols
+-rwxr-xr-x  root  wheel  jamf_ea_admin_violations.sh  (no @ symbol)
+```
+
+#### **Future-Proof Version Architecture**
+```bash
+# Main Script: VERSION="2.0.1"
+#      ↓
+# Extension Attribute: get_version_from_main_script() auto-detects
+#      ↓  
+# Package Creation: Auto-extracts from main script
+#      ↓
+# All Components: Use centralized version reference
+```
 
 ### Compatibility
-- **Seamless Upgrade:** v2.0.1 automatically upgrades v2.0.0 installations
-- **Configuration Preservation:** All existing Configuration Profiles and settings maintained
-- **Smart Group Migration:** Existing Smart Groups work immediately after Extension Attribute update
+
+#### **Seamless Upgrade Path**
+- **v2.0.0 → v2.0.1** - Automatic upgrade preserving all existing configurations
+- **Configuration Profile Preservation** - All existing webhook/email settings maintained
+- **Smart Group Migration** - Existing Smart Groups work immediately with enhanced data
+- **Zero Downtime** - Monitoring continues during upgrade process
+
+#### **Enterprise Environment Verification**
+- **Success Academies Environment** - All fixes verified working in production Jamf Pro setup
+- **Configuration Profile Active** - Confirmed working with enterprise managed preferences
+- **Extension Attribute Population** - Verified correct data display in Jamf Pro computer records
+- **Smart Group Automation** - Confirmed proper population with flexible v2.x criteria
+
+### Security
+
+#### **Enhanced System Integrity**
+- **ACL Management** - Prevents macOS Extended Attribute interference with script execution
+- **Configuration Profile Security** - Robust reading methods prevent credential exposure
+- **Permission Validation** - Comprehensive verification of all component permissions
+- **Clean Uninstallation** - Complete system state restoration with security preservation
+
+### Documentation
+
+#### **New Documentation Added**
+- **tools/verify_monitoring.sh** - Production verification script with comprehensive testing
+- **Enhanced Uninstall Guide** - Complete removal procedures with verification steps
+- **Production Deployment Guide** - Enterprise-specific deployment procedures
+- **Troubleshooting Enhancements** - ACL clearing and Configuration Profile debugging
+
+#### **Updated Documentation**
+- **Installation Guide** - Enhanced with ACL clearing procedures and verification steps
+- **Jamf Pro Deployment Guide** - Updated with v2.0.1 production fixes and verification procedures
+- **Smart Groups Guide** - Enhanced with future-proof criteria design
+- **CLI Reference** - Updated with new verification and uninstall options
+
+### Migration
+
+#### **Automatic Migration Features**
+- **Configuration Preservation** - All v2.0.0 settings automatically preserved
+- **Enhanced Functionality** - New capabilities enabled without configuration changes
+- **Smart Group Compatibility** - Existing Smart Groups work better with enhanced data format
+- **Production Continuity** - Zero interruption to monitoring during upgrade
+
+#### **Verification and Validation**
+- **Built-in Testing** - New verification script validates all components after upgrade
+- **Comprehensive Diagnostics** - Tools to verify ACL clearing and Configuration Profile integration
+- **Enterprise Validation** - Production-tested in Success Academies environment
 
 ## [2.0.0] - 2025-07-14
 
@@ -263,7 +400,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Version History Summary
 
-- **2.0.1**: Configuration Profile parsing fixes, Smart Group compatibility improvements
+- **2.0.1**: **PRODUCTION READY** - ACL clearing, Configuration Profile fixes, auto-version detection, verification tools
 - **2.0.0**: Configuration Profile management, real-time monitoring, enterprise features
 - **1.0.2**: Documentation improvements and package creation fixes
 - **1.0.1**: Enhanced documentation and professional branding
@@ -272,17 +409,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Upgrade Path
 
-### From v2.0.0 to v2.0.1
-1. **Upload v2.0.1 package** - Seamless upgrade of existing v2.0.0 installations
-2. **Update Extension Attribute** - Apply enhanced Configuration Profile parsing in Jamf Pro
-3. **Verify Smart Groups** - Confirm proper population with fixed monitoring mode display
-4. **No Configuration Profile changes needed** - All existing settings preserved
+### From v2.0.0 to v2.0.1 (CRITICAL PRODUCTION FIXES)
+1. **Upload v2.0.1 package** - Seamless upgrade with ACL clearing and Configuration Profile fixes
+2. **Update Extension Attribute script** - MOST IMPORTANT: Enables proper version display and Configuration Profile integration
+3. **Deploy verification script** - Use `tools/verify_monitoring.sh` to validate all components
+4. **Verify Smart Groups** - Confirm proper population with enhanced monitoring mode display
+5. **Configuration Profile validation** - Verify company name displays correctly (not "Your Company")
 
-### From v1.x to v2.0.0+
-1. **Deploy v2.0.1 package** - Automatic migration of existing installations
+### From v1.x to v2.0.1 (RECOMMENDED UPGRADE PATH)
+1. **Deploy v2.0.1 package** - Automatic migration with all production fixes included
 2. **Deploy Configuration Profile** - Enable centralized management features
-3. **Update Extension Attribute** - Enhanced Smart Group compatibility
+3. **Update Extension Attribute** - Enhanced Smart Group compatibility with auto-version detection
 4. **Configure real-time monitoring** - Optional immediate detection capabilities
+5. **Use verification tools** - Validate complete deployment with included diagnostic script
 
 ### Configuration Profile Migration
 v2.0.0+ introduces Configuration Profile management for:
@@ -296,6 +435,8 @@ v2.0.0+ introduces Configuration Profile management for:
 
 ### v2.0.1
 - **No Breaking Changes:** Seamless upgrade from v2.0.0 with all configuration preservation
+- **Enhanced Functionality:** All fixes improve existing features without removing capabilities
+- **Future-Proof Design:** Auto-version detection works with all future v2.x+ releases
 
 ### v2.0.0
 - **Configuration Profile Domain:** New domain `com.macjediwizard.jamfconnectmonitor`
@@ -305,13 +446,99 @@ v2.0.0+ introduces Configuration Profile management for:
 
 **Migration Impact:** Automatic - existing installations upgrade seamlessly with configuration preservation.
 
+## Uninstall Script Features (New in v2.0.1)
+
+### Complete System Removal
+The enhanced uninstall script provides enterprise-grade removal capabilities:
+
+#### **Comprehensive Component Removal**
+```bash
+# Components Removed:
+- /usr/local/bin/jamf_connect_monitor.sh (main monitoring script)
+- /Library/LaunchDaemons/com.macjediwizard.jamfconnectmonitor.plist (daemon)
+- /usr/local/etc/approved_admins.txt (configuration files)
+- /usr/local/share/jamf_connect_monitor/ (application directory)
+- /var/log/jamf_connect_monitor/ (archived before removal)
+- Package receipts and system cache entries
+```
+
+#### **Data Preservation Features**
+```bash
+# What's Preserved:
+- Log Archives: /var/log/jamf_connect_monitor_archive_[timestamp]/
+- Configuration Backups: *.uninstall_backup.[timestamp] files
+- Approved admin lists backed up before removal
+```
+
+#### **Usage Options**
+```bash
+# Interactive uninstall with confirmation prompts
+sudo ./uninstall_script.sh
+
+# Silent uninstall for mass deployment  
+sudo ./uninstall_script.sh --force
+
+# Verify complete removal
+sudo ./uninstall_script.sh verify
+```
+
+#### **Enterprise Integration**
+- **Jamf Pro Inventory Updates** - Triggers inventory collection after removal
+- **Notification Support** - Sends uninstall confirmation via configured webhooks
+- **Multiple Package ID Support** - Handles all legacy and current package identifiers
+- **Process Cleanup** - Ensures all monitoring processes are stopped before removal
+
+## Production Verification Tools (New in v2.0.1)
+
+### Comprehensive Monitoring Verification
+The new verification script provides enterprise-grade testing capabilities:
+
+#### **tools/verify_monitoring.sh Features**
+```bash
+# Usage:
+sudo ./tools/verify_monitoring.sh
+
+# Tests Include:
+✅ Main script installation and version detection
+✅ Extension Attribute script installation and execution
+✅ File permissions and ACL clearing verification  
+✅ Configuration Profile integration testing
+✅ Version auto-detection validation
+✅ Company name display verification
+✅ Monitoring mode detection testing
+```
+
+#### **Production Validation Results**
+```bash
+# Example Output:
+🔍 JAMF CONNECT MONITOR VERIFICATION v2.0.1
+✅ Main script installed: Version 2.0.1
+✅ Permissions correct: -rwxr-xr-x (no @ symbols)
+✅ Extension Attribute script installed: Version 2.0.1  
+✅ EA permissions correct: -rwxr-xr-x (no @ symbols)
+✅ Extension Attribute runs successfully
+✅ Version detected: Version: 2.0.1, Periodic: Running
+✅ Monitoring mode detected: Mode: periodic
+✅ Company name: Success Academies (from Configuration Profile)
+🎉 MONITORING APPEARS TO BE WORKING CORRECTLY
+```
+
+#### **Enterprise Deployment Integration**
+- **Post-Installation Validation** - Run after package deployment to verify success
+- **Troubleshooting Support** - Identifies specific issues with detailed diagnostics
+- **Jamf Pro Integration** - Can be deployed as script for automated validation
+- **Production Testing** - Verified working in Success Academies enterprise environment
+
 ## Support
 
 For issues, feature requests, or support:
 - **GitHub Issues**: [Report bugs or request features](https://github.com/MacJediWizard/jamf-connect-monitor/issues)
 - **Documentation**: [Complete guides in docs/](https://github.com/MacJediWizard/jamf-connect-monitor/tree/main/docs)
 - **Discussions**: [Community discussions](https://github.com/MacJediWizard/jamf-connect-monitor/discussions)
+- **Production Issues**: Use included verification script for immediate diagnostics
 
 ---
 
 **Note**: This changelog follows the [Keep a Changelog](https://keepachangelog.com/) format. Each version includes Added, Changed, Deprecated, Removed, Fixed, and Security sections as applicable.
+
+**v2.0.1 Status**: ✅ **PRODUCTION READY** - All critical fixes verified working in enterprise environment
