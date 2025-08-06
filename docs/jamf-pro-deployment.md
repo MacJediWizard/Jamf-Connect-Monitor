@@ -1,165 +1,486 @@
-# Troubleshooting Guide v2.0.1
+# Jamf Pro Deployment Guide v2.0.1
 
-## v2.0.1 Critical Issue Resolution
+## Overview
+This guide provides detailed instructions for deploying Jamf Connect Monitor v2.0.1 through Jamf Pro with complete Configuration Profile automation, real-time monitoring capabilities, and **critical v2.0.1 production fixes**.
 
-### **Issue 1: Extension Attribute Execution Failures (FIXED in v2.0.1)**
+## 🚨 **CRITICAL v2.0.1 UPDATE REQUIREMENT**
 
-#### **Root Cause**
-macOS Extended Attributes (ACLs) prevent script execution after package installation.
+### **⚠️ MOST IMPORTANT STEP: Extension Attribute Update**
 
-#### **Solution (Automatic in v2.0.1)**
-The v2.0.1 postinstall script automatically clears ACLs:
+**If upgrading from v2.0.0 or deploying v2.0.1, YOU MUST update the Extension Attribute script in Jamf Pro:**
+
+1. **Navigate:** Settings → Computer Management → Extension Attributes
+2. **Find:** "[ Jamf Connect ] - Monitor Status v2.x" (or similar)
+3. **Edit Script Content** → Replace with v2.0.1 Enhanced Extension Attribute Script
+4. **Save Changes**
+
+**Without this update:**
+- ❌ Extension Attribute shows empty version data
+- ❌ Smart Groups won't populate correctly
+- ❌ Configuration Profile integration appears broken
+- ❌ Company name shows "Your Company" instead of actual name
+
+**With this update:**
+- ✅ Extension Attribute shows "Version: 2.0.1" automatically
+- ✅ Smart Groups populate correctly with flexible criteria
+- ✅ Configuration Profile shows actual company names
+- ✅ All v2.0.1 production fixes enabled
+
+## Prerequisites
+
+### Jamf Pro Requirements
+- **Jamf Pro Version**: 10.19 or later (for JSON Schema support)
+- **Admin Privileges**: Full administrator access to Jamf Pro
+- **Target Environment**: macOS 10.14+ with Jamf Connect installed
+
+### v2.0.1 Production Features
+- **✅ ACL Clearing** - Eliminates script execution permission issues
+- **✅ Configuration Profile Integration** - Standardized reading methods for enterprise environments
+- **✅ Auto-Version Detection** - Future-proof version management for all v2.x+ releases
+- **✅ Enhanced Uninstall** - Complete system removal with configuration backup
+- **✅ Production Verification** - Comprehensive diagnostic tools for enterprise deployment
+
+## Step-by-Step Deployment
+
+### Phase 1: Package Management
+
+#### 1.1 Upload Installation Package
+1. **Download Package:**
+   - Go to [GitHub Releases](https://github.com/MacJediWizard/jamf-connect-monitor/releases/latest)
+   - Download `JamfConnectMonitor-2.0.1.pkg` (or latest 2.x version)
+   - Download `jamf_connect_monitor_schema.json`
+
+2. **Upload to Jamf Pro:**
+   - Navigate: **Settings → Computer Management → Packages**
+   - Click **"New"**
+   - **Configuration:**
+     ```
+     Display Name: Jamf Connect Monitor v2.0.1
+     Category: Security
+     Priority: 10
+     Description: Enterprise security monitoring with v2.0.1 production fixes
+     ```
+
+#### 1.2 Package Verification
 ```bash
-# Automatically applied during v2.0.1 installation:
-xattr -c /usr/local/bin/jamf_connect_monitor.sh
-xattr -c /usr/local/etc/jamf_ea_admin_violations.sh
+# Verify package integrity
+pkgutil --check-signature JamfConnectMonitor-2.0.1.pkg
+
+# Check package contents for v2.0.1 features
+pkgutil --payload-files JamfConnectMonitor-2.0.1.pkg | grep -E "(verify_monitoring|uninstall_script)"
+# Should show: tools/verify_monitoring.sh and enhanced uninstall script
 ```
 
-#### **Manual Fix (if needed)**
-```bash
-# Clear ACLs manually if issues persist:
-sudo xattr -c /usr/local/bin/jamf_connect_monitor.sh
-sudo xattr -c /usr/local/etc/jamf_ea_admin_violations.sh
+### Phase 2: Configuration Profile Deployment
 
-# Verify no ACLs remain:
-ls -la@ /usr/local/bin/jamf_connect_monitor.sh
-# Should show: -rwxr-xr-x (no @ symbol)
+#### 2.1 Create Configuration Profile
+1. **Navigate:** Computer Management → Configuration Profiles → New
+2. **General Settings:**
+   ```
+   Display Name: Jamf Connect Monitor Configuration v2.0.1
+   Description: Security monitoring with v2.0.1 production fixes and centralized management
+   Category: Security
+   Level: Computer Level
+   Distribution Method: Install Automatically
+   ```
+
+3. **Add Application & Custom Settings Payload:**
+   - Click **"Add"** → **"Application & Custom Settings"**
+   - **Source:** Custom Schema
+   - **Preference Domain:** `com.macjediwizard.jamfconnectmonitor`
+   - **Upload Schema:** Select `jamf_connect_monitor_schema.json`
+
+#### 2.2 Configure Settings via Jamf Pro Interface
+
+**Notification Settings:**
+```
+Webhook URL: https://hooks.slack.com/services/YOUR/SLACK/WEBHOOK
+Email Recipient: security@yourcompany.com
+Notification Template: security_report
+Notification Cooldown: 15 minutes
 ```
 
-### **Issue 2: Configuration Profile Integration (ENHANCED in v2.0.1)**
-
-#### **Symptom**
-Extension Attribute shows "Company: Your Company" instead of actual configured company name.
-
-#### **Root Cause**
-v2.0.0 had fallback issues when Configuration Profile wasn't fully processed.
-
-#### **Solution (Automatic in v2.0.1)**
-Enhanced parsing logic automatically detects and displays actual company names:
-```bash
-# Test Configuration Profile integration:
-sudo jamf_connect_monitor.sh test-config
-
-# Expected output shows actual configured values:
-# Company Name: [Your Actual Company Name]
-# Webhook: Configured
-# Email: configured@yourcompany.com
+**Monitoring Behavior:**
+```
+Monitoring Mode: realtime
+Auto Remediation: true
+Grace Period: 5 minutes
+Monitor Jamf Connect Only: true
 ```
 
-### **Issue 3: Extension Attribute Version Detection (FIXED in v2.0.1)**
+**Jamf Pro Integration:**
+```
+Company Name: Your Company Name (CRITICAL - this now displays correctly in v2.0.1)
+IT Contact Email: ithelp@yourcompany.com
+Update Inventory on Violation: true
+```
 
-#### **Symptom**
-Extension Attribute shows "Version: Unknown" or empty version field.
+#### 2.3 Scope Configuration Profile
+```
+Target: "Jamf Connect Monitor - Installed v2.x" Smart Group
+Exclusions: None (unless testing specific groups)
+```
 
-#### **Solution (Automatic in v2.0.1)**
-Auto-detection now works reliably:
+### Phase 3: Extension Attribute Creation/Update
+
+#### 3.1 🚨 CRITICAL: Update Extension Attribute for v2.0.1
+
+**For Existing v2.0.0 Installations:**
+1. **Navigate:** Settings → Computer Management → Extension Attributes
+2. **Find Existing:** "[ Jamf Connect ] - Monitor Status v2.x"
+3. **Edit:** Click on existing Extension Attribute
+4. **Replace Script Content:** Paste v2.0.1 Enhanced Extension Attribute Script
+5. **Save Changes**
+
+**For New Installations:**
+1. **Navigate:** Settings → Computer Management → Extension Attributes → New
+2. **Configuration:**
+   ```
+   Display Name: [ Jamf Connect ] - Monitor Status v2.0.1
+   Description: Enhanced monitoring with v2.0.1 production fixes
+   Data Type: String
+   Input Type: Script
+   ```
+3. **Script:** Use the v2.0.1 Enhanced Extension Attribute script
+
+#### 3.2 v2.0.1 Extension Attribute Features
+- **✅ Auto-Version Detection** - Shows "Version: 2.0.1" automatically
+- **✅ Configuration Profile Status** - Reports actual company names
+- **✅ ACL Compatibility** - Works reliably with v2.0.1 ACL clearing
+- **✅ Future-Proof Design** - Auto-detects v2.0.2, v2.1.0, v3.0.0+ automatically
+- **✅ Enhanced Monitoring Mode** - Shows "Mode: periodic/realtime/hybrid" correctly
+- **✅ Smart Group Compatibility** - Enhanced data format for automation
+
+### Phase 4: Smart Group Configuration (Future-Proof v2.x)
+
+#### 4.1 Essential Smart Groups
+
+**Jamf Connect Monitor - Installed v2.x (Future-Proof)**
+```
+Name: Jamf Connect Monitor - Installed v2.x
+Criteria: Extension Attribute "[ Jamf Connect ] - Monitor Status v2.0.1" like "*Version: 2.*"
+Purpose: Track ALL v2.x installations (2.0.1, 2.0.2, 2.1.0, etc.)
+```
+
+**Jamf Connect Monitor - Config Profile Active**
+```
+Name: Jamf Connect Monitor - Config Profile Active
+Criteria: Extension Attribute "[ Jamf Connect ] - Monitor Status v2.0.1" like "*Profile: Deployed*"
+Purpose: Verify Configuration Profile deployment success
+```
+
+**Jamf Connect Monitor - CRITICAL VIOLATIONS**
+```
+Name: Jamf Connect Monitor - CRITICAL VIOLATIONS
+Criteria: Extension Attribute "[ Jamf Connect ] - Monitor Status v2.0.1" like "*Unauthorized:*"
+AND Extension Attribute "[ Jamf Connect ] - Monitor Status v2.0.1" not like "*Unauthorized: 0*"
+Purpose: Immediate security incident response
+⚠️ CONFIGURE WEBHOOK ALERTS FOR THIS GROUP
+```
+
+**Jamf Connect Monitor - v2.0.1 Production Ready**
+```
+Name: Jamf Connect Monitor - v2.0.1 Production Ready
+Criteria: Extension Attribute "[ Jamf Connect ] - Monitor Status v2.0.1" like "*Version: 2.0.1*"
+AND Extension Attribute "[ Jamf Connect ] - Monitor Status v2.0.1" like "*Profile: Deployed*"
+AND Extension Attribute "[ Jamf Connect ] - Monitor Status v2.0.1" like "*Daemon: Healthy*"
+Purpose: Track systems with all v2.0.1 fixes and full functionality
+```
+
+#### 4.2 Advanced Smart Groups
+
+**Jamf Connect Monitor - Real-time Active**
+```
+Name: Jamf Connect Monitor - Real-time Active
+Criteria: Extension Attribute "[ Jamf Connect ] - Monitor Status v2.0.1" like "*Mode: realtime*"
+Purpose: Track real-time monitoring deployment and performance impact
+```
+
+**Jamf Connect Monitor - Needs Attention**
+```
+Name: Jamf Connect Monitor - Needs Attention
+Criteria: Extension Attribute "[ Jamf Connect ] - Monitor Status v2.0.1" like "*Daemon: Not Running*"
+OR Extension Attribute "[ Jamf Connect ] - Monitor Status v2.0.1" like "*Profile: Not Deployed*"
+OR Extension Attribute "[ Jamf Connect ] - Monitor Status v2.0.1" like "*Config Test: Failed*"
+Purpose: Proactive maintenance and troubleshooting (enhanced in v2.0.1)
+```
+
+### Phase 5: Policy Configuration
+
+#### 5.1 Main Deployment Policy
+1. **General Settings:**
+   ```
+   Display Name: Deploy Jamf Connect Monitor v2.0.1
+   Category: Security
+   Trigger: Enrollment Complete, Recurring Check-in
+   Execution Frequency: Once per computer
+   ```
+
+2. **Packages:**
+   ```
+   Package: Jamf Connect Monitor v2.0.1
+   Action: Install
+   ```
+
+3. **Scope:**
+   ```
+   Target: "Jamf Connect Devices" smart group
+   Exclusions: "Jamf Connect Monitor - Installed v2.x"
+   ```
+
+4. **Maintenance:**
+   ```
+   Update Inventory: Enabled
+   ```
+
+#### 5.2 v2.0.1 Upgrade Policy (For Existing v2.0.0 Systems)
+1. **General Settings:**
+   ```
+   Display Name: Upgrade to Jamf Connect Monitor v2.0.1
+   Category: Security
+   Trigger: Custom Event "upgrade_jamf_monitor_v201"
+   Execution Frequency: Once per computer
+   ```
+
+2. **Packages:**
+   ```
+   Package: Jamf Connect Monitor v2.0.1 (upgrades seamlessly)
+   Action: Install
+   ```
+
+3. **Scope:**
+   ```
+   Target: Smart Group with Extension Attribute like "*Version: 2.0.0*"
+   ```
+
+4. **Files and Processes:**
+   ```
+   Execute Command: /usr/local/bin/jamf_connect_monitor.sh status
+   (Validates upgrade success)
+   ```
+
+### Phase 6: Testing and Validation
+
+#### 6.1 Pilot Testing
+1. **Create Test Policy** scoped to 5-10 test machines
+2. **Test Scenarios:**
+   ```bash
+   # Test 1: Package installation
+   sudo installer -pkg JamfConnectMonitor-2.0.1.pkg -target /
+   
+   # Test 2: Production verification (NEW in v2.0.1)
+   sudo ./tools/verify_monitoring.sh
+   
+   # Test 3: Configuration Profile reading
+   sudo jamf_connect_monitor.sh test-config
+   
+   # Test 4: Extension Attribute execution (CRITICAL)
+   sudo /usr/local/etc/jamf_ea_admin_violations.sh
+   
+   # Test 5: Smart Group population
+   # Check Jamf Pro computer record for Extension Attribute data
+   
+   # Test 6: ACL clearing verification (v2.0.1 fix)
+   ls -la /usr/local/etc/jamf_ea_admin_violations.sh
+   # Expected: -rwxr-xr-x (no @ symbol)
+   ```
+
+3. **v2.0.1 Validation Checklist:**
+   - [ ] Package installs successfully with v2.0.1 components
+   - [ ] **CRITICAL:** Extension Attribute shows "Version: 2.0.1"
+   - [ ] Configuration Profile shows actual company name (not "Your Company")
+   - [ ] File permissions show no @ symbols (ACL clearing worked)
+   - [ ] Smart Groups populate with pilot systems
+   - [ ] Webhook/email notifications deliver successfully
+   - [ ] Production verification script passes all tests
+
+#### 6.2 Configuration Profile Testing
 ```bash
+# Verify Configuration Profile deployment
+sudo profiles list | grep jamfconnectmonitor
+
+# Test configuration reading (v2.0.1 improvements)
+sudo defaults read com.macjediwizard.jamfconnectmonitor
+
+# Expected output should show configured webhook, email, company name
+# Company name should show YOUR actual company name, not "Your Company"
+```
+
+#### 6.3 v2.0.1 Production Rollout Strategy
+1. **Phase 1: IT Department** (10-20 devices) - Test all v2.0.1 fixes
+2. **Phase 2: Administrative Users** (50-100 devices) - Validate production stability
+3. **Phase 3: General Fleet** (remaining devices) - Full deployment
+
+### Phase 7: Advanced Configuration
+
+#### 7.1 Department-Specific Configuration Profiles
+Create multiple Configuration Profiles for different departments:
+
+**IT Department Configuration (Enhanced Security):**
+```json
+{
+  "NotificationSettings": {
+    "WebhookURL": "https://hooks.slack.com/services/IT-TEAM/WEBHOOK",
+    "NotificationTemplate": "security_report",
+    "NotificationCooldownMinutes": 5
+  },
+  "MonitoringBehavior": {
+    "MonitoringMode": "realtime",
+    "GracePeriodMinutes": 2
+  },
+  "JamfProIntegration": {
+    "CompanyName": "IT Department - Your Company"
+  }
+}
+```
+
+**General Staff Configuration (Balanced):**
+```json
+{
+  "NotificationSettings": {
+    "WebhookURL": "https://hooks.slack.com/services/SECURITY-TEAM/WEBHOOK",
+    "NotificationTemplate": "detailed",
+    "NotificationCooldownMinutes": 15
+  },
+  "MonitoringBehavior": {
+    "MonitoringMode": "periodic",
+    "GracePeriodMinutes": 10
+  },
+  "JamfProIntegration": {
+    "CompanyName": "General Staff - Your Company"
+  }
+}
+```
+
+#### 7.2 Real-time Monitoring Deployment
+For organizations wanting immediate violation detection:
+
+1. **Configure Real-time Mode** in Configuration Profile
+2. **Monitor Performance Impact** via Smart Groups
+3. **Use Production Verification** to validate resource usage
+4. **Scale Gradually** across the fleet
+
+### Phase 8: Monitoring and Maintenance
+
+#### 8.1 Daily Operations Dashboard
+**Create Jamf Pro Dashboard Widgets:**
+- **Critical Violations:** Count of "CRITICAL VIOLATIONS" Smart Group (goal: 0)
+- **v2.0.1 Deployment:** "v2.0.1 Production Ready" vs "Needs Upgrade"
+- **Configuration Profile Compliance:** "Config Profile Active" vs total installations
+- **System Health:** "Healthy" vs "Needs Attention"
+
+#### 8.2 Automated Alerting
+**Configure webhook notifications for Smart Group membership changes:**
+- **Critical Violations Group** → Immediate Slack/Teams alert
+- **Needs Attention Group** → Daily maintenance notifications
+- **Configuration Profile Failures** → IT team alerts
+
+#### 8.3 Compliance Reporting
+**Weekly Security Reports:**
+- **v2.0.1 Coverage:** Percentage of fleet with production fixes
+- **Configuration Compliance:** Profile deployment success rate
+- **Violation Trends:** Historical incident analysis with enhanced v2.0.1 data
+- **Performance Metrics:** Real-time monitoring resource impact
+
+## Production Deployment Benefits (v2.0.1)
+
+### Centralized Administration
+- **No Script Editing:** Webhook URLs and email managed via Jamf Pro interface
+- **Immediate Updates:** Configuration changes apply without script deployment
+- **Encrypted Storage:** Sensitive credentials protected via Configuration Profiles
+- **Department Flexibility:** Different settings per Smart Group/department
+
+### Enterprise Reliability (v2.0.1)
+- **ACL Resolution:** Eliminates script execution permission issues
+- **Configuration Integration:** Standardized reading methods for enterprise environments
+- **Auto-Version Management:** Future-proof system requiring zero maintenance
+- **Production Verification:** Built-in diagnostic tools for deployment confidence
+
+## Version-Specific Deployment Notes
+
+### v2.0.1 Critical Improvements
+- **Extension Attribute Update Required** - MUST update script in Jamf Pro for v2.0.1 features
+- **ACL Clearing Automatic** - No more @ symbols in file permissions
+- **Configuration Profile Integration** - Displays actual company names correctly
+- **Auto-Version Detection** - Works automatically with all future versions
+
+### v2.0.0 Foundation Features
+- Initial Configuration Profile support
+- Real-time monitoring capabilities
+- JSON Schema for Jamf Pro deployment
+- Enhanced notification templates
+
+## Troubleshooting Deployment
+
+### Common v2.0.1 Issues
+
+#### Extension Attribute Not Showing v2.0.1 Data
+```bash
+# CRITICAL: Ensure Extension Attribute script is updated in Jamf Pro
+# Settings → Extension Attributes → [ Jamf Connect ] - Monitor Status
+# Replace script content with v2.0.1 version
+
 # Test Extension Attribute manually:
 sudo /usr/local/etc/jamf_ea_admin_violations.sh
 
-# Expected output shows:
-# Version: 2.0.1, Periodic: Running, Real-time: Not Running
+# Expected: Version: 2.0.1, Company: [Your Company Name]
 ```
 
-## Common Issues and Solutions
-
-### Extension Attribute Not Populating
-**Symptoms**: Empty or "Not configured" in Jamf Pro
-**Solutions**:
-1. Check script permissions: `ls -la /usr/local/etc/jamf_ea_admin_violations.sh`
-2. Test manually: `sudo /usr/local/etc/jamf_ea_admin_violations.sh`
-3. Force inventory update: `sudo jamf recon`
-
-### Monitoring Not Running
-**Symptoms**: No log entries, violations not detected
-**Solutions**:
-1. Check daemon status: `sudo launchctl list | grep jamfconnectmonitor`
-2. Load daemon: `sudo launchctl load /Library/LaunchDaemons/com.macjediwizard.jamfconnectmonitor.plist`
-3. Check logs: `tail -f /var/log/jamf_connect_monitor/monitor.log`
-
-### False Violation Alerts
-**Symptoms**: Approved admins being flagged
-**Solutions**:
-1. Check approved list: `cat /usr/local/etc/approved_admins.txt`
-2. Add user: `sudo /usr/local/bin/jamf_connect_monitor.sh add-admin username`
-3. Verify admin group: `dscl . -read /Groups/admin GroupMembership`
-
-### Configuration Profile Not Applying
-**Symptoms**: Settings not taking effect
-**Solutions**:
-1. Force profile renewal: `sudo profiles renew -type=config`
-2. Check profile status: `sudo profiles list | grep jamfconnectmonitor`
-3. Validate JSON schema: `python3 -m json.tool jamf_connect_monitor_schema.json`
-
-### Smart Groups Not Populating
-**Symptoms**: Empty Smart Groups despite installations
-**Solutions**:
-1. Update Extension Attribute script in Jamf Pro (CRITICAL for v2.0.1)
-2. Use flexible criteria: "Version: 2." instead of "Version: 2.0.0"
-3. Force inventory updates: `sudo jamf recon`
-4. Allow time for Smart Group processing
-
-## Production Verification
-
-### Comprehensive System Check
+#### Configuration Profile Shows "Your Company" Instead of Actual Name
 ```bash
-# 1. Verify installation
-sudo jamf_connect_monitor.sh status
+# This indicates v2.0.0 issue - should be fixed in v2.0.1
+# Force Configuration Profile renewal:
+sudo profiles renew -type=config
 
-# 2. Test Configuration Profile
+# Test configuration reading:
 sudo jamf_connect_monitor.sh test-config
-
-# 3. Check Extension Attribute
-sudo /usr/local/etc/jamf_ea_admin_violations.sh
-
-# 4. Verify file permissions (no ACL @ symbols)
-ls -la@ /usr/local/bin/jamf_connect_monitor.sh
-ls -la@ /usr/local/etc/jamf_ea_admin_violations.sh
-
-# 5. Check daemon status
-sudo launchctl list | grep jamfconnectmonitor
+# Should show YOUR actual company name, not "Your Company"
 ```
 
-### Expected v2.0.1 Output
+#### Smart Groups Not Populating with v2.0.1 Systems
 ```bash
-# jamf_connect_monitor.sh status should show:
-=== Jamf Connect Elevation Monitor Status (v2.0.1) ===
-Configuration Profile: Active (or Not deployed)
-Company: [Your Actual Company Name]
-Monitoring Mode: periodic (or realtime/hybrid)
+# Use flexible criteria for future-proof Smart Groups:
+Extension Attribute "Monitor Status" like "*Version: 2.*"
+# This catches 2.0.1, 2.0.2, 2.1.0, etc. automatically
 
-# Extension Attribute should show:
-Version: 2.0.1, Periodic: Running, Real-time: Not Running
-Configuration: Profile: Deployed, Webhook: Configured, Mode: periodic
+# Force inventory update on sample systems:
+sudo jamf recon
+
+# Verify Extension Attribute data format matches criteria
 ```
 
-## Log Analysis
+### Performance Considerations
 
-### Key Log Locations
-- Installation: `/var/log/jamf_connect_monitor_install.log`
-- Activity: `/var/log/jamf_connect_monitor/monitor.log`
-- Violations: `/var/log/jamf_connect_monitor/admin_violations.log`
-- Daemon: `/var/log/jamf_connect_monitor/daemon.log`
+#### v2.0.1 Performance Improvements
+- **Efficient ACL Clearing** - One-time operation during installation
+- **Optimized Configuration Profile Reading** - Uses fastest working methods
+- **Reduced Execution Overhead** - Auto-version detection eliminates script parsing
+- **Enhanced Error Handling** - Graceful degradation prevents resource waste
 
-### Performance Tuning
-- Increase monitoring interval for large environments
-- Implement log rotation for disk space management
-- Consider network bandwidth for notifications
+#### Real-time Monitoring Impact
+- **CPU Usage:** Monitor via Activity Monitor on pilot devices
+- **Memory Usage:** Track background process resource consumption
+- **Log Growth:** Monitor `/var/log/jamf_connect_monitor/` disk usage
+- **Network Impact:** Minimal - only during violation notifications
 
-## Enterprise Deployment Issues
+#### Scalability Recommendations
+- **Gradual Rollout:** Deploy v2.0.1 in phases
+- **Department Targeting:** Start with IT and high-security departments
+- **Performance Monitoring:** Use Smart Groups to track resource impact
+- **Production Verification:** Use built-in tools to validate deployment success
 
-### Mass Deployment Troubleshooting
-1. **Staged Rollout**: Deploy to pilot group first
-2. **Inventory Management**: Force updates after deployment
-3. **Smart Group Validation**: Use flexible version criteria
-4. **Performance Monitoring**: Track resource usage
+---
 
-### Configuration Profile Management
-1. **JSON Schema Validation**: Test schema before deployment
-2. **Department-Specific Settings**: Use multiple profiles if needed
-3. **Update Procedures**: Configuration changes without script updates
-4. **Backup and Recovery**: Document profile configurations
+## Next Steps After Deployment
+
+1. **Verify Smart Group "CRITICAL VIOLATIONS"** - Should remain at 0 members
+2. **Monitor "v2.0.1 Production Ready" Smart Group** - Track deployment progress
+3. **Review Configuration Profile Compliance** - Target 100% deployment
+4. **Use Production Verification Tools** - Validate installation success
+5. **Plan Advanced Features** - Consider department-specific configurations
 
 ---
 
 **Created with ❤️ by MacJediWizard**
+
+**Enterprise-grade deployment with v2.0.1 production fixes, Configuration Profile management, and comprehensive verification procedures.**

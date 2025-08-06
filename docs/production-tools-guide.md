@@ -1,533 +1,357 @@
-# Production Tools & Verification Guide
+# Production Tools & Verification Guide - v2.0.1
 
 ## Overview
-This guide documents the production verification tools and diagnostic procedures for Jamf Connect Monitor v2.0.1, providing comprehensive deployment confidence and troubleshooting capabilities.
+Jamf Connect Monitor v2.0.1 introduces comprehensive production tools for enterprise deployment validation, troubleshooting, and system maintenance. These tools ensure reliable deployment and ongoing operational excellence.
 
-## Built-in Verification Tools
+## 🔧 **tools/ Directory Structure**
 
-### Primary Diagnostic Commands
-
-#### Status Check with Full Configuration
-```bash
-# Comprehensive system status
-sudo jamf_connect_monitor.sh status
-
-# Expected v2.0.1 output:
-# === Jamf Connect Elevation Monitor Status (v2.0.1) ===
-# Configuration Profile: Active
-# Company: [Actual Company Name] (not "Your Company")
-# Monitoring Mode: periodic (or realtime/hybrid)
-# Auto Remediation: true
-# Grace Period: 5 minutes
-# Notifications:
-#   Webhook: Configured
-#   Email: security@company.com
-#   Template: security_report
-#   Cooldown: 15 minutes
+```
+tools/
+├── verify_monitoring.sh          # Comprehensive production verification script
+├── README.md                     # Tools documentation and usage guide
+└── (future diagnostic tools)     # Planned: performance monitoring, SIEM integration
 ```
 
-#### Configuration Profile Integration Test
-```bash
-# Test Configuration Profile parsing
-sudo jamf_connect_monitor.sh test-config
+## 🔍 **verify_monitoring.sh - Comprehensive Production Verification**
 
-# Expected v2.0.1 output:
-# === Configuration Profile Test ===
-# Profile Status: Deployed
-# Notification Settings:
-#   Webhook: Configured
-#   Email: security@company.com
-#   Template: security_report
-#   Cooldown: 15 minutes
-# Monitoring Behavior:
-#   Mode: periodic
-#   Auto Remediation: true
-#   Grace Period: 5 minutes
-#   Company Name: [Actual Company Name]
+### Purpose
+The verification script provides enterprise-grade validation of all Jamf Connect Monitor components after installation, upgrade, or troubleshooting scenarios.
+
+### Usage
+```bash
+# Basic verification (recommended after installation)
+sudo ./tools/verify_monitoring.sh
+
+# Verbose output for troubleshooting
+sudo ./tools/verify_monitoring.sh --verbose
+
+# Quick health check (minimal output)
+sudo ./tools/verify_monitoring.sh --quick
 ```
 
-#### Extension Attribute Verification
-```bash
-# Test Extension Attribute directly
-sudo /usr/local/etc/jamf_ea_admin_violations.sh
+### What It Tests
 
-# Expected v2.0.1 output format:
-# <result>=== JAMF CONNECT MONITOR STATUS v2.0 ===
-# Version: 2.0.1, Periodic: Running, Real-time: Not Running
-# Configuration: Profile: Deployed, Webhook: Configured, Email: Configured, Mode: periodic, Company: [Actual Company Name]
-# Violations: Total: 0, Recent: 0, Last: None, Unauthorized: 0
-# Admin Status: Current: [admin,user1], Approved: [admin,user1]
-# Jamf Connect: Installed: Yes, Elevation: Yes, Monitoring: Yes
-# Health: Last Check: 2025-08-05 14:30:15, Daemon: Healthy, Logs: 2MB, Config Test: OK
-# Report Generated: 2025-08-05 14:30:15
-# </result>
+#### **1. Main Script Validation**
+```bash
+✅ Script Installation: /usr/local/bin/jamf_connect_monitor.sh exists
+✅ Version Detection: Extracts and displays VERSION variable
+✅ Permissions: Validates executable permissions (755)
+✅ ACL Status: Ensures no @ symbols in permissions
+✅ Functionality: Tests basic CLI commands
 ```
 
-### Permission and ACL Verification
-
-#### File Permission Check
+#### **2. Extension Attribute Validation**
 ```bash
-# Verify no ACL issues (v2.0.1 automatically clears ACLs)
-ls -la@ /usr/local/bin/jamf_connect_monitor.sh
-ls -la@ /usr/local/etc/jamf_ea_admin_violations.sh
-
-# Expected output (no @ symbols):
-# -rwxr-xr-x  1 root  wheel  45K Aug  5 14:30 /usr/local/bin/jamf_connect_monitor.sh
-# -rwxr-xr-x  1 root  wheel  12K Aug  5 14:30 /usr/local/etc/jamf_ea_admin_violations.sh
+✅ Script Installation: /usr/local/etc/jamf_ea_admin_violations.sh exists
+✅ Version Compatibility: Confirms v2.0.1 features present
+✅ Permissions: Validates executable permissions without ACL symbols
+✅ Execution Test: Runs script and validates output format
+✅ Data Format: Ensures Jamf Pro and Smart Group compatibility
 ```
 
-#### Manual ACL Clearing (if needed)
+#### **3. Configuration Profile Integration**
 ```bash
-# Clear ACLs manually if automatic clearing failed
-sudo xattr -c /usr/local/bin/jamf_connect_monitor.sh
-sudo xattr -c /usr/local/etc/jamf_ea_admin_violations.sh
-
-# Verify clearing worked
-ls -la@ /usr/local/bin/jamf_connect_monitor.sh
-# Should show no @ symbol at end of permissions
+✅ Profile Detection: Tests multiple Configuration Profile reading methods
+✅ Company Name Validation: Verifies actual company name (not "Your Company")
+✅ Settings Reading: Validates webhook, email, and monitoring mode settings
+✅ Method Compatibility: Tests Methods 2 & 4 for enterprise environments
 ```
 
-### System Integration Verification
-
-#### LaunchDaemon Status
+#### **4. Monitoring System Health**
 ```bash
-# Check daemon registration and status
-sudo launchctl list | grep jamfconnectmonitor
-
-# Expected output:
-# 12345   0   com.macjediwizard.jamfconnectmonitor
-
-# Check daemon configuration
-plutil -lint /Library/LaunchDaemons/com.macjediwizard.jamfconnectmonitor.plist
-# Expected: OK
+✅ LaunchDaemon Status: Verifies daemon is loaded and running
+✅ Process Monitoring: Checks for active monitoring processes
+✅ Log Directory: Validates log directory existence and permissions
+✅ Recent Activity: Confirms recent monitoring activity
 ```
 
-#### Configuration Profile Status
+#### **5. Version Auto-Detection System**
 ```bash
-# Verify Configuration Profile installation
-sudo profiles list | grep jamfconnectmonitor
-
-# Expected output shows profile UUID and details
-
-# Read actual configuration values
-sudo defaults read com.macjediwizard.jamfconnectmonitor
-# Should display configured webhook, email, company name, etc.
+✅ Main Script Version: Extracts VERSION variable from main script
+✅ Extension Attribute Detection: Validates auto-detection functionality
+✅ Future-Proof Design: Confirms system works with version updates
+✅ Package Compatibility: Verifies package creation integration
 ```
 
-#### Log System Health
+### Sample Output
+
+#### **Successful Verification**
 ```bash
-# Check log directory and files
-ls -la /var/log/jamf_connect_monitor/
+🔍 JAMF CONNECT MONITOR VERIFICATION v2.0.1
+======================================
 
-# Monitor live activity
-tail -f /var/log/jamf_connect_monitor/monitor.log
+✅ Main script installed: Version 2.0.1
+✅ Permissions correct: -rwxr-xr-x
+✅ Extension Attribute script installed: Version 2.0.1
+✅ EA permissions correct: -rwxr-xr-x (no @ symbols)
+✅ Extension Attribute runs successfully
+✅ Version detected: Version: 2.0.1, Periodic: Running
+✅ Monitoring mode detected: Mode: periodic
+✅ Company name: Success Academies (from Configuration Profile)
+✅ Configuration Profile integration: Working (Method 2)
+✅ LaunchDaemon status: Loaded and running
+✅ Recent monitoring activity: Last check 2 minutes ago
 
-# Check for recent violations
-tail -10 /var/log/jamf_connect_monitor/admin_violations.log
+🎉 MONITORING APPEARS TO BE WORKING CORRECTLY
+
+📊 SUMMARY:
+- Version Detection: Working (auto-detects from main script)
+- Configuration Profile: Active (company name correctly displayed)  
+- ACL Clearing: Successful (no @ symbols in permissions)
+- Smart Group Compatibility: Ready (enhanced data format)
+- Extension Attribute: Functional (all tests passed)
+
+✅ READY FOR PRODUCTION DEPLOYMENT
 ```
 
-## Comprehensive Deployment Verification
-
-### Pre-Deployment Checklist
+#### **Troubleshooting Output**
 ```bash
-# 1. Package integrity check
-pkgutil --check-signature JamfConnectMonitor-2.0.1.pkg
-shasum -a 256 -c JamfConnectMonitor-2.0.1.pkg.sha256
+🔍 JAMF CONNECT MONITOR VERIFICATION v2.0.1
+======================================
 
-# 2. JSON Schema validation
-python3 -m json.tool jamf_connect_monitor_schema.json
+❌ Main script installed: Missing
+✅ Extension Attribute script installed: Version 2.0.1
+⚠️  EA permissions incorrect: -rw-r--r--@ (has @ symbol)
+❌ Extension Attribute execution: Permission denied
+⚠️  Configuration Profile: Method 1 failed, trying Method 2...
+✅ Configuration Profile integration: Working (Method 2)
 
-# 3. Jamf Pro connectivity
-jamf checkJSSConnection
+🚨 ISSUES DETECTED - MANUAL INTERVENTION REQUIRED
 
-# 4. Target system requirements
-sw_vers | grep ProductVersion
-# Should show macOS 10.14+
+🔧 RECOMMENDED FIXES:
+1. Install main monitoring script: sudo installer -pkg JamfConnectMonitor-2.0.1.pkg -target /
+2. Clear ACLs on Extension Attribute: sudo xattr -c /usr/local/etc/jamf_ea_admin_violations.sh
+3. Set correct permissions: sudo chmod +x /usr/local/etc/jamf_ea_admin_violations.sh
+
+📞 For support: https://github.com/MacJediWizard/jamf-connect-monitor/issues
 ```
 
-### Post-Installation Validation
+### Enterprise Integration
+
+#### **Jamf Pro Script Deployment**
+Deploy verification script as Jamf Pro script for automated validation:
+
 ```bash
-# 1. Installation verification
-sudo jamf_connect_monitor.sh status | grep "Version: 2.0.1"
-
-# 2. Configuration Profile integration
-sudo jamf_connect_monitor.sh test-config | grep "Profile Status: Deployed"
-
-# 3. Extension Attribute functionality
-sudo /usr/local/etc/jamf_ea_admin_violations.sh | grep "Version: 2.0.1"
-
-# 4. Permission verification (no ACL @ symbols)
-ls -la@ /usr/local/bin/jamf_connect_monitor.sh | grep -v '@'
-
-# 5. Daemon health
-sudo launchctl list | grep jamfconnectmonitor | grep -v '-'
-
-# 6. Company name verification (should not be "Your Company")
-sudo jamf_connect_monitor.sh test-config | grep "Company Name:" | grep -v "Your Company"
+# Script Configuration in Jamf Pro:
+Display Name: Jamf Connect Monitor - Production Verification
+Category: Diagnostic
+Priority: After
+Parameter 4: Verification Mode (quick|verbose|standard)
 ```
 
-### Jamf Pro Integration Testing
+#### **Policy Integration**
 ```bash
-# 1. Force inventory update
-sudo jamf recon
+# Deployment Validation Policy:
+1. Deploy JamfConnectMonitor-2.0.1.pkg
+2. Run Production Verification script
+3. Update inventory if verification passes
+4. Send notification with results
 
-# 2. Check Extension Attribute population in Jamf Pro
-# Navigate to computer record → Extension Attributes
-# Verify "[ Jamf Connect ] - Monitor Status v2.x" shows proper data
-
-# 3. Smart Group validation
-# Check Smart Groups for proper membership:
-# - "Jamf Connect Monitor - Installed v2.x" should include the device
-# - "Jamf Connect Monitor - Latest v2.0.1+" should include the device
-# - Extension Attribute data should match expected format
+# Maintenance Policy:
+1. Run verification script weekly
+2. Generate health report
+3. Alert if issues detected
 ```
 
-## Troubleshooting Tools
+#### **Smart Group Integration**
+Create Smart Groups based on verification results:
 
-### Diagnostic Information Collection
 ```bash
-# Comprehensive system information
-cat << 'EOF' > jamf_monitor_diagnostics.sh
-#!/bin/bash
-echo "=== Jamf Connect Monitor Diagnostics ==="
-echo "Date: $(date)"
-echo "Hostname: $(hostname)"
-echo "macOS Version: $(sw_vers -productVersion)"
-echo ""
+# Jamf Connect Monitor - Verification Passed
+Criteria: Script Result "Production Verification" contains "READY FOR PRODUCTION"
 
-echo "=== Package Information ==="
-pkgutil --pkg-info com.macjediwizard.jamfconnectmonitor 2>/dev/null || echo "Package not found"
-echo ""
-
-echo "=== File Status ==="
-ls -la@ /usr/local/bin/jamf_connect_monitor.sh
-ls -la@ /usr/local/etc/jamf_ea_admin_violations.sh
-echo ""
-
-echo "=== Configuration Profile ==="
-sudo profiles list | grep jamfconnectmonitor || echo "No profile found"
-sudo defaults read com.macjediwizard.jamfconnectmonitor 2>/dev/null || echo "No configuration found"
-echo ""
-
-echo "=== LaunchDaemon Status ==="
-sudo launchctl list | grep jamfconnectmonitor || echo "Daemon not loaded"
-plutil -lint /Library/LaunchDaemons/com.macjediwizard.jamfconnectmonitor.plist 2>/dev/null || echo "Plist not found/invalid"
-echo ""
-
-echo "=== Monitor Status ==="
-sudo /usr/local/bin/jamf_connect_monitor.sh status 2>/dev/null || echo "Monitor script not functional"
-echo ""
-
-echo "=== Extension Attribute Test ==="
-sudo /usr/local/etc/jamf_ea_admin_violations.sh 2>/dev/null || echo "Extension Attribute script not functional"
-echo ""
-
-echo "=== Recent Logs ==="
-tail -5 /var/log/jamf_connect_monitor/monitor.log 2>/dev/null || echo "No recent logs"
-EOF
-
-chmod +x jamf_monitor_diagnostics.sh
-sudo ./jamf_monitor_diagnostics.sh
+# Jamf Connect Monitor - Needs Attention  
+Criteria: Script Result "Production Verification" contains "ISSUES DETECTED"
 ```
+
+## 🧪 **Testing Scenarios**
+
+### Pre-Deployment Testing
+```bash
+# Test on clean system
+1. Run verification (should show "not installed")
+2. Install package
+3. Run verification (should show "READY FOR PRODUCTION")
+4. Validate Extension Attribute in Jamf Pro
+```
+
+### Post-Deployment Validation
+```bash
+# Enterprise deployment validation
+1. Deploy to pilot group via Jamf Pro
+2. Run verification script on pilot systems
+3. Force inventory update: sudo jamf recon
+4. Verify Extension Attribute data in Jamf Pro
+5. Check Smart Group population
+6. Proceed with full deployment
+```
+
+### Troubleshooting Workflows
+```bash
+# User reports monitoring not working
+1. Run verification script for comprehensive diagnosis
+2. Apply recommended fixes from script output
+3. Re-run verification to confirm resolution
+4. Update Jamf Pro inventory
+5. Document resolution for future reference
+```
+
+### Upgrade Validation
+```bash
+# v2.0.0 → v2.0.1 upgrade verification
+1. Note pre-upgrade version: sudo jamf_connect_monitor.sh status
+2. Deploy v2.0.1 package
+3. Run verification script
+4. Confirm version shows "2.0.1" 
+5. Verify Configuration Profile improvements
+6. Test Extension Attribute execution
+```
+
+## 🚀 **Advanced Verification Features**
+
+### Configuration Profile Deep Testing
+```bash
+# Tests all Configuration Profile reading methods:
+Method 1: defaults read com.macjediwizard.jamfconnectmonitor
+Method 2: defaults read "/Library/Managed Preferences/com.macjediwizard.jamfconnectmonitor"  
+Method 3: sudo defaults read com.macjediwizard.jamfconnectmonitor
+Method 4: sudo defaults read "/Library/Managed Preferences/com.macjediwizard.jamfconnectmonitor"
+
+# Reports which methods work in your environment
+# Validates company name displays correctly
+# Confirms webhook/email configuration reading
+```
+
+### ACL and Extended Attribute Validation
+```bash
+# Comprehensive permission testing:
+- Checks for @ symbols in file listings (indicates ACL problems)
+- Validates execute permissions on all scripts
+- Tests script execution without permission errors
+- Confirms xattr -c clearing was successful
+- Validates proper ownership (root:wheel)
+```
+
+### Version Management Testing
+```bash
+# Future-proof version architecture validation:
+- Extracts VERSION variable from main script
+- Tests Extension Attribute auto-detection capability  
+- Validates package creation integration
+- Confirms Smart Group compatibility
+- Tests with simulated future versions (2.0.2, 2.1.0, etc.)
+```
+
+## 📋 **Deployment Checklist Integration**
+
+### Pre-Production Checklist
+- [ ] **Package Upload** - JamfConnectMonitor-2.0.1.pkg uploaded to Jamf Pro
+- [ ] **Extension Attribute Update** - v2.0.1 script deployed in Jamf Pro
+- [ ] **Configuration Profile** - JSON Schema deployed and scoped
+- [ ] **Verification Script** - Available for post-deployment testing
+- [ ] **Smart Groups** - Created with flexible v2.x criteria
+- [ ] **Pilot Group** - Test deployment target identified
+
+### Post-Deployment Validation
+- [ ] **Run Verification** - `sudo ./tools/verify_monitoring.sh` on pilot systems
+- [ ] **Check Output** - All tests show ✅ status
+- [ ] **Extension Attribute** - Jamf Pro shows proper v2.0.1 data format
+- [ ] **Smart Groups** - Pilot systems populate correctly
+- [ ] **Configuration Profile** - Company name displays correctly
+- [ ] **Force Inventory** - `sudo jamf recon` on pilot systems
+- [ ] **Production Ready** - All validations passed
+
+### Ongoing Maintenance
+- [ ] **Weekly Verification** - Run on random sampling of fleet
+- [ ] **Extension Attribute Monitoring** - Check for consistent data format
+- [ ] **Smart Group Health** - Verify proper population trends
+- [ ] **Version Tracking** - Monitor auto-detection functionality
+- [ ] **Configuration Profile** - Validate settings consistency
+
+## 🔮 **Future Tools (Planned)**
 
 ### Performance Monitoring
 ```bash
-# Monitor resource usage
-ps aux | grep jamf_connect_monitor
-
-# Check log sizes
-du -sh /var/log/jamf_connect_monitor/
-
-# Monitor real-time activity
-tail -f /var/log/jamf_connect_monitor/monitor.log &
-TAIL_PID=$!
-
-# Run a test check
-sudo jamf_connect_monitor.sh force-check
-
-# Stop monitoring
-kill $TAIL_PID
+# tools/performance_monitor.sh (planned)
+- Real-time monitoring resource usage tracking
+- Log growth rate analysis
+- CPU/Memory impact measurement
+- Network utilization for notifications
+- Jamf Pro inventory impact assessment
 ```
 
-### Network Connectivity Testing
+### SIEM Integration
 ```bash
-# Test webhook connectivity (if configured)
-WEBHOOK_URL=$(sudo defaults read com.macjediwizard.jamfconnectmonitor NotificationSettings.WebhookURL 2>/dev/null)
-if [[ -n "$WEBHOOK_URL" ]]; then
-    curl -X POST -H 'Content-type: application/json' \
-         --data '{"text":"Test from Jamf Connect Monitor v2.0.1"}' \
-         "$WEBHOOK_URL" && echo "Webhook test successful"
-fi
-
-# Test Jamf Pro connectivity
-jamf checkJSSConnection
-
-# Test DNS resolution
-nslookup hooks.slack.com 2>/dev/null || echo "DNS resolution test failed"
+# tools/siem_export.sh (planned)  
+- Structured log export for security information systems
+- JSON format violation reports
+- API integration for security platforms
+- Automated incident response triggers
+- Compliance reporting generation
 ```
 
-## Production Deployment Validation
-
-### Pilot Group Testing
+### Health Dashboard
 ```bash
-# Deploy to 5-10 test systems and run this validation on each:
-
-# 1. Automated validation script
-cat << 'EOF' > pilot_validation.sh
-#!/bin/bash
-ERRORS=0
-
-echo "=== Pilot System Validation ==="
-
-# Test 1: Version detection
-if sudo jamf_connect_monitor.sh status | grep -q "Version: 2.0.1"; then
-    echo "✅ Version 2.0.1 detected"
-else
-    echo "❌ Version detection failed"
-    ((ERRORS++))
-fi
-
-# Test 2: Configuration Profile
-if sudo jamf_connect_monitor.sh test-config | grep -q "Profile Status: Deployed"; then
-    echo "✅ Configuration Profile active"
-else
-    echo "❌ Configuration Profile not active"
-    ((ERRORS++))
-fi
-
-# Test 3: Extension Attribute
-if sudo /usr/local/etc/jamf_ea_admin_violations.sh | grep -q "Version: 2.0.1"; then
-    echo "✅ Extension Attribute functional"
-else
-    echo "❌ Extension Attribute not functional"
-    ((ERRORS++))
-fi
-
-# Test 4: ACL clearing
-if ! ls -la@ /usr/local/bin/jamf_connect_monitor.sh | grep -q '@'; then
-    echo "✅ ACLs cleared successfully"
-else
-    echo "❌ ACLs still present"
-    ((ERRORS++))
-fi
-
-# Test 5: Company name (should not be default)
-if sudo jamf_connect_monitor.sh test-config | grep "Company Name:" | grep -qv "Your Company"; then
-    echo "✅ Company name configured correctly"
-else
-    echo "⚠️  Company name shows default value"
-fi
-
-echo ""
-echo "Validation complete: $ERRORS errors found"
-exit $ERRORS
-EOF
-
-chmod +x pilot_validation.sh
-sudo ./pilot_validation.sh
+# tools/health_dashboard.sh (planned)
+- Web-based monitoring dashboard
+- Real-time fleet health status
+- Configuration Profile compliance tracking
+- Violation trend analysis
+- Automated reporting capabilities
 ```
 
-### Fleet Deployment Monitoring
+## 📞 **Support and Troubleshooting**
+
+### Common Issues and Solutions
+
+#### **Verification Script Not Found**
 ```bash
-# Smart Group validation queries for Jamf Pro API
-# Use these to monitor deployment progress
-
-# Check v2.0.1 deployment percentage
-# Smart Group: "Jamf Connect Monitor - Latest v2.0.1+"
-
-# Check Configuration Profile deployment
-# Smart Group: "Jamf Connect Monitor - Config Profile Active"
-
-# Monitor for violations
-# Smart Group: "Jamf Connect Monitor - CRITICAL VIOLATIONS" (should be 0)
-
-# Check system health
-# Smart Group: "Jamf Connect Monitor - Needs Attention"
+# If tools/verify_monitoring.sh missing:
+1. Re-download from GitHub releases
+2. Extract from package: pkgutil --expand JamfConnectMonitor-2.0.1.pkg temp
+3. Copy to appropriate location
+4. Set permissions: chmod +x tools/verify_monitoring.sh
 ```
 
-## Advanced Diagnostic Procedures
-
-### Configuration Profile Deep Dive
+#### **Permission Denied Errors**
 ```bash
-# Extract and examine Configuration Profile
-sudo profiles show -output /tmp/profiles.plist
-/usr/libexec/PlistBuddy -c "Print" /tmp/profiles.plist | grep -A 20 jamfconnectmonitor
-
-# Test specific Configuration Profile values
-sudo defaults read com.macjediwizard.jamfconnectmonitor NotificationSettings.WebhookURL
-sudo defaults read com.macjediwizard.jamfconnectmonitor JamfProIntegration.CompanyName
-sudo defaults read com.macjediwizard.jamfconnectmonitor MonitoringBehavior.MonitoringMode
+# If verification fails with permission errors:
+1. Run with sudo: sudo ./tools/verify_monitoring.sh
+2. Check file permissions: ls -la tools/verify_monitoring.sh
+3. Clear ACLs if needed: sudo xattr -c tools/verify_monitoring.sh
+4. Set execute permission: sudo chmod +x tools/verify_monitoring.sh
 ```
 
-### Extension Attribute Data Analysis
+#### **Configuration Profile Not Detected**
 ```bash
-# Parse Extension Attribute output for specific values
-EA_OUTPUT=$(sudo /usr/local/etc/jamf_ea_admin_violations.sh)
-
-# Extract version
-echo "$EA_OUTPUT" | grep -o "Version: [0-9]\+\.[0-9]\+\.[0-9]\+"
-
-# Extract company name
-echo "$EA_OUTPUT" | grep -o "Company: [^,]*"
-
-# Extract violation count
-echo "$EA_OUTPUT" | grep -o "Unauthorized: [0-9]\+"
-
-# Extract monitoring mode
-echo "$EA_OUTPUT" | grep -o "Mode: [a-z]*"
+# If Configuration Profile tests fail:
+1. Verify profile deployment in Jamf Pro
+2. Force profile renewal: sudo profiles renew -type=config
+3. Check profile list: sudo profiles list | grep jamfconnectmonitor
+4. Test manual reading: sudo defaults read com.macjediwizard.jamfconnectmonitor
 ```
 
-### Performance Impact Assessment
-```bash
-# Measure monitoring impact
-cat << 'EOF' > performance_test.sh
-#!/bin/bash
-echo "=== Performance Impact Assessment ==="
-
-# CPU usage
-CPU_USAGE=$(ps aux | grep jamf_connect_monitor | grep -v grep | awk '{print $3}')
-echo "CPU Usage: ${CPU_USAGE:-0}%"
-
-# Memory usage
-MEM_USAGE=$(ps aux | grep jamf_connect_monitor | grep -v grep | awk '{print $4}')
-echo "Memory Usage: ${MEM_USAGE:-0}%"
-
-# Log sizes
-LOG_SIZE=$(du -sh /var/log/jamf_connect_monitor/ 2>/dev/null | cut -f1)
-echo "Log Directory Size: ${LOG_SIZE:-0MB}"
-
-# Daemon check frequency impact
-DAEMON_RUNS=$(grep "Starting Jamf Connect elevation monitoring" /var/log/jamf_connect_monitor/monitor.log | wc -l)
-echo "Monitoring Cycles: $DAEMON_RUNS"
-
-# Network requests (if webhook configured)
-WEBHOOK_REQUESTS=$(grep -c "webhook notification sent" /var/log/jamf_connect_monitor/monitor.log 2>/dev/null || echo "0")
-echo "Webhook Notifications: $WEBHOOK_REQUESTS"
-EOF
-
-chmod +x performance_test.sh
-./performance_test.sh
-```
-
-## Quality Assurance Procedures
-
-### Automated Testing Framework
-```bash
-# Comprehensive automated test suite
-cat << 'EOF' > qa_test_suite.sh
-#!/bin/bash
-# Jamf Connect Monitor v2.0.1 QA Test Suite
-
-PASSED=0
-FAILED=0
-
-test_result() {
-    if [[ $1 -eq 0 ]]; then
-        echo "✅ $2"
-        ((PASSED++))
-    else
-        echo "❌ $2"
-        ((FAILED++))
-    fi
-}
-
-echo "=== Jamf Connect Monitor v2.0.1 QA Test Suite ==="
-
-# Test 1: Package Installation
-sudo jamf_connect_monitor.sh status &>/dev/null
-test_result $? "Package installation and script functionality"
-
-# Test 2: Version Detection
-sudo jamf_connect_monitor.sh status | grep -q "Version: 2.0.1"
-test_result $? "Version 2.0.1 detection"
-
-# Test 3: Configuration Profile Integration
-sudo jamf_connect_monitor.sh test-config | grep -q "Profile Status: Deployed"
-test_result $? "Configuration Profile integration"
-
-# Test 4: Extension Attribute Functionality
-sudo /usr/local/etc/jamf_ea_admin_violations.sh | grep -q "Version: 2.0.1"
-test_result $? "Extension Attribute version detection"
-
-# Test 5: ACL Clearing
-! ls -la@ /usr/local/bin/jamf_connect_monitor.sh | grep -q '@'
-test_result $? "ACL clearing (no @ symbols)"
-
-# Test 6: LaunchDaemon Status
-sudo launchctl list | grep -q jamfconnectmonitor
-test_result $? "LaunchDaemon registration"
-
-# Test 7: Company Name Configuration
-! sudo jamf_connect_monitor.sh test-config | grep "Company Name:" | grep -q "Your Company"
-test_result $? "Company name not using default fallback"
-
-# Test 8: File Permissions
-[[ -x /usr/local/bin/jamf_connect_monitor.sh ]] && [[ -x /usr/local/etc/jamf_ea_admin_violations.sh ]]
-test_result $? "Script execution permissions"
-
-# Test 9: Log Directory
-[[ -d /var/log/jamf_connect_monitor ]]
-test_result $? "Log directory creation"
-
-# Test 10: Approved Admin List
-[[ -f /usr/local/etc/approved_admins.txt ]]
-test_result $? "Approved admin list file"
-
-echo ""
-echo "=== Test Results ==="
-echo "Passed: $PASSED"
-echo "Failed: $FAILED"
-echo "Total: $((PASSED + FAILED))"
-
-if [[ $FAILED -eq 0 ]]; then
-    echo "🎉 All tests passed! System is production ready."
-    exit 0
-else
-    echo "⚠️ $FAILED test(s) failed. Review system before production deployment."
-    exit 1
-fi
-EOF
-
-chmod +x qa_test_suite.sh
-sudo ./qa_test_suite.sh
-```
-
-### Pre-Production Checklist
-- [ ] **Package Integrity**: Checksum verification passed
-- [ ] **Version Detection**: Extension Attribute shows "Version: 2.0.1"
-- [ ] **Configuration Profile**: Active and displaying actual company name
-- [ ] **ACL Clearing**: No @ symbols in script permissions
-- [ ] **Smart Group Compatibility**: Extension Attribute data format correct
-- [ ] **LaunchDaemon**: Loaded and running properly
-- [ ] **Notification Testing**: Webhook/email delivery confirmed
-- [ ] **Performance Impact**: Resource usage within acceptable limits
-- [ ] **Jamf Pro Integration**: Extension Attribute populating correctly
-- [ ] **Future Compatibility**: Flexible Smart Group criteria implemented
+### Getting Help
+- **GitHub Issues**: [Report verification problems](https://github.com/MacJediWizard/jamf-connect-monitor/issues)
+- **Documentation**: [Complete troubleshooting guide](docs/troubleshooting.md)
+- **Community**: [Share verification results and solutions](https://github.com/MacJediWizard/jamf-connect-monitor/discussions)
 
 ---
 
-## Emergency Diagnostic Commands
+## 🎯 **Bottom Line**
 
-### Quick Health Check
-```bash
-# One-liner health check
-sudo jamf_connect_monitor.sh status | head -5 && sudo /usr/local/etc/jamf_ea_admin_violations.sh | grep "Version:" && ls -la@ /usr/local/bin/jamf_connect_monitor.sh | grep -v '@' && echo "Basic health check complete"
-```
+The production verification tools in v2.0.1 provide enterprise administrators with:
 
-### Emergency Repair
-```bash
-# Emergency repair procedures
-sudo xattr -c /usr/local/bin/jamf_connect_monitor.sh
-sudo xattr -c /usr/local/etc/jamf_ea_admin_violations.sh
-sudo chmod +x /usr/local/bin/jamf_connect_monitor.sh
-sudo chmod +x /usr/local/etc/jamf_ea_admin_violations.sh
-sudo launchctl unload /Library/LaunchDaemons/com.macjediwizard.jamfconnectmonitor.plist
-sudo launchctl load /Library/LaunchDaemons/com.macjediwizard.jamfconnectmonitor.plist
-echo "Emergency repair complete"
-```
+- **✅ Deployment Confidence** - Comprehensive validation before production rollout
+- **✅ Troubleshooting Speed** - Immediate diagnosis of common issues
+- **✅ Maintenance Automation** - Ongoing health monitoring capabilities  
+- **✅ Future Compatibility** - Tools designed to work with all future versions
+- **✅ Enterprise Integration** - Jamf Pro policy and Smart Group compatibility
+
+**Use `sudo ./tools/verify_monitoring.sh` after every installation, upgrade, or when troubleshooting issues.**
 
 ---
 
 **Created with ❤️ by MacJediWizard**
 
-**Comprehensive production verification and diagnostic tools for enterprise deployment confidence.**
+**Production-grade tools for enterprise reliability and operational excellence.**
