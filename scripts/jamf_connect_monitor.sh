@@ -181,18 +181,19 @@ test_smtp_connection() {
     
     # Test basic connectivity with multiple methods
     if command -v nc >/dev/null 2>&1; then
-        if timeout 10 nc -z "$smtp_host" "$smtp_port" 2>/dev/null; then
+        # Use nc directly without timeout (macOS doesn't have timeout by default)
+        if nc -z -w 10 "$smtp_host" "$smtp_port" 2>/dev/null; then
             log_message "INFO" "SMTP server reachable: $smtp_host:$smtp_port"
             return 0
         fi
     fi
     
-    # Fallback connectivity test using telnet if nc not available
-    if command -v telnet >/dev/null 2>&1; then
-        if timeout 10 sh -c "echo quit | telnet $smtp_host $smtp_port" 2>/dev/null | grep -q "Connected"; then
-            log_message "INFO" "SMTP server reachable via telnet: $smtp_host:$smtp_port"
-            return 0
-        fi
+    # Fallback connectivity test using bash TCP socket
+    if exec 3<>/dev/tcp/"$smtp_host"/"$smtp_port" 2>/dev/null; then
+        exec 3<&-
+        exec 3>&-
+        log_message "INFO" "SMTP server reachable via TCP socket: $smtp_host:$smtp_port"
+        return 0
     fi
     
     log_message "ERROR" "Cannot connect to SMTP server: $smtp_host:$smtp_port"
