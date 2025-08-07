@@ -1,9 +1,16 @@
-# 🧪 Jamf Connect Monitor v2.1.0 - Email Testing Guide
+# 🧪 Jamf Connect Monitor v2.2.0 - Email Testing Guide
 
 ## 📦 Package Ready for Deployment
 
-**Package Location:** `/scripts/output/JamfConnectMonitor-2.1.0.pkg`  
+**Package Location:** `/scripts/output/JamfConnectMonitor-2.2.0.pkg`  
 **Schema Location:** `/scripts/output/jamf_connect_monitor_schema.json`
+
+## ⚠️ Breaking Change in v2.2.0
+
+**SMTP Configuration is now REQUIRED for email notifications**
+- System mail fallback has been removed due to reliability issues
+- You must configure SMTP settings in the Configuration Profile
+- Supports Gmail, Office365, or corporate SMTP servers
 
 ## ✅ What's Been Fixed
 
@@ -16,10 +23,12 @@
    - `swaks` with --tlsc for port 465
    - `mailx` with proper SSL configuration
    - Multiple fallback methods
+   - **No system mail fallback** - SMTP only
 
-3. **No Customer Data**
-   - All references to specific organizations removed
-   - Completely generic code
+3. **Email Reliability**
+   - Removed unreliable system mail that caused silent failures
+   - Clear error messages when SMTP is not configured
+   - No more stuck emails in local mail queues
 
 ## 🚀 Deployment Steps
 
@@ -27,7 +36,7 @@
 1. Log into Jamf Pro
 2. Navigate to: **Settings → Computer Management → Packages**
 3. Click **New**
-4. Upload `JamfConnectMonitor-2.1.0.pkg`
+4. Upload `JamfConnectMonitor-2.2.0.pkg`
 5. Set Category: Security or Utilities
 
 ### Step 2: Create Configuration Profile
@@ -55,7 +64,7 @@
    - Display Name: "Install Jamf Connect Monitor"
    - Trigger: Recurring Check-in (or Self Service)
 3. Packages:
-   - Add `JamfConnectMonitor-2.1.0.pkg`
+   - Add `JamfConnectMonitor-2.2.0.pkg`
    - Action: Install
 4. Scope:
    - Target test computers first
@@ -140,7 +149,7 @@ sudo /path/to/tools/email_test.sh diagnostics
 4. **Common Issues:**
    - **Port 587 blocked**: Make sure Configuration Profile uses port 465
    - **Authentication failed**: Use Gmail App Password, not regular password
-   - **No swaks/mailx**: System will fall back to basic mail command
+   - **No SMTP configured**: Email notifications will be disabled (no system mail fallback)
 
 ### Expected Success Output
 
@@ -181,6 +190,6 @@ Once testing succeeds:
 
 ---
 
-**Version:** 2.1.0  
+**Version:** 2.2.0  
 **Port Configuration:** 465 (SSL) recommended  
 **Default Fallback:** Port 465 if not configured

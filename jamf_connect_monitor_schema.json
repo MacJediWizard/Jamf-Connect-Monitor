@@ -28,12 +28,12 @@
           }
         },
         "SMTPServer": {
-          "title": "SMTP Server (Authenticated Email)",
-          "description": "SMTP server for reliable email delivery in corporate environments",
+          "title": "SMTP Server (Required for Email)",
+          "description": "SMTP server required for email delivery - system mail no longer supported",
           "type": "string",
           "property_order": 25,
           "options": {
-            "infoText": "Examples: smtp.gmail.com, smtp.office365.com, or your corporate SMTP server. Leave blank to use system mail."
+            "infoText": "Examples: smtp.gmail.com, smtp.office365.com, or your corporate SMTP server. REQUIRED for email notifications in v2.2.0+"
           }
         },
         "SMTPPort": {

@@ -13,6 +13,40 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Performance monitoring dashboard
 - Automated compliance reporting
 
+## [2.2.0] - 2025-08-07
+
+### 🔄 **Breaking Change: Removed System Mail Fallback**
+
+This release removes the unreliable system mail fallback, requiring SMTP configuration for all email notifications. This ensures consistent, authenticated email delivery in enterprise environments.
+
+### Breaking Changes
+
+#### **Removed System Mail Fallback**
+- **Impact:** Email notifications now require SMTP configuration
+- **Rationale:** System mail was unreliable with DNS issues, postfix problems, and stuck mail queues
+- **Migration:** Configure SMTP settings in Configuration Profile (Gmail, Office365, or corporate SMTP)
+
+### Changed
+
+#### **Email Delivery Architecture**
+- **SMTP-Only:** All email notifications now require authenticated SMTP
+- **No Fallback:** Removed unreliable system mail fallback that caused silent failures
+- **Better Errors:** Clear error messages when SMTP is not configured
+- **Enterprise Focus:** Designed for corporate environments with proper email infrastructure
+
+### Fixed
+
+#### **Email Reliability Issues**
+- **Problem:** System mail fallback created false sense of success while emails never delivered
+- **Solution:** Removed system mail entirely, requiring reliable SMTP configuration
+- **Impact:** No more stuck emails in local mail queues or DNS resolution failures
+
+### Security
+
+- **Authenticated Only:** All emails now sent via authenticated SMTP connections
+- **No Local Queue:** Eliminates security risks from emails stuck in local postfix queues
+- **Enterprise Standards:** Aligns with corporate email security requirements
+
 ## [2.1.0] - 2025-08-07
 
 ### 🚀 **Major Feature Release: Enhanced SMTP Authentication & Security**
@@ -460,6 +494,8 @@ xattr -c /usr/local/share/jamf_connect_monitor/uninstall_script.sh
 
 ## Version History Summary
 
+- **2.2.0**: **BREAKING CHANGE** - Removed unreliable system mail fallback, SMTP-only email delivery
+- **2.1.0**: Enhanced SMTP authentication with port 465 SSL support and password security
 - **2.0.1**: **PRODUCTION READY** - ACL clearing, Configuration Profile fixes, auto-version detection, verification tools
 - **2.0.0**: Configuration Profile management, real-time monitoring, enterprise features
 - **1.0.2**: Documentation improvements and package creation fixes

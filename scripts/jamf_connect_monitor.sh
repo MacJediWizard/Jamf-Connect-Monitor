@@ -1,11 +1,11 @@
 #!/bin/bash
 
 # Jamf Connect Elevation Monitor & Admin Account Remediation Script
-# Version: 2.1.0 - Enhanced SMTP authentication with port 465 SSL support and password security
+# Version: 2.2.0 - SMTP-only email delivery (removed unreliable system mail fallback)
 # Author: MacJediWizard
 
 # Centralized Version Management
-VERSION="2.1.0"
+VERSION="2.2.0"
 SCRIPT_NAME="JamfConnectMonitor"
 
 # Configuration Variables
@@ -302,96 +302,17 @@ EOF
     return 1
 }
 
-# FIXED: Improved system mail sending with multiple fallback methods
+# System mail function removed - SMTP authentication required
+# This function is kept as a stub for backwards compatibility but always returns failure
+# Configure SMTP settings in Configuration Profile for email delivery
 send_system_mail() {
     local recipient="$1"
-    local subject="$2"
-    local body="$3"
-    
-    log_message "INFO" "Attempting system mail delivery to $recipient"
-    
-    # Method 1: Standard mail command
-    if command -v mail >/dev/null 2>&1; then
-        log_message "DEBUG" "Trying system mail via 'mail' command"
-        
-        if echo "$body" | mail -s "$subject" "$recipient" 2>/dev/null; then
-            log_message "INFO" "System mail sent successfully via 'mail' command to $recipient"
-            return 0
-        else
-            log_message "WARN" "Failed to send via 'mail' command"
-        fi
-    fi
-    
-    # Method 2: mailx command
-    if command -v mailx >/dev/null 2>&1; then
-        log_message "DEBUG" "Trying system mail via 'mailx' command"
-        
-        if echo "$body" | mailx -s "$subject" "$recipient" 2>/dev/null; then
-            log_message "INFO" "System mail sent successfully via 'mailx' command to $recipient"
-            return 0
-        else
-            log_message "WARN" "Failed to send via 'mailx' command"
-        fi
-    fi
-    
-    # Method 3: sendmail command (direct SMTP)
-    if command -v sendmail >/dev/null 2>&1; then
-        log_message "DEBUG" "Trying system mail via 'sendmail' command"
-        
-        local temp_message="/tmp/jamf_monitor_sendmail_$$"
-        cat > "$temp_message" << EOF
-To: $recipient
-From: root@$(hostname)
-Subject: $subject
-
-$body
-EOF
-        
-        if sendmail "$recipient" < "$temp_message" 2>/dev/null; then
-            rm -f "$temp_message"
-            log_message "INFO" "System mail sent successfully via 'sendmail' command to $recipient"
-            return 0
-        else
-            rm -f "$temp_message"
-            log_message "WARN" "Failed to send via 'sendmail' command"
-        fi
-    fi
-    
-    # Method 4: Postfix direct (if configured)
-    if [[ -f "/usr/sbin/postfix" ]] && launchctl list | grep -q "org.postfix.master"; then
-        log_message "DEBUG" "Trying system mail via postfix"
-        
-        # Start postfix if not running
-        if ! launchctl list | grep -q "org.postfix.master"; then
-            log_message "INFO" "Starting postfix service"
-            launchctl load /System/Library/LaunchDaemons/org.postfix.master.plist 2>/dev/null || true
-            sleep 2
-        fi
-        
-        local temp_message="/tmp/jamf_monitor_postfix_$$"
-        cat > "$temp_message" << EOF
-To: $recipient
-From: jamf-monitor@$(hostname)
-Subject: $subject
-
-$body
-EOF
-        
-        if /usr/sbin/sendmail "$recipient" < "$temp_message" 2>/dev/null; then
-            rm -f "$temp_message"
-            log_message "INFO" "System mail sent successfully via postfix to $recipient"
-            return 0
-        else
-            rm -f "$temp_message"
-            log_message "WARN" "Failed to send via postfix"
-        fi
-    fi
-    
-    log_message "ERROR" "All system mail delivery methods failed"
+    log_message "WARN" "System mail is deprecated - SMTP configuration required"
+    log_message "INFO" "Configure SMTP settings in Configuration Profile to enable email notifications"
     return 1
 }
 
-# FIXED: Enhanced email sending with improved fallback logic
+# Enhanced email sending - SMTP authentication only (no system mail fallback)
 enhanced_send_email() {
     local recipient="$1"
     local subject="$2"
@@ -404,20 +325,19 @@ enhanced_send_email() {
     
     log_message "INFO" "Sending email to $recipient: $subject"
     
-    # Try authenticated SMTP first if configured
-    if [[ -n "$SMTP_SERVER" ]]; then
-        if send_authenticated_email "$recipient" "$subject" "$body"; then
-            return 0
-        else
-            log_message "WARN" "Authenticated SMTP failed, trying system mail fallback"
-        fi
+    # Require SMTP configuration
+    if [[ -z "$SMTP_SERVER" ]]; then
+        log_message "ERROR" "SMTP server not configured - email delivery disabled"
+        log_message "ERROR" "Configure SMTP settings in Configuration Profile to enable email notifications"
+        return 1
     fi
     
-    # Fallback to system mail
-    if send_system_mail "$recipient" "$subject" "$body"; then
+    # Send via authenticated SMTP only
+    if send_authenticated_email "$recipient" "$subject" "$body"; then
         return 0
     else
-        log_message "ERROR" "Both authenticated SMTP and system mail failed"
+        log_message "ERROR" "SMTP email delivery failed - check SMTP configuration and credentials"
+        log_message "ERROR" "Ensure SMTP server, port, username, and password are correctly configured"
         return 1
     fi
 }
