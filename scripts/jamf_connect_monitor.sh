@@ -1,11 +1,11 @@
 #!/bin/bash
 
 # Jamf Connect Elevation Monitor & Admin Account Remediation Script
-# Version: 2.2.0 - SMTP-only email delivery (removed unreliable system mail fallback)
+# Version: 2.3.0 - Added SMTP provider selection and improved configuration
 # Author: MacJediWizard
 
 # Centralized Version Management
-VERSION="2.2.0"
+VERSION="2.3.0"
 SCRIPT_NAME="JamfConnectMonitor"
 
 # Configuration Variables
@@ -54,9 +54,10 @@ read_configuration() {
         WEBHOOK_URL=$(echo "$config_data" | grep -A1 "WebhookURL" | grep -o 'https://[^"]*' | head -1 || echo "")
         EMAIL_RECIPIENT=$(echo "$config_data" | grep -A1 "EmailRecipient" | grep -o '[a-zA-Z0-9._%+-]*@[a-zA-Z0-9.-]*\.[a-zA-Z]*' | head -1 || echo "")
         
-        # SMTP Configuration - NEW
+        # SMTP Configuration - NEW with Provider support
+        SMTP_PROVIDER=$(echo "$config_data" | grep -A1 "SMTPProvider" | grep -o '"[^"]*"' | tr -d '"' | head -1 || echo "custom")
         SMTP_SERVER=$(echo "$config_data" | grep -A1 "SMTPServer" | grep -o '"[^"]*"' | tr -d '"' | head -1 || echo "")
-        SMTP_PORT=$(echo "$config_data" | grep -A1 "SMTPPort" | grep -o '[0-9]*' | head -1 || echo "465")
+        SMTP_PORT=$(echo "$config_data" | grep -A1 "SMTPPort" | grep -o '[0-9]*' | head -1 || echo "587")
         SMTP_USERNAME=$(echo "$config_data" | grep -A1 "SMTPUsername" | grep -o '[a-zA-Z0-9._%+-]*@[a-zA-Z0-9.-]*\.[a-zA-Z]*' | head -1 || echo "")
         SMTP_PASSWORD=$(echo "$config_data" | grep -A1 "SMTPPassword" | grep -o '"[^"]*"' | tr -d '"' | head -1 || echo "")
         SMTP_FROM_ADDRESS=$(echo "$config_data" | grep -A1 "SMTPFromAddress" | grep -o '[a-zA-Z0-9._%+-]*@[a-zA-Z0-9.-]*\.[a-zA-Z]*' | head -1 || echo "$SMTP_USERNAME")
@@ -217,7 +218,9 @@ send_authenticated_email() {
         return 1
     fi
     
-    log_message "INFO" "Attempting authenticated SMTP delivery to $recipient via $SMTP_SERVER"
+    # Log provider-specific info for debugging
+    log_message "INFO" "Attempting authenticated SMTP delivery via $SMTP_PROVIDER provider"
+    log_message "INFO" "SMTP Server: $SMTP_SERVER:$SMTP_PORT, User: $SMTP_USERNAME"
     
     # Try swaks first (most reliable for SMTP auth)
     if command -v swaks >/dev/null 2>&1; then
@@ -1019,6 +1022,7 @@ case "${1:-monitor}" in
         echo "Notification Settings:"
         echo "  Webhook: $([[ -n "$WEBHOOK_URL" ]] && echo "Configured" || echo "None")"
         echo "  Email: $([[ -n "$EMAIL_RECIPIENT" ]] && echo "$EMAIL_RECIPIENT" || echo "None")"
+        echo "  SMTP Provider: $SMTP_PROVIDER"
         echo "  SMTP Server: $([[ -n "$SMTP_SERVER" ]] && echo "$SMTP_SERVER:$SMTP_PORT" || echo "Not configured")"
         echo "  SMTP Auth: $([[ -n "$SMTP_USERNAME" ]] && echo "Configured ($SMTP_USERNAME)" || echo "None")"
         echo "  From Address: $([[ -n "$SMTP_FROM_ADDRESS" ]] && echo "$SMTP_FROM_ADDRESS" || echo "Default")"

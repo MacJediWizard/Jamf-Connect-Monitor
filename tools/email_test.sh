@@ -69,10 +69,11 @@ read_email_configuration() {
     if [[ -n "$config_data" ]]; then
         print_status "$GREEN" "✅ Configuration Profile found via $config_source"
         
-        # Parse email settings
+        # Parse email settings including new SMTPProvider field
         EMAIL_RECIPIENT=$(echo "$config_data" | grep -A1 "EmailRecipient" | grep -o '[a-zA-Z0-9._%+-]*@[a-zA-Z0-9.-]*\.[a-zA-Z]*' | head -1 || echo "")
+        SMTP_PROVIDER=$(echo "$config_data" | grep -A1 "SMTPProvider" | grep -o '"[^"]*"' | tr -d '"' | head -1 || echo "custom")
         SMTP_SERVER=$(echo "$config_data" | grep -A1 "SMTPServer" | grep -o '"[^"]*"' | tr -d '"' | head -1 || echo "")
-        SMTP_PORT=$(echo "$config_data" | grep -A1 "SMTPPort" | grep -o '[0-9]*' | head -1 || echo "465")
+        SMTP_PORT=$(echo "$config_data" | grep -A1 "SMTPPort" | grep -o '[0-9]*' | head -1 || echo "587")
         SMTP_USERNAME=$(echo "$config_data" | grep -A1 "SMTPUsername" | grep -o '[a-zA-Z0-9._%+-]*@[a-zA-Z0-9.-]*\.[a-zA-Z]*' | head -1 || echo "")
         SMTP_PASSWORD=$(echo "$config_data" | grep -A1 "SMTPPassword" | grep -o '"[^"]*"' | tr -d '"' | head -1 || echo "")
         SMTP_FROM_ADDRESS=$(echo "$config_data" | grep -A1 "SMTPFromAddress" | grep -o '[a-zA-Z0-9._%+-]*@[a-zA-Z0-9.-]*\.[a-zA-Z]*' | head -1 || echo "$SMTP_USERNAME")
@@ -99,6 +100,7 @@ read_email_configuration() {
 show_email_configuration() {
     print_status "$BLUE" "=== Current Email Configuration ==="
     echo "Email Recipient: $([[ -n "$EMAIL_RECIPIENT" ]] && echo "$EMAIL_RECIPIENT" || echo "Not configured")"
+    echo "SMTP Provider: $([[ -n "$SMTP_PROVIDER" ]] && echo "$SMTP_PROVIDER" || echo "Not configured")"
     echo "SMTP Server: $([[ -n "$SMTP_SERVER" ]] && echo "$SMTP_SERVER:$SMTP_PORT" || echo "Not configured")"
     echo "SMTP Username: $([[ -n "$SMTP_USERNAME" ]] && echo "$SMTP_USERNAME" || echo "Not configured")"
     echo "SMTP Password: $([[ -n "$SMTP_PASSWORD" ]] && echo "Configured (hidden)" || echo "Not configured")"
@@ -541,16 +543,37 @@ provide_fix_recommendations() {
         recommendations+=("Install swaks for SMTP testing: brew install swaks")
     fi
     
-    # Gmail specific
-    if [[ "$SMTP_SERVER" == *"gmail"* ]]; then
-        recommendations+=("For Gmail: Enable 2-Step Verification and create App Password")
-        recommendations+=("Gmail App Password: Google Account → Security → App passwords")
-    fi
-    
-    # Office365 specific  
-    if [[ "$SMTP_SERVER" == *"office365"* || "$SMTP_SERVER" == *"outlook"* ]]; then
-        recommendations+=("For Office365: Use account password or create app-specific password")
-    fi
+    # Provider-specific recommendations based on SMTPProvider field
+    case "$SMTP_PROVIDER" in
+        "gmail")
+            recommendations+=("Gmail: Enable 2-Step Verification and create App Password")
+            recommendations+=("Gmail App Password: Google Account → Security → App passwords")
+            recommendations+=("Alternative: Enable 'Less secure app access' if 2FA is disabled")
+            ;;
+        "office365")
+            recommendations+=("Office 365: Ensure SMTP AUTH is enabled in your tenant")
+            recommendations+=("Use smtp.office365.com on port 587")
+            recommendations+=("May need app password if MFA is enabled")
+            ;;
+        "sendgrid")
+            recommendations+=("SendGrid: Use 'apikey' as username")
+            recommendations+=("Generate API key in SendGrid dashboard")
+            recommendations+=("Use smtp.sendgrid.net on port 587")
+            ;;
+        "aws_ses")
+            recommendations+=("AWS SES: Create SMTP credentials in SES console")
+            recommendations+=("Use email-smtp.[region].amazonaws.com")
+            recommendations+=("SMTP credentials are different from AWS login")
+            ;;
+        *)
+            # Fallback to server-based detection
+            if [[ "$SMTP_SERVER" == *"gmail"* ]]; then
+                recommendations+=("Gmail detected: Create App Password or enable 'Less secure apps'")
+            elif [[ "$SMTP_SERVER" == *"office365"* || "$SMTP_SERVER" == *"outlook"* ]]; then
+                recommendations+=("Office 365 detected: Check SMTP AUTH settings")
+            fi
+            ;;
+    esac
     
     if [[ ${#recommendations[@]} -eq 0 ]]; then
         print_status "$GREEN" "✅ No additional configuration needed"

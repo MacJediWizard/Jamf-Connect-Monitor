@@ -27,13 +27,33 @@
             "infoText": "Example: security@yourcompany.com"
           }
         },
-        "SMTPServer": {
-          "title": "SMTP Server (Required for Email)",
-          "description": "SMTP server required for email delivery - system mail no longer supported",
+        "SMTPProvider": {
+          "title": "SMTP Provider Type",
+          "description": "Select your SMTP provider for configuration guidance",
           "type": "string",
+          "enum": ["gmail", "office365", "sendgrid", "aws_ses", "smtp2go", "mailgun", "custom"],
+          "enum_titles": [
+            "Gmail / Google Workspace",
+            "Office 365 / Exchange Online", 
+            "SendGrid",
+            "AWS SES",
+            "SMTP2GO",
+            "Mailgun",
+            "Custom / Other SMTP Server"
+          ],
+          "default": "gmail",
           "property_order": 25,
           "options": {
-            "infoText": "Examples: smtp.gmail.com, smtp.office365.com, or your corporate SMTP server. REQUIRED for email notifications in v2.2.0+"
+            "infoText": "This helps provide the right configuration tips. All providers require SMTP authentication."
+          }
+        },
+        "SMTPServer": {
+          "title": "SMTP Server Address",
+          "description": "SMTP server hostname or IP address",
+          "type": "string",
+          "property_order": 26,
+          "options": {
+            "infoText": "Enter your SMTP server (e.g., smtp.sendgrid.net, smtp.gmail.com, mail.yourcompany.com)"
           }
         },
         "SMTPPort": {
@@ -42,30 +62,29 @@
           "type": "integer",
           "minimum": 1,
           "maximum": 65535,
-          "default": 465,
-          "property_order": 26,
+          "default": 587,
+          "property_order": 27,
           "options": {
-            "infoText": "Common ports: 465 (SSL - recommended for Gmail/Google Workspace), 587 (TLS/STARTTLS), 25 (unencrypted - not recommended). Use 465 if port 587 is blocked."
+            "infoText": "Common ports: 587 (STARTTLS - recommended), 465 (SSL/TLS), 25 (standard SMTP)"
           }
         },
         "SMTPUsername": {
           "title": "SMTP Username",
-          "description": "Email account username for SMTP authentication",
+          "description": "Username for SMTP authentication",
           "type": "string",
-          "format": "email",
-          "property_order": 27,
+          "property_order": 28,
           "options": {
-            "infoText": "Usually your full email address (e.g., alerts@yourcompany.com or personal.account@gmail.com)"
+            "infoText": "Your email address or SMTP account username"
           }
         },
         "SMTPPassword": {
           "title": "SMTP Password",
-          "description": "Email account password or app-specific password",
+          "description": "Password for SMTP authentication",
           "type": "string",
           "format": "password",
-          "property_order": 28,
+          "property_order": 29,
           "options": {
-            "infoText": "For Gmail: Create App Password in Google Account settings. For Office365: Use account password or create app password.",
+            "infoText": "Your email password, app password, or API key",
             "inputAttributes": {
               "type": "password"
             }
@@ -73,12 +92,12 @@
         },
         "SMTPFromAddress": {
           "title": "From Email Address (Optional)",
-          "description": "Email address shown as sender in violation notifications",
+          "description": "Email address shown as sender in notifications",
           "type": "string",
           "format": "email",
-          "property_order": 29,
+          "property_order": 30,
           "options": {
-            "infoText": "Leave blank to use SMTP username as sender address. Can be different for branded emails."
+            "infoText": "Leave blank to use SMTP username as sender address"
           }
         },
         "NotificationTemplate": {

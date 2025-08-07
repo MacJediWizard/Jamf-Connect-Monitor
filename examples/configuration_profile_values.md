@@ -7,10 +7,11 @@ When configuring the Jamf Connect Monitor in Jamf Pro using the schema, use thes
 ### Notification Settings
 ```
 Email Recipient: security-alerts@yourcompany.com
+SMTP Provider: Gmail / Google Workspace
 SMTP Server: smtp.gmail.com
-SMTP Port: 465  (Use 465 if port 587 is blocked)
+SMTP Port: 587
 SMTP Username: monitoring@yourcompany.com
-SMTP Password: [Your App Password - 16 characters for Gmail]
+SMTP Password: [Your App Password or regular password]
 From Email Address: monitoring@yourcompany.com
 Notification Style: Detailed Report
 Notification Cooldown: 15 minutes
@@ -50,38 +51,51 @@ Auto-populate Approved Admins: ✓ Enabled
 
 ---
 
-## SMTP Configuration Examples
+## SMTP Configuration Examples by Provider
 
-### Gmail/Google Workspace
+### Gmail / Google Workspace
 ```
+SMTP Provider: Gmail / Google Workspace
 SMTP Server: smtp.gmail.com
-SMTP Port: 465 (SSL) or 587 (TLS)
+SMTP Port: 587 (recommended) or 465
 SMTP Username: your-email@gmail.com
-SMTP Password: [Gmail App Password - see setup below]
+SMTP Password: [App Password if 2FA enabled, or regular password]
 ```
 
-### Office 365/Outlook
+### Office 365 / Exchange Online
 ```
+SMTP Provider: Office 365 / Exchange Online
 SMTP Server: smtp.office365.com
 SMTP Port: 587
 SMTP Username: your-email@organization.com
-SMTP Password: [Your password or app password]
+SMTP Password: [Your password or app password if MFA enabled]
 ```
 
 ### SendGrid
 ```
+SMTP Provider: SendGrid
 SMTP Server: smtp.sendgrid.net
-SMTP Port: 587 or 465
+SMTP Port: 587 (recommended) or 465
 SMTP Username: apikey
 SMTP Password: [Your SendGrid API key]
 ```
 
-### Corporate SMTP Relay (no authentication)
+### AWS SES
 ```
-SMTP Server: internal-smtp.company.local
-SMTP Port: 25
-SMTP Username: [leave blank]
-SMTP Password: [leave blank]
+SMTP Provider: AWS SES
+SMTP Server: email-smtp.[region].amazonaws.com
+SMTP Port: 587 or 465
+SMTP Username: [SMTP credentials from SES console]
+SMTP Password: [SMTP password from SES console]
+```
+
+### Custom / Other SMTP Server
+```
+SMTP Provider: Custom / Other SMTP Server
+SMTP Server: mail.yourcompany.com
+SMTP Port: 587
+SMTP Username: monitoring@yourcompany.com
+SMTP Password: [Your email password]
 ```
 
 ---

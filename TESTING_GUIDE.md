@@ -1,11 +1,11 @@
-# 🧪 Jamf Connect Monitor v2.2.0 - Email Testing Guide
+# 🧪 Jamf Connect Monitor v2.3.0 - Email Testing Guide
 
 ## 📦 Package Ready for Deployment
 
-**Package Location:** `/scripts/output/JamfConnectMonitor-2.2.0.pkg`  
+**Package Location:** `/scripts/output/JamfConnectMonitor-2.3.0.pkg`  
 **Schema Location:** `/scripts/output/jamf_connect_monitor_schema.json`
 
-## ⚠️ Breaking Change in v2.2.0
+## ✨ New in v2.3.0
 
 **SMTP Configuration is now REQUIRED for email notifications**
 - System mail fallback has been removed due to reliability issues
@@ -36,7 +36,7 @@
 1. Log into Jamf Pro
 2. Navigate to: **Settings → Computer Management → Packages**
 3. Click **New**
-4. Upload `JamfConnectMonitor-2.2.0.pkg`
+4. Upload `JamfConnectMonitor-2.3.0.pkg`
 5. Set Category: Security or Utilities
 
 ### Step 2: Create Configuration Profile
@@ -64,7 +64,7 @@
    - Display Name: "Install Jamf Connect Monitor"
    - Trigger: Recurring Check-in (or Self Service)
 3. Packages:
-   - Add `JamfConnectMonitor-2.2.0.pkg`
+   - Add `JamfConnectMonitor-2.3.0.pkg`
    - Action: Install
 4. Scope:
    - Target test computers first
@@ -190,6 +190,6 @@ Once testing succeeds:
 
 ---
 
-**Version:** 2.2.0  
-**Port Configuration:** 465 (SSL) recommended  
-**Default Fallback:** Port 465 if not configured
+**Version:** 2.3.0  
+**SMTP Provider:** Select from dropdown (Gmail, Office365, SendGrid, etc.)  
+**Port Configuration:** 587 (STARTTLS) default, 465 (SSL) also supported

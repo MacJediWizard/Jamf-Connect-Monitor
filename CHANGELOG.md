@@ -13,6 +13,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Performance monitoring dashboard
 - Automated compliance reporting
 
+## [2.3.0] - 2025-08-07
+
+### Added
+- **SMTP Provider Selection**: New dropdown field in Configuration Profile to select SMTP provider type
+  - Supports: Gmail/Google Workspace, Office 365, SendGrid, AWS SES, SMTP2GO, Mailgun, Custom
+  - Provider-specific configuration guidance and troubleshooting
+- **Enhanced Email Diagnostics**: Provider-aware recommendations in email test tool
+- **Improved Configuration**: All SMTP configurations now require authentication for security
+
+### Changed
+- Updated Configuration Profile schema with SMTPProvider field
+- Enhanced email test tool with provider-specific tips
+- Improved SMTP configuration examples in documentation
+- Default SMTP port changed from 465 to 587 (more universal)
+
+### Fixed
+- Better handling of SMTP configuration for different email providers
+- Clearer error messages for authentication failures
+
 ## [2.2.0] - 2025-08-07
 
 ### 🔄 **Breaking Change: Removed System Mail Fallback**

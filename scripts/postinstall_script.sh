@@ -12,7 +12,7 @@ LAUNCH_DAEMON="/Library/LaunchDaemons/com.macjediwizard.jamfconnectmonitor.plist
 APPROVED_ADMINS="/usr/local/etc/approved_admins.txt"
 
 # Centralized version management
-PACKAGE_VERSION="2.0.1"
+PACKAGE_VERSION="2.3.0"
 
 # Configuration from Jamf Pro Parameters (if provided)
 WEBHOOK_URL="${4:-}"          # Parameter 4

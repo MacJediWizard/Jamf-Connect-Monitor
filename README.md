@@ -1,4 +1,4 @@
-# Jamf Connect Privilege Monitor v2.2.0
+# Jamf Connect Privilege Monitor v2.3.0
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Jamf Pro Compatible](https://img.shields.io/badge/Jamf%20Pro-10.19%2B-blue.svg)](https://jamf.com)
@@ -7,24 +7,25 @@
 
 A comprehensive monitoring and automated remediation system for Jamf Connect privilege elevation events with **enterprise Configuration Profile management** and **real-time detection capabilities**.
 
-## 🎯 **v2.2.0 - SMTP-Only Email Delivery**
+## 🎯 **v2.3.0 - Enhanced SMTP Provider Support**
 
-### ⚠️ **Breaking Change in v2.2.0**
-- **Email notifications now require SMTP configuration**  
-- System mail fallback removed due to reliability issues  
-- Configure Gmail, Office365, or corporate SMTP in Configuration Profile  
+### ✨ **New in v2.3.0**
+- **SMTP Provider Selection** - Choose from Gmail, Office 365, SendGrid, AWS SES, and more
+- **Provider-Specific Guidance** - Get tailored configuration help for your email provider
+- **Enhanced Diagnostics** - Improved email testing with provider-aware recommendations
+- **All Providers Authenticated** - Security-first approach with mandatory SMTP authentication
 
-**✅ ENTERPRISE TESTED:** Reliable authenticated email delivery  
-**✅ NO MORE STUCK EMAILS:** Eliminated unreliable system mail queues  
-**✅ CLEAR ERRORS:** Explicit messages when SMTP not configured  
-**✅ PRODUCTION READY:** All v2.x fixes plus reliable SMTP-only email delivery  
+**✅ SIMPLIFIED SETUP:** Dropdown selection for common SMTP providers  
+**✅ BETTER GUIDANCE:** Provider-specific configuration tips  
+**✅ ENHANCED SECURITY:** All SMTP options require authentication  
+**✅ PRODUCTION READY:** All v2.x fixes plus enhanced provider support  
 
-## 🚀 **What's New in v2.2.0**
+## 🚀 **What's New in v2.3.0**
 
-### **Breaking Changes**
-- **SMTP Required** - Email notifications require authenticated SMTP configuration
-- **No System Mail** - Removed unreliable system mail fallback that caused silent failures
-- **Better Reliability** - No more stuck emails in postfix queues or DNS resolution issues
+### **New Features**
+- **SMTP Provider Dropdown** - Select your email provider from a list for easier configuration
+- **Provider-Aware Diagnostics** - Get specific troubleshooting tips for your SMTP provider
+- **Improved Documentation** - Updated examples for all major email providers
 
 ### **Includes All Previous Fixes** 
 - **✅ ACL Clearing** - Eliminates `@` symbols in file permissions preventing script execution
@@ -62,8 +63,8 @@ A comprehensive monitoring and automated remediation system for Jamf Connect pri
 1. Download the latest `.pkg` from [Releases](https://github.com/MacJediWizard/jamf-connect-monitor/releases)
 2. Upload to Jamf Pro and deploy via policy
 3. Deploy Configuration Profile using included JSON Schema
-4. **CRITICAL:** Update Extension Attribute script in Jamf Pro for v2.2.0 features
-5. **IMPORTANT:** Configure SMTP settings in Configuration Profile (required for email in v2.2.0+)
+4. **CRITICAL:** Update Extension Attribute script in Jamf Pro for v2.3.0 features
+5. **IMPORTANT:** Configure SMTP settings in Configuration Profile with provider selection
 5. Verify deployment with included verification script
 6. See [Jamf Pro Deployment Guide](docs/jamf-pro-deployment.md) for details
 
@@ -77,7 +78,7 @@ cd jamf-connect-monitor
 sudo ./scripts/package_creation_script.sh build
 
 # Install the generated package
-sudo installer -pkg output/JamfConnectMonitor-2.2.0.pkg -target /
+sudo installer -pkg output/JamfConnectMonitor-2.3.0.pkg -target /
 
 # Verify installation
 sudo ./tools/verify_monitoring.sh
@@ -89,10 +90,10 @@ sudo ./tools/verify_monitoring.sh
 sudo ./tools/verify_monitoring.sh
 
 # Expected output includes:
-# ✅ Main script installed: Version 2.2.0
+# ✅ Main script installed: Version 2.3.0
 # ✅ Permissions correct: -rwxr-xr-x (no @ symbols)
 # ✅ Extension Attribute runs successfully
-# ✅ Version detected: Version: 2.2.0, Periodic: Running
+# ✅ Version detected: Version: 2.3.0, Periodic: Running
 # ✅ Company name: [Your Company Name] (from Configuration Profile)
 ```
 
@@ -168,7 +169,7 @@ sudo ./tools/verify_monitoring.sh
 
 ### Extension Attribute (Enhanced in v2.x)
 Creates comprehensive reporting in Jamf Pro computer records:
-- **Auto-Version Detection** - Shows "Version: 2.2.0" automatically
+- **Auto-Version Detection** - Shows "Version: 2.3.0" automatically
 - **Configuration Profile Status** - "Profile: Deployed" with actual company names
 - **Monitoring Mode Display** - "Mode: periodic" (fixed in v2.x)
 - **Violation History** - Current unauthorized admins with detailed tracking
@@ -261,13 +262,13 @@ sudo ./tools/verify_monitoring.sh
 
 ### Verification Output Example
 ```bash
-🔍 JAMF CONNECT MONITOR VERIFICATION v2.2.0
-✅ Main script installed: Version 2.2.0
+🔍 JAMF CONNECT MONITOR VERIFICATION v2.3.0
+✅ Main script installed: Version 2.3.0
 ✅ Permissions correct: -rwxr-xr-x
-✅ Extension Attribute script installed: Version 2.2.0
+✅ Extension Attribute script installed: Version 2.3.0
 ✅ EA permissions correct: -rwxr-xr-x (no @ symbols)
 ✅ Extension Attribute runs successfully
-✅ Version detected: Version: 2.2.0, Periodic: Running
+✅ Version detected: Version: 2.3.0, Periodic: Running
 ✅ Monitoring mode detected: Mode: periodic
 ✅ Company name: [Your Company Name] (from Configuration Profile)
 🎉 MONITORING APPEARS TO BE WORKING CORRECTLY
@@ -312,19 +313,19 @@ Complete removal guide: [Uninstall Guide](docs/uninstall-guide.md)
 - [Smart Groups Guide](docs/smart-groups.md) - Jamf Pro automation setup with future-proof criteria
 - [Migration Guide](docs/migration-guide.md) - v1.x to v2.x upgrade instructions
 
-## 🚀 **Migration to v2.2.0**
+## 🚀 **Migration to v2.3.0**
 
 ### ⚠️ Breaking Change - SMTP Required
 ```bash
 # 1. CONFIGURE SMTP in Configuration Profile (REQUIRED for email)
-# 2. Upload v2.2.0 package to Jamf Pro
+# 2. Upload v2.3.0 package to Jamf Pro
 # 3. Update Extension Attribute script for version display
 # 4. Deploy to existing systems
 # 5. Run verification: sudo ./tools/verify_monitoring.sh
 ```
 
 ### From Previous Versions
-The v2.2.0 package automatically handles upgrades with:
+The v2.3.0 package automatically handles upgrades with:
 - **Clean Installation:** Removes old files before installing new ones
 - **ACL Clearing:** Cleans extended attributes to prevent permission issues
 - **Configuration Preservation:** Keeps approved admin lists and logs
@@ -341,10 +342,10 @@ See [Migration Guide](docs/migration-guide.md) for detailed upgrade instructions
 
 ## 🎯 **Enterprise Deployment Checklist**
 
-### Critical Steps for v2.2.0 Production Deployment
+### Critical Steps for v2.3.0 Production Deployment
 - [ ] **Configure SMTP** - REQUIRED: Set up SMTP in Configuration Profile for email
-- [ ] **Upload Package** - Deploy JamfConnectMonitor-2.2.0.pkg to Jamf Pro
-- [ ] **Update Extension Attribute** - Apply v2.2.0 script for proper version display
+- [ ] **Upload Package** - Deploy JamfConnectMonitor-2.3.0.pkg to Jamf Pro
+- [ ] **Update Extension Attribute** - Apply v2.3.0 script for proper version display
 - [ ] **Deploy Configuration Profile** - Use included JSON Schema for centralized management
 - [ ] **Create Smart Groups** - Use future-proof criteria: `Extension Attribute like "*Version: 2.*"`
 - [ ] **Test on Pilot Group** - Deploy to 2-3 test systems first
