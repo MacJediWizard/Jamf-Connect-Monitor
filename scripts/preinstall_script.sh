@@ -15,6 +15,33 @@ log_message() {
 
 log_message "Starting pre-installation tasks"
 
+# Clean up old installation files to ensure clean upgrade
+log_message "Cleaning up previous installation files"
+
+# Remove old script locations (if they exist from previous versions)
+old_files=(
+    "/usr/local/bin/jamf_connect_monitor.sh"
+    "/usr/local/etc/jamf_ea_admin_violations.sh"
+    "/Library/LaunchDaemons/com.macjediwizard.jamfconnectmonitor.plist"
+    "/usr/local/share/jamf_connect_monitor/uninstall_script.sh"
+)
+
+for file in "${old_files[@]}"; do
+    if [[ -f "$file" ]]; then
+        # Clear any ACLs before removal
+        xattr -c "$file" 2>/dev/null || true
+        rm -f "$file"
+        log_message "Removed old file: $file"
+    fi
+done
+
+# Clean up old directories (but preserve logs and config)
+if [[ -d "/usr/local/share/jamf_connect_monitor" ]]; then
+    # Remove everything except logs
+    find /usr/local/share/jamf_connect_monitor -type f ! -name "*.log" -delete 2>/dev/null || true
+    log_message "Cleaned up old application directory"
+fi
+
 # Stop existing monitoring if running
 if launchctl list | grep -q "com.macjediwizard.jamfconnectmonitor"; then
     log_message "Stopping existing monitoring daemon"

@@ -41,6 +41,14 @@ This release removes the unreliable system mail fallback, requiring SMTP configu
 - **Solution:** Removed system mail entirely, requiring reliable SMTP configuration
 - **Impact:** No more stuck emails in local mail queues or DNS resolution failures
 
+### Enhanced
+
+#### **Package Installation Process**
+- **Clean Upgrades:** Preinstall script now removes old files before installing new ones
+- **ACL Clearing:** Clears extended attributes on old files to prevent permission issues
+- **Preserves Configuration:** Keeps approved admin lists and logs during upgrade
+- **Prevents Conflicts:** Ensures clean installation by removing previous version files
+
 ### Security
 
 - **Authenticated Only:** All emails now sent via authenticated SMTP connections

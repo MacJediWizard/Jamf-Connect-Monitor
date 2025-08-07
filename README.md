@@ -324,10 +324,11 @@ Complete removal guide: [Uninstall Guide](docs/uninstall-guide.md)
 ```
 
 ### From Previous Versions
-The v2.2.0 package automatically migrates existing installations while preserving:
-- Approved administrator lists
-- Historical violation logs  
-- Monitoring configuration preferences
+The v2.2.0 package automatically handles upgrades with:
+- **Clean Installation:** Removes old files before installing new ones
+- **ACL Clearing:** Cleans extended attributes to prevent permission issues
+- **Configuration Preservation:** Keeps approved admin lists and logs
+- **Automatic Migration:** Preserves all existing settings and data
 
 ### New Configuration Profile Features
 After upgrade, deploy Configuration Profile to enable:
