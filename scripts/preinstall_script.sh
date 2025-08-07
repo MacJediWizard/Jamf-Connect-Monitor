@@ -3,6 +3,9 @@
 # Jamf Pro Pre-installation Script
 # This script prepares the system for Jamf Connect Monitor installation
 
+# Set script timeout to prevent hanging
+set -o pipefail
+
 # Variables
 SCRIPT_NAME="JamfConnectMonitor-PreInstall"
 LOG_FILE="/var/log/jamf_connect_monitor_install.log"
@@ -37,16 +40,17 @@ done
 
 # Clean up old directories (but preserve logs and config)
 if [[ -d "/usr/local/share/jamf_connect_monitor" ]]; then
-    # Remove everything except logs
-    find /usr/local/share/jamf_connect_monitor -type f ! -name "*.log" -delete 2>/dev/null || true
+    # Remove old uninstall script specifically
+    rm -f "/usr/local/share/jamf_connect_monitor/uninstall_script.sh" 2>/dev/null || true
     log_message "Cleaned up old application directory"
 fi
 
 # Stop existing monitoring if running
-if launchctl list | grep -q "com.macjediwizard.jamfconnectmonitor"; then
+if launchctl list 2>/dev/null | grep -q "com.macjediwizard.jamfconnectmonitor"; then
     log_message "Stopping existing monitoring daemon"
     launchctl unload /Library/LaunchDaemons/com.macjediwizard.jamfconnectmonitor.plist 2>/dev/null || true
-    sleep 2
+    # Shorter sleep to avoid hanging
+    sleep 1
 fi
 
 # Kill any running monitor processes
