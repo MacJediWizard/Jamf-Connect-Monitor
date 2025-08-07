@@ -13,6 +13,66 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Performance monitoring dashboard
 - Automated compliance reporting
 
+## [2.1.0] - 2025-08-07
+
+### 🚀 **Major Feature Release: Enhanced SMTP Authentication & Security**
+
+This release introduces comprehensive SMTP authentication support with enterprise-grade email delivery capabilities, addressing common corporate network restrictions and security requirements.
+
+### Added
+
+#### **Full SMTP Authentication Support**
+- **Multiple SMTP Methods:** Implemented swaks, mailx, and sendmail with proper authentication
+- **Port 465 SSL Support:** Added automatic SSL/TLS detection based on port
+  - Port 465: Uses SSL connection (--tlsc for swaks, smtp-use-ssl for mailx)
+  - Port 587: Uses STARTTLS (--tls for swaks, smtp-use-starttls for mailx)
+- **Fallback Chain:** Automatic fallback from authenticated SMTP to system mail
+- **Network Testing:** Built-in connectivity testing before sending emails
+
+#### **Configuration Profile Security**
+- **Password Field Security:** SMTP password now displays as masked field in Jamf Pro GUI
+- **Format:** Added `"format": "password"` to schema for secure input
+- **No Clear Text:** Passwords are hidden during input and after saving
+
+#### **Email Testing Tools**
+- **Comprehensive Test Suite:** Enhanced `tools/email_test.sh` with:
+  - SMTP connectivity testing
+  - Authentication validation
+  - System mail verification
+  - Diagnostic reporting with fix recommendations
+- **Test Commands:** New `test-email` and `test-config` commands in main script
+
+### Changed
+
+#### **Default Port Configuration**
+- **Changed default SMTP port from 587 to 465** across all components
+- **Rationale:** Many corporate networks block port 587 but allow 465
+- **Backwards Compatible:** Still supports port 587 when configured
+
+#### **Configuration Schema Updates**
+- Added SMTP configuration fields to JSON schema:
+  - SMTPServer, SMTPPort, SMTPUsername, SMTPPassword, SMTPFromAddress
+- Enhanced documentation in schema for port selection
+- Improved help text for Gmail App Password requirements
+
+### Fixed
+
+#### **Email Delivery Issues**
+- **Problem:** Email notifications failed in networks blocking port 587
+- **Solution:** Implemented port 465 SSL support with proper TLS handling
+- **Impact:** Email now works in restrictive corporate environments
+
+#### **SMTP Authentication**
+- **Problem:** Basic mail command couldn't authenticate with modern mail servers
+- **Solution:** Integrated swaks and configured mailx for authenticated SMTP
+- **Impact:** Supports Gmail, Office365, and corporate SMTP servers
+
+### Security
+
+- **Password Protection:** SMTP passwords are now masked in Configuration Profile GUI
+- **No Customer Data:** Removed all organization-specific references from code
+- **Secure Defaults:** Port 465 with SSL as default for better security
+
 ## [2.0.1] - 2025-08-05
 
 ### 🔧 **Production-Ready Release: All Critical Fixes Verified**

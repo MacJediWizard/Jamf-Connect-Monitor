@@ -27,6 +27,60 @@
             "infoText": "Example: security@yourcompany.com"
           }
         },
+        "SMTPServer": {
+          "title": "SMTP Server (Authenticated Email)",
+          "description": "SMTP server for reliable email delivery in corporate environments",
+          "type": "string",
+          "property_order": 25,
+          "options": {
+            "infoText": "Examples: smtp.gmail.com, smtp.office365.com, or your corporate SMTP server. Leave blank to use system mail."
+          }
+        },
+        "SMTPPort": {
+          "title": "SMTP Port",
+          "description": "SMTP server port number",
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 65535,
+          "default": 465,
+          "property_order": 26,
+          "options": {
+            "infoText": "Common ports: 465 (SSL - recommended for Gmail/Google Workspace), 587 (TLS/STARTTLS), 25 (unencrypted - not recommended). Use 465 if port 587 is blocked."
+          }
+        },
+        "SMTPUsername": {
+          "title": "SMTP Username",
+          "description": "Email account username for SMTP authentication",
+          "type": "string",
+          "format": "email",
+          "property_order": 27,
+          "options": {
+            "infoText": "Usually your full email address (e.g., alerts@yourcompany.com or personal.account@gmail.com)"
+          }
+        },
+        "SMTPPassword": {
+          "title": "SMTP Password",
+          "description": "Email account password or app-specific password",
+          "type": "string",
+          "format": "password",
+          "property_order": 28,
+          "options": {
+            "infoText": "For Gmail: Create App Password in Google Account settings. For Office365: Use account password or create app password.",
+            "inputAttributes": {
+              "type": "password"
+            }
+          }
+        },
+        "SMTPFromAddress": {
+          "title": "From Email Address (Optional)",
+          "description": "Email address shown as sender in violation notifications",
+          "type": "string",
+          "format": "email",
+          "property_order": 29,
+          "options": {
+            "infoText": "Leave blank to use SMTP username as sender address. Can be different for branded emails."
+          }
+        },
         "NotificationTemplate": {
           "title": "Notification Style",
           "description": "Choose notification detail level",

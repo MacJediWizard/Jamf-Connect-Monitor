@@ -1,11 +1,11 @@
 #!/bin/bash
 
 # Jamf Connect Elevation Monitor & Admin Account Remediation Script
-# Version: 2.0.1 - Enhanced with Configuration Profile support and real-time monitoring
+# Version: 2.1.0 - Enhanced SMTP authentication with port 465 SSL support and password security
 # Author: MacJediWizard
 
 # Centralized Version Management
-VERSION="2.0.1"
+VERSION="2.1.0"
 SCRIPT_NAME="JamfConnectMonitor"
 
 # Configuration Variables
@@ -19,7 +19,7 @@ LOCKFILE="/tmp/jamf_connect_monitor.lock"
 # Configuration Profile domain
 CONFIG_PROFILE_DOMAIN="com.macjediwizard.jamfconnectmonitor"
 
-# Read configuration from managed preferences (Configuration Profile) - USING WORKING METHODS
+# Read configuration from managed preferences (Configuration Profile) - FIXED VERSION WITH SMTP
 read_configuration() {
     local config_data=""
     local config_source=""
@@ -36,35 +36,59 @@ read_configuration() {
     if [[ -n "$config_data" ]]; then
         log_message "INFO" "Configuration Profile found via $config_source"
         
+        # Helper function to parse boolean values from Configuration Profile
+        parse_boolean() {
+            local key="$1"
+            local default_value="$2"
+            local value=$(echo "$config_data" | grep -A1 "$key" | grep -o -E "(true|false|1|0)" | head -1)
+            
+            case "$value" in
+                "true"|"1") echo "true" ;;
+                "false"|"0") echo "false" ;;
+                *) echo "$default_value" ;;
+            esac
+        }
+        
         # Parse settings from the config data using robust extraction
         # Notification Settings
         WEBHOOK_URL=$(echo "$config_data" | grep -A1 "WebhookURL" | grep -o 'https://[^"]*' | head -1 || echo "")
         EMAIL_RECIPIENT=$(echo "$config_data" | grep -A1 "EmailRecipient" | grep -o '[a-zA-Z0-9._%+-]*@[a-zA-Z0-9.-]*\.[a-zA-Z]*' | head -1 || echo "")
+        
+        # SMTP Configuration - NEW
+        SMTP_SERVER=$(echo "$config_data" | grep -A1 "SMTPServer" | grep -o '"[^"]*"' | tr -d '"' | head -1 || echo "")
+        SMTP_PORT=$(echo "$config_data" | grep -A1 "SMTPPort" | grep -o '[0-9]*' | head -1 || echo "465")
+        SMTP_USERNAME=$(echo "$config_data" | grep -A1 "SMTPUsername" | grep -o '[a-zA-Z0-9._%+-]*@[a-zA-Z0-9.-]*\.[a-zA-Z]*' | head -1 || echo "")
+        SMTP_PASSWORD=$(echo "$config_data" | grep -A1 "SMTPPassword" | grep -o '"[^"]*"' | tr -d '"' | head -1 || echo "")
+        SMTP_FROM_ADDRESS=$(echo "$config_data" | grep -A1 "SMTPFromAddress" | grep -o '[a-zA-Z0-9._%+-]*@[a-zA-Z0-9.-]*\.[a-zA-Z]*' | head -1 || echo "$SMTP_USERNAME")
+        
         NOTIFICATION_TEMPLATE=$(echo "$config_data" | grep -A1 "NotificationTemplate" | grep -o '"[^"]*"' | tr -d '"' | grep -E "(simple|detailed|security_report)" | head -1 || echo "detailed")
         NOTIFICATION_COOLDOWN=$(echo "$config_data" | grep -A1 "NotificationCooldownMinutes" | grep -o '[0-9]*' | head -1 || echo "15")
         
-        # Monitoring Behavior
+        # Monitoring Behavior - FIXED BOOLEAN PARSING
         MONITORING_MODE=$(echo "$config_data" | grep -A1 "MonitoringMode" | grep -o -E "(periodic|realtime|hybrid)" | head -1 || echo "periodic")
-        AUTO_REMEDIATION=$(echo "$config_data" | grep -A1 "AutoRemediation" | grep -o -E "(true|false)" | head -1 || echo "true")
+        AUTO_REMEDIATION=$(parse_boolean "AutoRemediation" "true")
         GRACE_PERIOD_MINUTES=$(echo "$config_data" | grep -A1 "GracePeriodMinutes" | grep -o '[0-9]*' | head -1 || echo "5")
-        MONITOR_JAMF_CONNECT_ONLY=$(echo "$config_data" | grep -A1 "MonitorJamfConnectOnly" | grep -o -E "(true|false)" | head -1 || echo "true")
+        MONITOR_JAMF_CONNECT_ONLY=$(parse_boolean "MonitorJamfConnectOnly" "true")
         
-        # Security Settings
-        REQUIRE_CONFIRMATION=$(echo "$config_data" | grep -A1 "RequireConfirmation" | grep -o -E "(true|false)" | head -1 || echo "false")
-        VIOLATION_REPORTING=$(echo "$config_data" | grep -A1 "ViolationReporting" | grep -o -E "(true|false)" | head -1 || echo "true")
+        # Security Settings - FIXED BOOLEAN PARSING
+        REQUIRE_CONFIRMATION=$(parse_boolean "RequireConfirmation" "false")
+        VIOLATION_REPORTING=$(parse_boolean "ViolationReporting" "true")
         LOG_RETENTION_DAYS=$(echo "$config_data" | grep -A1 "LogRetentionDays" | grep -o '[0-9]*' | head -1 || echo "30")
         
         # Jamf Pro Integration - FIXED COMPANY NAME READING
-        UPDATE_INVENTORY_ON_VIOLATION=$(echo "$config_data" | grep -A1 "UpdateInventoryOnViolation" | grep -o -E "(true|false)" | head -1 || echo "true")
+        UPDATE_INVENTORY_ON_VIOLATION=$(parse_boolean "UpdateInventoryOnViolation" "true")
         TRIGGER_POLICY_ON_VIOLATION=$(echo "$config_data" | grep -A1 "TriggerPolicyOnViolation" | grep -o '"[^"]*"' | tr -d '"' | head -1 || echo "")
         COMPANY_NAME=$(echo "$config_data" | grep -A1 "CompanyName" | grep -o '"[^"]*"' | tr -d '"' | head -1 || echo "Your Company")
         IT_CONTACT_EMAIL=$(echo "$config_data" | grep -A1 "ITContactEmail" | grep -o '[a-zA-Z0-9._%+-]*@[a-zA-Z0-9.-]*\.[a-zA-Z]*' | head -1 || echo "")
         
-        # Advanced Settings
-        DEBUG_LOGGING=$(echo "$config_data" | grep -A1 "DebugLogging" | grep -o -E "(true|false)" | head -1 || echo "false")
+        # Advanced Settings - FIXED BOOLEAN PARSING
+        DEBUG_LOGGING=$(parse_boolean "DebugLogging" "false")
         MONITORING_INTERVAL=$(echo "$config_data" | grep -A1 "MonitoringInterval" | grep -o '[0-9]*' | head -1 || echo "300")
         MAX_NOTIFICATIONS_PER_HOUR=$(echo "$config_data" | grep -A1 "MaxNotificationsPerHour" | grep -o '[0-9]*' | head -1 || echo "10")
-        AUTO_POPULATE_APPROVED_ADMINS=$(echo "$config_data" | grep -A1 "AutoPopulateApprovedAdmins" | grep -o -E "(true|false)" | head -1 || echo "true")
+        AUTO_POPULATE_APPROVED_ADMINS=$(parse_boolean "AutoPopulateApprovedAdmins" "true")
+        
+        # Set default SMTP from address if not configured
+        [[ -z "$SMTP_FROM_ADDRESS" ]] && SMTP_FROM_ADDRESS="$SMTP_USERNAME"
         
     else
         # Fallback to default values if no Configuration Profile found
@@ -72,6 +96,11 @@ read_configuration() {
         
         WEBHOOK_URL=""
         EMAIL_RECIPIENT=""
+        SMTP_SERVER=""
+        SMTP_PORT="465"
+        SMTP_USERNAME=""
+        SMTP_PASSWORD=""
+        SMTP_FROM_ADDRESS=""
         NOTIFICATION_TEMPLATE="detailed"
         NOTIFICATION_COOLDOWN="15"
         MONITORING_MODE="periodic"
@@ -95,8 +124,10 @@ read_configuration() {
     if [[ "$DEBUG_LOGGING" == "true" ]]; then
         log_message "DEBUG" "Webhook: $([[ -n "$WEBHOOK_URL" ]] && echo "Configured" || echo "None")"
         log_message "DEBUG" "Email: $([[ -n "$EMAIL_RECIPIENT" ]] && echo "$EMAIL_RECIPIENT" || echo "None")"
+        log_message "DEBUG" "SMTP: $([[ -n "$SMTP_SERVER" ]] && echo "Configured ($SMTP_SERVER:$SMTP_PORT)" || echo "System mail")"
         log_message "DEBUG" "Monitoring Mode: $MONITORING_MODE"
         log_message "DEBUG" "Auto Remediation: $AUTO_REMEDIATION"
+        log_message "DEBUG" "Violation Reporting: $VIOLATION_REPORTING"
         log_message "DEBUG" "Company: $COMPANY_NAME"
     fi
 }
@@ -139,6 +170,330 @@ cleanup() {
     exit 0
 }
 trap cleanup EXIT INT TERM
+
+# FIXED: Improved SMTP Authentication Functions for Reliable Email Delivery
+# Test SMTP connectivity
+test_smtp_connection() {
+    local smtp_host="$1"
+    local smtp_port="$2"
+    
+    log_message "INFO" "Testing SMTP connectivity to $smtp_host:$smtp_port"
+    
+    # Test basic connectivity with multiple methods
+    if command -v nc >/dev/null 2>&1; then
+        if timeout 10 nc -z "$smtp_host" "$smtp_port" 2>/dev/null; then
+            log_message "INFO" "SMTP server reachable: $smtp_host:$smtp_port"
+            return 0
+        fi
+    fi
+    
+    # Fallback connectivity test using telnet if nc not available
+    if command -v telnet >/dev/null 2>&1; then
+        if timeout 10 sh -c "echo quit | telnet $smtp_host $smtp_port" 2>/dev/null | grep -q "Connected"; then
+            log_message "INFO" "SMTP server reachable via telnet: $smtp_host:$smtp_port"
+            return 0
+        fi
+    fi
+    
+    log_message "ERROR" "Cannot connect to SMTP server: $smtp_host:$smtp_port"
+    return 1
+}
+
+# FIXED: Improved authenticated email sending with better error handling
+send_authenticated_email() {
+    local recipient="$1"
+    local subject="$2"
+    local body="$3"
+    
+    if [[ -z "$SMTP_SERVER" || -z "$SMTP_USERNAME" || -z "$SMTP_PASSWORD" ]]; then
+        log_message "DEBUG" "SMTP authentication not configured - cannot send authenticated email"
+        return 1
+    fi
+    
+    # Test SMTP connectivity first
+    if ! test_smtp_connection "$SMTP_SERVER" "$SMTP_PORT"; then
+        log_message "ERROR" "SMTP connectivity test failed for $SMTP_SERVER:$SMTP_PORT"
+        return 1
+    fi
+    
+    log_message "INFO" "Attempting authenticated SMTP delivery to $recipient via $SMTP_SERVER"
+    
+    # Try swaks first (most reliable for SMTP auth)
+    if command -v swaks >/dev/null 2>&1; then
+        log_message "DEBUG" "Using swaks for authenticated SMTP"
+        
+        # Add TLS options based on port
+        local tls_option=""
+        if [[ "$SMTP_PORT" == "465" ]]; then
+            tls_option="--tlsc"  # Use TLS on connect for port 465
+        else
+            tls_option="--tls"   # Use STARTTLS for other ports
+        fi
+        
+        local swaks_result=$(swaks \
+            --to "$recipient" \
+            --from "$SMTP_FROM_ADDRESS" \
+            --server "$SMTP_SERVER:$SMTP_PORT" \
+            --auth-user "$SMTP_USERNAME" \
+            --auth-password "$SMTP_PASSWORD" \
+            --header "Subject: $subject" \
+            --body "$body" \
+            $tls_option \
+            --suppress-data \
+            2>&1)
+        
+        if echo "$swaks_result" | grep -q "250.*OK"; then
+            log_message "INFO" "Authenticated email sent successfully via swaks to $recipient"
+            return 0
+        else
+            log_message "ERROR" "swaks authentication failed: $(echo "$swaks_result" | tail -1)"
+            return 1
+        fi
+    fi
+    
+    # Fallback to mailx with configuration
+    if command -v mailx >/dev/null 2>&1; then
+        log_message "DEBUG" "Using mailx for authenticated SMTP"
+        
+        # Create temporary mailx configuration with proper SSL/TLS settings
+        local temp_mailrc="/tmp/jamf_monitor_mailrc_$$"
+        
+        # Determine SSL/TLS settings based on port
+        local use_ssl="no"
+        local use_starttls="yes"
+        if [[ "$SMTP_PORT" == "465" ]]; then
+            use_ssl="yes"
+            use_starttls="no"
+        fi
+        
+        cat > "$temp_mailrc" << EOF
+set smtp-host=$SMTP_SERVER:$SMTP_PORT
+set smtp-use-starttls=$use_starttls
+set smtp-use-ssl=$use_ssl
+set smtp-auth=yes
+set smtp-auth-user=$SMTP_USERNAME
+set smtp-auth-password=$SMTP_PASSWORD
+set from=$SMTP_FROM_ADDRESS
+set ssl-verify=ignore
+set nss-config-dir=/etc/ssl/certs
+EOF
+        
+        # Send email using mailx with custom configuration
+        local mailx_result=""
+        if echo "$body" | MAILRC="$temp_mailrc" mailx -s "$subject" "$recipient" 2>&1; then
+            mailx_result=$?
+        else
+            mailx_result=$?
+        fi
+        
+        # Cleanup
+        rm -f "$temp_mailrc"
+        
+        if [[ $mailx_result -eq 0 ]]; then
+            log_message "INFO" "Authenticated email sent successfully via mailx to $recipient"
+            return 0
+        else
+            log_message "ERROR" "mailx authentication failed with exit code $mailx_result"
+            return 1
+        fi
+    fi
+    
+    log_message "ERROR" "No suitable authenticated email command available (install swaks or mailx)"
+    return 1
+}
+
+# FIXED: Improved system mail sending with multiple fallback methods
+send_system_mail() {
+    local recipient="$1"
+    local subject="$2"
+    local body="$3"
+    
+    log_message "INFO" "Attempting system mail delivery to $recipient"
+    
+    # Method 1: Standard mail command
+    if command -v mail >/dev/null 2>&1; then
+        log_message "DEBUG" "Trying system mail via 'mail' command"
+        
+        if echo "$body" | mail -s "$subject" "$recipient" 2>/dev/null; then
+            log_message "INFO" "System mail sent successfully via 'mail' command to $recipient"
+            return 0
+        else
+            log_message "WARN" "Failed to send via 'mail' command"
+        fi
+    fi
+    
+    # Method 2: mailx command
+    if command -v mailx >/dev/null 2>&1; then
+        log_message "DEBUG" "Trying system mail via 'mailx' command"
+        
+        if echo "$body" | mailx -s "$subject" "$recipient" 2>/dev/null; then
+            log_message "INFO" "System mail sent successfully via 'mailx' command to $recipient"
+            return 0
+        else
+            log_message "WARN" "Failed to send via 'mailx' command"
+        fi
+    fi
+    
+    # Method 3: sendmail command (direct SMTP)
+    if command -v sendmail >/dev/null 2>&1; then
+        log_message "DEBUG" "Trying system mail via 'sendmail' command"
+        
+        local temp_message="/tmp/jamf_monitor_sendmail_$$"
+        cat > "$temp_message" << EOF
+To: $recipient
+From: root@$(hostname)
+Subject: $subject
+
+$body
+EOF
+        
+        if sendmail "$recipient" < "$temp_message" 2>/dev/null; then
+            rm -f "$temp_message"
+            log_message "INFO" "System mail sent successfully via 'sendmail' command to $recipient"
+            return 0
+        else
+            rm -f "$temp_message"
+            log_message "WARN" "Failed to send via 'sendmail' command"
+        fi
+    fi
+    
+    # Method 4: Postfix direct (if configured)
+    if [[ -f "/usr/sbin/postfix" ]] && launchctl list | grep -q "org.postfix.master"; then
+        log_message "DEBUG" "Trying system mail via postfix"
+        
+        # Start postfix if not running
+        if ! launchctl list | grep -q "org.postfix.master"; then
+            log_message "INFO" "Starting postfix service"
+            launchctl load /System/Library/LaunchDaemons/org.postfix.master.plist 2>/dev/null || true
+            sleep 2
+        fi
+        
+        local temp_message="/tmp/jamf_monitor_postfix_$$"
+        cat > "$temp_message" << EOF
+To: $recipient
+From: jamf-monitor@$(hostname)
+Subject: $subject
+
+$body
+EOF
+        
+        if /usr/sbin/sendmail "$recipient" < "$temp_message" 2>/dev/null; then
+            rm -f "$temp_message"
+            log_message "INFO" "System mail sent successfully via postfix to $recipient"
+            return 0
+        else
+            rm -f "$temp_message"
+            log_message "WARN" "Failed to send via postfix"
+        fi
+    fi
+    
+    log_message "ERROR" "All system mail delivery methods failed"
+    return 1
+}
+
+# FIXED: Enhanced email sending with improved fallback logic
+enhanced_send_email() {
+    local recipient="$1"
+    local subject="$2"
+    local body="$3"
+    
+    if [[ -z "$recipient" ]]; then
+        log_message "ERROR" "No email recipient specified"
+        return 1
+    fi
+    
+    log_message "INFO" "Sending email to $recipient: $subject"
+    
+    # Try authenticated SMTP first if configured
+    if [[ -n "$SMTP_SERVER" ]]; then
+        if send_authenticated_email "$recipient" "$subject" "$body"; then
+            return 0
+        else
+            log_message "WARN" "Authenticated SMTP failed, trying system mail fallback"
+        fi
+    fi
+    
+    # Fallback to system mail
+    if send_system_mail "$recipient" "$subject" "$body"; then
+        return 0
+    else
+        log_message "ERROR" "Both authenticated SMTP and system mail failed"
+        return 1
+    fi
+}
+
+# FIXED: Improved test email function with better diagnostics
+send_test_email() {
+    local test_recipient="${1:-$EMAIL_RECIPIENT}"
+    
+    if [[ -z "$test_recipient" ]]; then
+        echo "Usage: test-email [recipient@domain.com]"
+        echo "No recipient specified and EMAIL_RECIPIENT not configured"
+        return 1
+    fi
+    
+    local hostname=$(hostname)
+    local test_subject="🧪 Jamf Connect Monitor Test Email - $hostname"
+    local test_body="This is a test email from Jamf Connect Monitor v$VERSION
+
+System Information:
+- Hostname: $hostname
+- Company: $COMPANY_NAME
+- Monitoring Version: $VERSION
+- Test Time: $(date)
+- Configuration Profile: $([[ -n "$(defaults read "/Library/Managed Preferences/$CONFIG_PROFILE_DOMAIN" 2>/dev/null)" ]] && echo "Active" || echo "Not deployed")
+
+Email Configuration:
+- Recipient: $test_recipient
+- SMTP Server: $([[ -n "$SMTP_SERVER" ]] && echo "$SMTP_SERVER:$SMTP_PORT" || echo "System mail only")
+- SMTP Authentication: $([[ -n "$SMTP_USERNAME" ]] && echo "Enabled ($SMTP_USERNAME)" || echo "Not configured")
+- From Address: $([[ -n "$SMTP_FROM_ADDRESS" ]] && echo "$SMTP_FROM_ADDRESS" || echo "System default")
+
+Delivery Methods Available:
+$([[ -n "$SMTP_SERVER" ]] && echo "- Authenticated SMTP: Configured" || echo "- Authenticated SMTP: Not configured")
+- System Mail Commands: $(command -v mail >/dev/null && echo "mail") $(command -v mailx >/dev/null && echo "mailx") $(command -v sendmail >/dev/null && echo "sendmail")
+- Postfix Service: $(launchctl list | grep -q "org.postfix.master" && echo "Running" || echo "Not running")
+
+If you received this email, your notification system is working correctly.
+
+Next Steps:
+1. Verify this email was received
+2. Check email headers to see delivery method used
+3. Configure additional recipients if needed
+4. Test violation notifications
+
+IT Contact: $IT_CONTACT_EMAIL
+Monitoring System: Jamf Connect Monitor v$VERSION
+Generated: $(date '+%Y-%m-%d %H:%M:%S %Z')"
+    
+    echo "Sending test email to: $test_recipient"
+    echo "Subject: $test_subject"
+    echo
+    echo "Configuration:"
+    echo "  SMTP Server: $([[ -n "$SMTP_SERVER" ]] && echo "$SMTP_SERVER:$SMTP_PORT" || echo "System mail only")"
+    echo "  Authentication: $([[ -n "$SMTP_USERNAME" ]] && echo "Enabled" || echo "Disabled")"
+    echo "  From Address: $([[ -n "$SMTP_FROM_ADDRESS" ]] && echo "$SMTP_FROM_ADDRESS" || echo "System default")"
+    echo
+    
+    if enhanced_send_email "$test_recipient" "$test_subject" "$test_body"; then
+        echo "✅ Test email sent successfully!"
+        echo "Please check your inbox for the test message."
+        echo "If you don't receive it within 5 minutes, check spam folder."
+        return 0
+    else
+        echo "❌ Failed to send test email"
+        echo "Check the logs for detailed error information:"
+        echo "  tail -f $LOG_DIR/monitor.log"
+        echo
+        echo "Troubleshooting suggestions:"
+        echo "1. Check Configuration Profile settings in Jamf Pro"
+        echo "2. Verify SMTP credentials (try App Password for Gmail)"
+        echo "3. Ensure network connectivity to SMTP server"
+        echo "4. Check system mail configuration (postfix)"
+        echo "5. Run email diagnostics: sudo ./tools/email_test.sh diagnostics"
+        return 1
+    fi
+}
 
 # Initialize approved admin list with configuration profile support
 initialize_admin_whitelist() {
@@ -337,7 +692,7 @@ handle_violation() {
     local hostname=$(hostname)
     local current_user=$(who | awk 'NR==1{print $1}')
     
-    # Check if violation reporting is enabled
+    # Check if violation reporting is enabled (FIXED BOOLEAN PARSING)
     if [[ "$VIOLATION_REPORTING" != "true" ]]; then
         log_message "INFO" "Violation reporting disabled - skipping report for $user"
         return
@@ -401,7 +756,7 @@ send_enhanced_notifications() {
         send_webhook_notification_enhanced "$user" "$hostname"
     fi
     
-    # Send email notification
+    # Send email notification (with FIXED SMTP support)
     if [[ -n "$EMAIL_RECIPIENT" ]]; then
         send_email_notification_enhanced "$user" "$hostname" "$report"
     fi
@@ -461,7 +816,7 @@ send_webhook_notification_enhanced() {
     log_message "INFO" "Enhanced webhook notification sent ($NOTIFICATION_TEMPLATE template)"
 }
 
-# Enhanced email notification with template support
+# FIXED: Enhanced email notification with improved SMTP authentication support
 send_email_notification_enhanced() {
     local user="$1"
     local hostname="$2"
@@ -524,8 +879,12 @@ IT Contact: $IT_CONTACT_EMAIL"
 $report"
     fi
     
-    echo "$body" | mail -s "$subject" "$EMAIL_RECIPIENT" 2>/dev/null && \
-    log_message "INFO" "Enhanced email notification sent ($NOTIFICATION_TEMPLATE template)"
+    # Use improved email sending function
+    if enhanced_send_email "$EMAIL_RECIPIENT" "$subject" "$body"; then
+        log_message "INFO" "Enhanced email notification sent ($NOTIFICATION_TEMPLATE template)"
+    else
+        log_message "ERROR" "Failed to send email notification"
+    fi
 }
 
 # Remove admin privileges
@@ -609,6 +968,7 @@ show_status() {
     echo "Notifications:"
     echo "  Webhook: $([[ -n "$WEBHOOK_URL" ]] && echo "Configured" || echo "None")"
     echo "  Email: $([[ -n "$EMAIL_RECIPIENT" ]] && echo "$EMAIL_RECIPIENT" || echo "None")"
+    echo "  SMTP: $([[ -n "$SMTP_SERVER" ]] && echo "Configured ($SMTP_SERVER:$SMTP_PORT)" || echo "System mail")"
     echo "  Template: $NOTIFICATION_TEMPLATE"
     echo "  Cooldown: $NOTIFICATION_COOLDOWN minutes"
     echo
@@ -631,6 +991,7 @@ show_status() {
     echo "  Jamf Connect Only: $MONITOR_JAMF_CONNECT_ONLY"
     echo "  Auto-populate Admins: $AUTO_POPULATE_APPROVED_ADMINS"
     echo "  IT Contact: $([[ -n "$IT_CONTACT_EMAIL" ]] && echo "$IT_CONTACT_EMAIL" || echo "Not configured")"
+    echo "  Violation Reporting: $VIOLATION_REPORTING"
 }
 
 # Main monitoring function with enhanced configuration
@@ -652,7 +1013,7 @@ main_monitor() {
     log_message "INFO" "Monitoring cycle completed"
 }
 
-# Command line interface (enhanced with working Configuration Profile support)
+# Command line interface (enhanced with FIXED email support)
 case "${1:-monitor}" in
     "monitor")
         check_lock
@@ -689,6 +1050,9 @@ case "${1:-monitor}" in
         echo "Notification Settings:"
         echo "  Webhook: $([[ -n "$WEBHOOK_URL" ]] && echo "Configured" || echo "None")"
         echo "  Email: $([[ -n "$EMAIL_RECIPIENT" ]] && echo "$EMAIL_RECIPIENT" || echo "None")"
+        echo "  SMTP Server: $([[ -n "$SMTP_SERVER" ]] && echo "$SMTP_SERVER:$SMTP_PORT" || echo "Not configured")"
+        echo "  SMTP Auth: $([[ -n "$SMTP_USERNAME" ]] && echo "Configured ($SMTP_USERNAME)" || echo "None")"
+        echo "  From Address: $([[ -n "$SMTP_FROM_ADDRESS" ]] && echo "$SMTP_FROM_ADDRESS" || echo "Default")"
         echo "  Template: $NOTIFICATION_TEMPLATE"
         echo "  Cooldown: $NOTIFICATION_COOLDOWN minutes"
         echo
@@ -715,6 +1079,10 @@ case "${1:-monitor}" in
         echo "  Max Notifications/Hour: $MAX_NOTIFICATIONS_PER_HOUR"
         echo "  Auto-populate Admins: $AUTO_POPULATE_APPROVED_ADMINS"
         ;;
+    "test-email")
+        read_configuration
+        send_test_email "$2"
+        ;;
     "help")
         echo "Usage: $0 [command]"
         echo "Commands:"
@@ -724,14 +1092,21 @@ case "${1:-monitor}" in
         echo "  remove-admin   Remove user from approved admin list"
         echo "  force-check    Force check for unauthorized admins"
         echo "  test-config    Test configuration profile settings"
+        echo "  test-email     Send test email to verify delivery (FIXED in v2.0.1)"
         echo "  help           Show this help message"
         echo
         echo "Version $VERSION Features:"
         echo "  • Configuration Profile support for centralized management"
+        echo "  • FIXED: Reliable email delivery with multiple fallback methods"
         echo "  • Real-time monitoring capabilities"
         echo "  • Enhanced notification templates"
         echo "  • Configurable grace periods and auto-remediation"
         echo "  • Advanced Jamf Pro integration"
+        echo
+        echo "Email Testing:"
+        echo "  sudo $0 test-email                    # Test with configured recipient"
+        echo "  sudo $0 test-email user@domain.com    # Test with specific recipient"
+        echo "  sudo ./tools/email_test.sh test       # Comprehensive email diagnostics"
         ;;
     *)
         echo "Unknown command: $1"
