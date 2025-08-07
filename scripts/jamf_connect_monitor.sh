@@ -252,9 +252,9 @@ send_authenticated_email() {
         fi
     fi
     
-    # Fallback to mailx with configuration
-    if command -v mailx >/dev/null 2>&1; then
-        log_message "DEBUG" "Using mailx for authenticated SMTP"
+    # Check if mailx supports SMTP authentication (GNU mailx only, not BSD/macOS mailx)
+    if command -v mailx >/dev/null 2>&1 && mailx -? 2>&1 | grep -q "smtp-auth"; then
+        log_message "DEBUG" "Using GNU mailx for authenticated SMTP"
         
         # Create temporary mailx configuration with proper SSL/TLS settings
         local temp_mailrc="/tmp/jamf_monitor_mailrc_$$"
@@ -279,27 +279,75 @@ set ssl-verify=ignore
 set nss-config-dir=/etc/ssl/certs
 EOF
         
-        # Send email using mailx with custom configuration
-        local mailx_result=""
-        if echo "$body" | MAILRC="$temp_mailrc" mailx -s "$subject" "$recipient" 2>&1; then
-            mailx_result=$?
-        else
-            mailx_result=$?
-        fi
+        # Send email using mailx with custom configuration and capture output
+        local mailx_output=""
+        mailx_output=$(echo "$body" | MAILRC="$temp_mailrc" mailx -v -s "$subject" "$recipient" 2>&1)
+        local mailx_result=$?
         
         # Cleanup
         rm -f "$temp_mailrc"
         
+        # Check for authentication failures in output
+        if echo "$mailx_output" | grep -q "authentication failed\|AUTH failed\|535\|550"; then
+            log_message "ERROR" "mailx SMTP authentication failed - check credentials"
+            log_message "DEBUG" "mailx output: ${mailx_output:0:500}"
+            return 1
+        fi
+        
         if [[ $mailx_result -eq 0 ]]; then
-            log_message "INFO" "Authenticated email sent successfully via mailx to $recipient"
+            log_message "INFO" "mailx command completed - check inbox for delivery"
+            log_message "DEBUG" "Note: mailx may report success even if authentication fails"
             return 0
         else
-            log_message "ERROR" "mailx authentication failed with exit code $mailx_result"
+            log_message "ERROR" "mailx failed with exit code $mailx_result"
+            log_message "DEBUG" "mailx output: ${mailx_output:0:500}"
             return 1
         fi
     fi
     
-    log_message "ERROR" "No suitable authenticated email command available (install swaks or mailx)"
+    # Fallback to curl for SMTP (built into macOS)
+    if command -v curl >/dev/null 2>&1; then
+        log_message "DEBUG" "Using curl for authenticated SMTP"
+        
+        # Create email in RFC 2822 format
+        local temp_email="/tmp/jamf_monitor_email_$$"
+        cat > "$temp_email" << EOF
+From: ${SMTP_FROM:-$SMTP_USERNAME}
+To: $recipient
+Subject: $subject
+Date: $(date -R 2>/dev/null || date '+%a, %d %b %Y %H:%M:%S %z')
+
+$body
+EOF
+        
+        # Determine protocol based on port
+        local protocol="smtp"
+        local curl_opts=""
+        if [[ "$SMTP_PORT" == "465" ]]; then
+            protocol="smtps"
+            curl_opts="--ssl-reqd"
+        else
+            curl_opts="--ssl"
+        fi
+        
+        # Send via curl
+        if curl -s --url "${protocol}://${SMTP_SERVER}:${SMTP_PORT}" \
+               --mail-from "${SMTP_FROM:-$SMTP_USERNAME}" \
+               --mail-rcpt "$recipient" \
+               --user "${SMTP_USERNAME}:${SMTP_PASSWORD}" \
+               $curl_opts \
+               --upload-file "$temp_email" 2>&1; then
+            rm -f "$temp_email"
+            log_message "INFO" "Authenticated email sent successfully via curl to $recipient"
+            return 0
+        else
+            rm -f "$temp_email"
+            log_message "ERROR" "curl SMTP authentication failed"
+            return 1
+        fi
+    fi
+    
+    log_message "ERROR" "No suitable authenticated email command available (install swaks or use curl)"
     return 1
 }
 
