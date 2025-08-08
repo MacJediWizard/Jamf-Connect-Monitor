@@ -404,11 +404,11 @@ For organizations wanting immediate violation detection:
 - **Configuration Profile Integration** - Displays actual company names correctly
 - **Auto-Version Detection** - Works automatically with all future versions
 
-### v2.3.0 Foundation Features
-- Initial Configuration Profile support
-- Real-time monitoring capabilities
-- JSON Schema for Jamf Pro deployment
-- Enhanced notification templates
+### v2.3.0 Enhanced Features
+- SMTP provider selection and configuration
+- Enhanced email delivery with authentication
+- Production-verified Configuration Profile integration
+- Provider-specific troubleshooting guidance
 
 ## Troubleshooting Deployment
 

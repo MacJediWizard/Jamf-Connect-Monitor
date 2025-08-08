@@ -13,7 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Performance monitoring dashboard
 - Automated compliance reporting
 
-## [2.3.0] - 2025-08-07
+## [2.3.0] - 2025-08-08
 
 ### Added
 - **SMTP Provider Selection**: New dropdown field in Configuration Profile to select SMTP provider type
