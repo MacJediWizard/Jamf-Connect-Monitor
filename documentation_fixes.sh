@@ -1,9 +1,9 @@
 #!/bin/bash
 
-# Quick Documentation Fixes for v2.0.0
+# Quick Documentation Fixes for v2.3.0
 # Fixes common inconsistencies found in documentation review
 
-echo "🔧 APPLYING DOCUMENTATION FIXES FOR v2.0.0"
+echo "🔧 APPLYING DOCUMENTATION FIXES FOR v2.3.0"
 echo "============================================"
 
 # Colors for output

@@ -11,8 +11,14 @@ MONITOR_SCRIPT="/usr/local/bin/jamf_connect_monitor.sh"
 LAUNCH_DAEMON="/Library/LaunchDaemons/com.macjediwizard.jamfconnectmonitor.plist"
 APPROVED_ADMINS="/usr/local/etc/approved_admins.txt"
 
-# Centralized version management
-PACKAGE_VERSION="2.3.0"
+# Centralized version management - auto-extract from main script
+if [[ -f "/usr/local/bin/jamf_connect_monitor.sh" ]]; then
+    PACKAGE_VERSION=$(grep "^VERSION=" "/usr/local/bin/jamf_connect_monitor.sh" | cut -d'"' -f2)
+    if [[ -z "$PACKAGE_VERSION" ]]; then
+        PACKAGE_VERSION=$(head -10 "/usr/local/bin/jamf_connect_monitor.sh" | grep -o '[0-9]\+\.[0-9]\+\.[0-9]\+' | head -1)
+    fi
+fi
+[[ -z "$PACKAGE_VERSION" ]] && PACKAGE_VERSION="2.3.0"  # Fallback
 
 # Configuration from Jamf Pro Parameters (if provided)
 WEBHOOK_URL="${4:-}"          # Parameter 4

@@ -1,11 +1,11 @@
 #!/bin/bash
 
 # Jamf Pro Extension Attribute - Admin Account Violations
-# Version: 2.0.1 - Working Configuration Profile detection
+# Version: 2.3.0 - Enhanced SMTP provider support with working Configuration Profile detection
 # Author: MacJediWizard
 # Description: Reports unauthorized admin account violations, monitoring status, and configuration
 # Compatible with: Jamf Pro 10.19+ and macOS 10.14+
-# Last Updated: 2025-08-05
+# Last Updated: 2025-08-08
 
 REPORT_LOG="/var/log/jamf_connect_monitor/admin_violations.log"
 REALTIME_LOG="/var/log/jamf_connect_monitor/realtime_monitor.log"

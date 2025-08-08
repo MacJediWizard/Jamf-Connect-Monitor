@@ -1,9 +1,9 @@
 #!/bin/bash
 
-# Jamf Connect Monitor - Verification Script v2.0.1
+# Jamf Connect Monitor - Verification Script v2.3.0
 # Use this script to verify monitoring is working properly
 
-echo "🔍 JAMF CONNECT MONITOR VERIFICATION v2.0.1"
+echo "🔍 JAMF CONNECT MONITOR VERIFICATION v2.3.0"
 echo "============================================"
 
 # Colors for output
@@ -25,7 +25,9 @@ print_status "$BLUE" "1. 🔧 Installation Status"
 echo "----------------------------------------"
 
 if [[ -f "/usr/local/bin/jamf_connect_monitor.sh" ]]; then
-    version=$(grep "Version: 2.0.1" /usr/local/bin/jamf_connect_monitor.sh >/dev/null 2>&1 && echo "2.0.1" || echo "Other")
+    # Auto-extract version from VERSION= variable
+    version=$(grep "^VERSION=" /usr/local/bin/jamf_connect_monitor.sh 2>/dev/null | cut -d'"' -f2)
+    [[ -z "$version" ]] && version="Unknown"
     print_status "$GREEN" "✅ Main script installed: Version $version"
     
     # Check permissions
@@ -40,7 +42,9 @@ else
 fi
 
 if [[ -f "/usr/local/etc/jamf_ea_admin_violations.sh" ]]; then
-    ea_version=$(grep "Version: 2.0.1" /usr/local/etc/jamf_ea_admin_violations.sh >/dev/null 2>&1 && echo "2.0.1" || echo "Other")
+    # Auto-extract EA version from header
+    ea_version=$(head -10 /usr/local/etc/jamf_ea_admin_violations.sh 2>/dev/null | grep -o '[0-9]\+\.[0-9]\+\.[0-9]\+' | head -1)
+    [[ -z "$ea_version" ]] && ea_version="Unknown"
     print_status "$GREEN" "✅ Extension Attribute script installed: Version $ea_version"
     
     # Check EA permissions
@@ -132,13 +136,13 @@ if [[ -f "/usr/local/etc/jamf_ea_admin_violations.sh" ]]; then
             print_status "$YELLOW" "⚠️  Version info not found in output"
         fi
         
-        # Check for monitoring mode info (v2.0.1 fix)
+        # Check for monitoring mode info (v2.3.0 enhanced)
         if echo "$ea_output" | grep -q "Mode: "; then
             mode_info=$(echo "$ea_output" | grep -o "Mode: [^,]*" | head -1)
             if [[ "$mode_info" != "Mode: " ]]; then
                 print_status "$GREEN" "✅ Monitoring mode detected: $mode_info"
             else
-                print_status "$RED" "❌ Monitoring mode EMPTY (v2.0.1 should fix this)"
+                print_status "$RED" "❌ Monitoring mode EMPTY (check v2.3.0 installation)"
             fi
         else
             print_status "$YELLOW" "⚠️  Monitoring mode info not found"

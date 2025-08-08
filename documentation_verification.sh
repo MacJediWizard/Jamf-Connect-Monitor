@@ -1,9 +1,9 @@
 #!/bin/bash
 
-# Documentation Verification Script for v2.0.0 - FIXED VERSION
+# Documentation Verification Script for v2.3.0
 # Run this to verify documentation consistency and accuracy
 
-echo "🔍 DOCUMENTATION VERIFICATION FOR v2.0.0 (FIXED)"
+echo "🔍 DOCUMENTATION VERIFICATION FOR v2.3.0"
 echo "========================================"
 
 # Colors for output
