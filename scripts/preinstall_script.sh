@@ -3,8 +3,12 @@
 # Jamf Pro Pre-installation Script
 # This script prepares the system for Jamf Connect Monitor installation
 
-# Set script timeout to prevent hanging
+# Exit on any error and prevent hanging
+set -e
 set -o pipefail
+
+# Ensure script doesn't hang on user input
+export DEBIAN_FRONTEND=noninteractive
 
 # Variables
 SCRIPT_NAME="JamfConnectMonitor-PreInstall"
@@ -140,14 +144,20 @@ fi
 
 # Pre-create configuration file with current environment settings
 log_message "Creating default configuration"
+
+# Get values first to avoid execution in heredoc (with protection against hanging)
+install_date=$(date '+%Y-%m-%d %H:%M:%S' 2>/dev/null || echo "Unknown")
+current_hostname=$(hostname 2>/dev/null || echo "localhost")
+admin_count=$(echo "$current_admins" 2>/dev/null | wc -l | tr -d ' ' || echo "0")
+
 cat > "/tmp/jamf_monitor_config.env" << EOF
 # Jamf Connect Monitor Configuration
-# Generated during installation on $(date)
+# Generated during installation on $install_date
 
 # System Information
-HOSTNAME=$(hostname)
+HOSTNAME=$current_hostname
 MACOS_VERSION=$macos_version
-INSTALL_DATE=$(date '+%Y-%m-%d %H:%M:%S')
+INSTALL_DATE=$install_date
 
 # Default Settings
 MONITORING_INTERVAL=300
@@ -158,7 +168,7 @@ VIOLATION_REPORTING=true
 # Installation Context
 JAMF_CONNECT_VERSION=${jc_version:-"Not Installed"}
 ELEVATION_ENABLED=${elevation_enabled:-"0"}
-CURRENT_ADMIN_COUNT=$(echo "$current_admins" | wc -l | tr -d ' ')
+CURRENT_ADMIN_COUNT=$admin_count
 EOF
 
 log_message "Pre-installation tasks completed successfully"
