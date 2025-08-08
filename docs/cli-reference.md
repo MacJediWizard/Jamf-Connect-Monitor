@@ -1,4 +1,4 @@
-# Jamf Connect Monitor - CLI Reference
+# Jamf Connect Monitor v2.3.0 - CLI Reference
 
 ## Command Line Interface
 

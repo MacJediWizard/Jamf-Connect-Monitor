@@ -1065,7 +1065,7 @@ case "${1:-monitor}" in
         echo "  remove-admin   Remove user from approved admin list"
         echo "  force-check    Force check for unauthorized admins"
         echo "  test-config    Test configuration profile settings"
-        echo "  test-email     Send test email to verify delivery (FIXED in v2.0.1)"
+        echo "  test-email     Send test email to verify delivery"
         echo "  help           Show this help message"
         echo
         echo "Version $VERSION Features:"

@@ -1,4 +1,4 @@
-# Configuration Guide
+# Configuration Guide v2.3.0
 
 ## Monitoring Settings
 

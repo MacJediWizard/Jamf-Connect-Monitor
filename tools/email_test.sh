@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Jamf Connect Monitor - Email Testing & Verification Tool
-# Version: 1.0.0
+# Version: 2.3.0
 # Author: MacJediWizard
 # Description: Comprehensive email delivery testing for production deployment
 
