@@ -1,7 +1,7 @@
 {
   "title": "Jamf Connect Monitor Configuration",
-  "description": "Enterprise security monitoring settings for Jamf Connect privilege elevation detection and automated admin account remediation.",
-  "version": "2.3.0",
+  "description": "Enterprise security monitoring settings for Jamf Connect privilege elevation detection with legitimate elevation tracking. SMTP SETUP: 1) Select provider type, 2) Leave server/port blank for auto-config, 3) Enter username/password/from-address based on provider requirements.",
+  "version": "2.4.0",
   "$schema": "http://json-schema.org/draft-07/schema#",
   "properties": {
     "NotificationSettings": {
@@ -9,14 +9,26 @@
       "description": "Configure how security violations are reported",
       "type": "object",
       "properties": {
+        "WebhookType": {
+          "title": "Webhook Platform",
+          "description": "Select your webhook platform for proper message formatting",
+          "type": "string",
+          "enum": ["none", "slack", "teams"],
+          "enum_titles": ["None", "Slack", "Microsoft Teams"],
+          "default": "none",
+          "property_order": 10,
+          "options": {
+            "infoText": "Teams recommended (Slack webhooks are being deprecated)"
+          }
+        },
         "WebhookURL": {
-          "title": "Slack/Teams Webhook URL",
+          "title": "Webhook URL",
           "description": "Complete webhook URL for real-time security alerts",
           "type": "string",
           "format": "uri",
-          "property_order": 10,
+          "property_order": 11,
           "options": {
-            "infoText": "Example: https://hooks.slack.com/services/T00000000/B00000000/XXXXXXXXXXXXXXXXXXXXXXXX"
+            "infoText": "Teams: https://outlook.office.com/webhook/... | Slack: https://hooks.slack.com/..."
           }
         },
         "EmailRecipient": {
@@ -35,39 +47,40 @@
           "type": "string",
           "enum": ["gmail", "office365", "sendgrid", "aws_ses", "smtp2go", "mailgun", "custom"],
           "enum_titles": [
-            "Gmail / Google Workspace",
+            "Gmail (requires App Password)",
             "Office 365 / Exchange Online", 
-            "SendGrid",
+            "SendGrid (use 'apikey' as username)",
             "AWS SES",
-            "SMTP2GO",
-            "Mailgun",
+            "SMTP2GO (requires domain verification)",
+            "Mailgun (requires domain verification)",
             "Custom / Other SMTP Server"
           ],
-          "default": "gmail",
+          "default": "custom",
           "property_order": 25,
           "options": {
-            "infoText": "This helps provide the right configuration tips. All providers require SMTP authentication."
+            "infoText": "If server/port fields are left blank, these defaults apply: Gmail→smtp.gmail.com:587, Office365→smtp.office365.com:587, SendGrid→smtp.sendgrid.net:587, SMTP2GO→mail.smtp2go.com:587"
           }
         },
         "SMTPServer": {
           "title": "SMTP Server Address",
-          "description": "SMTP server hostname or IP address",
+          "description": "SMTP server hostname (leave blank to use provider defaults)",
           "type": "string",
           "property_order": 26,
+          "placeholder": "Leave blank for auto-config",
           "options": {
-            "infoText": "Enter your SMTP server (e.g., smtp.sendgrid.net, smtp.gmail.com, mail.yourcompany.com)"
+            "infoText": "Defaults: Gmail=smtp.gmail.com, Office365=smtp.office365.com, SendGrid=smtp.sendgrid.net, SMTP2GO=mail.smtp2go.com"
           }
         },
         "SMTPPort": {
           "title": "SMTP Port",
-          "description": "SMTP server port number",
+          "description": "SMTP server port (leave blank for 587)",
           "type": "integer",
           "minimum": 1,
           "maximum": 65535,
-          "default": 587,
           "property_order": 27,
+          "placeholder": 587,
           "options": {
-            "infoText": "Common ports: 587 (STARTTLS - recommended), 465 (SSL/TLS), 25 (standard SMTP)"
+            "infoText": "Default 587 works for Gmail, Office365, SendGrid, SMTP2GO, Mailgun. Use 465 for SSL/TLS."
           }
         },
         "SMTPUsername": {
@@ -76,7 +89,7 @@
           "type": "string",
           "property_order": 28,
           "options": {
-            "infoText": "Your email address or SMTP account username"
+            "infoText": "Gmail: your email, SendGrid: 'apikey', SMTP2GO: your username"
           }
         },
         "SMTPPassword": {
@@ -86,20 +99,21 @@
           "format": "password",
           "property_order": 29,
           "options": {
-            "infoText": "Your email password, app password, or API key",
+            "infoText": "Gmail: 16-char App Password, SendGrid: API key, SMTP2GO: account password",
             "inputAttributes": {
               "type": "password"
             }
           }
         },
         "SMTPFromAddress": {
-          "title": "From Email Address (Optional)",
-          "description": "Email address shown as sender in notifications",
+          "title": "From Email Address (Required)",
+          "description": "Email address shown as sender - must be verified with your SMTP provider",
           "type": "string",
           "format": "email",
           "property_order": 30,
           "options": {
-            "infoText": "Leave blank to use SMTP username as sender address"
+            "infoText": "Must be a verified sender address for your SMTP provider (e.g., verified domain for SMTP2GO)",
+            "required": true
           }
         },
         "NotificationTemplate": {
@@ -169,13 +183,13 @@
           }
         },
         "MonitorJamfConnectOnly": {
-          "title": "Monitor Jamf Connect Events Only",
-          "description": "Only monitor elevations through Jamf Connect, ignore manual admin changes",
+          "title": "Require Jamf Connect Event for Monitoring",
+          "description": "Only check for violations when Jamf Connect elevation is detected",
           "type": "boolean",
           "default": true,
           "property_order": 40,
           "options": {
-            "infoText": "Recommended: Focus on Jamf Connect elevation violations only"
+            "infoText": "When TRUE: Only checks admins after Jamf Connect elevation. When FALSE: Always checks for unauthorized admins regardless of Jamf Connect activity."
           }
         }
       },

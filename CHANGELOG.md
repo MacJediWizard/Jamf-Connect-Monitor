@@ -13,6 +13,67 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Performance monitoring dashboard
 - Automated compliance reporting
 
+## [2.4.0] - 2025-08-09
+
+### Added
+
+#### **Webhook Platform Selection**
+- **WebhookType Configuration**: Select between Slack and Microsoft Teams for proper message formatting
+- **Platform-Specific Formatting**: 
+  - Slack: Uses attachments with color coding and fields
+  - Teams: Uses MessageCard format with themeColor and sections
+- **Auto-Detection**: Automatically formats messages based on selected platform
+- **Enhanced Templates**: security_report, detailed, and simple templates for each platform
+
+#### **Legitimate Elevation Tracking**
+- **Audit Trail**: New `legitimate_elevations.log` for all authorized elevations
+- **Elevation Lifecycle**: Tracks elevation → reason → demotion with timestamps
+- **Duration Tracking**: Calculates and logs how long users remain elevated
+- **Reason Capture**: Records why users elevated for compliance
+- **Current Status**: Real-time tracking of who's currently elevated and why
+
+#### **Elevation Analytics & Reporting**
+- **Statistics Tracking**: Total, daily, per-user, and per-reason counts
+- **New Command**: `elevation-report` shows comprehensive statistics and history
+- **Top Users Report**: Shows users with most frequent elevations
+- **Reason Analytics**: Tracks most common elevation reasons
+- **Extension Attribute**: Shows elevation counts and current status
+
+#### **MonitorJamfConnectOnly Setting**
+- **New Configuration**: Only check for violations after Jamf Connect elevation detected
+- **Flexible Monitoring**: Choose between always monitoring or event-driven checks
+- **Resource Optimization**: Reduces unnecessary checks when no elevations occur
+- **Default True**: Focuses on Jamf Connect elevation events by default
+
+#### **SMTP Improvements**
+- **Fixed SMTP_FROM_ADDRESS**: Now correctly uses SMTPFromAddress from config
+- **Enhanced Authentication**: Fixed credential extraction using awk instead of regex
+- **Provider Auto-Configuration**: Automatically configures settings based on provider
+- **Required From Address**: Made SMTP From Address required in schema
+- **Better Error Handling**: Improved SMTP error messages and diagnostics
+
+#### **Enhanced Violation Context**
+- **Legitimate vs Unauthorized**: Clear distinction in all notifications
+- **Elevation Reasons in Alerts**: Shows why users elevated in violations
+- **Current Elevations Display**: Shows who's legitimately elevated during violations
+- **Better Decision Context**: Security teams see full picture for informed decisions
+
+### Changed
+- **Extension Attribute v2.4.0**: Enhanced with elevation tracking and SMTP details
+- **Webhook Notifications**: Now platform-aware with proper formatting
+- **Violation Reports**: Include legitimate elevation context
+- **SMTP Configuration**: More robust with provider-specific guidance
+- **Monitoring Logic**: Can now be Jamf Connect event-driven
+- **Log Structure**: Added multiple new log files for elevation tracking
+
+### Fixed
+- **SMTP Authentication**: Fixed credential extraction for all providers
+- **SMTP From Address**: Correctly reads from Configuration Profile
+- **Webhook Type Detection**: Properly extracts WebhookType from config
+- **Last Violation Timestamp**: Fixed extraction with proper formatting
+- **Elevation Reason Capture**: Now properly logged for audit trail
+- **Duration Calculation**: Correctly handles elevation-to-demotion timing
+
 ## [2.3.0] - 2025-08-08
 
 ### Added

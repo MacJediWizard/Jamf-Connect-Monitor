@@ -1,9 +1,9 @@
-# Enhanced Uninstall Guide - v2.3.0
+# Enhanced Uninstall Guide - v2.4.0
 
 ## Overview
-Jamf Connect Monitor v2.3.0 introduces a comprehensive enterprise-grade uninstall system that provides complete component removal, configuration backup, and system state restoration for production environments.
+Jamf Connect Monitor v2.4.0 introduces a comprehensive enterprise-grade uninstall system that provides complete component removal, configuration backup, and system state restoration for production environments.
 
-## 🗑️ **Enhanced Uninstall Features (New in v2.3.0)**
+## 🗑️ **Enhanced Uninstall Features (New in v2.4.0)**
 
 ### **Complete System Restoration**
 - **✅ Total Component Removal** - All scripts, daemons, logs, and configurations
@@ -113,7 +113,7 @@ sudo ./uninstall_script.sh -f
 
 ### **Method 3: Local Uninstall (Package Included)**
 ```bash
-# Use uninstall script included with v2.3.0 package
+# Use uninstall script included with v2.4.0 package
 sudo /usr/local/share/jamf_connect_monitor/uninstall_script.sh
 
 # Available options:
@@ -215,7 +215,7 @@ Note: Jamf Connect application itself remains installed and functional.
 1. **Navigate:** Settings → Computer Management → Scripts → New
 2. **Configuration:**
    ```
-   Display Name: Jamf Connect Monitor - Enhanced Uninstall v2.3.0
+   Display Name: Jamf Connect Monitor - Enhanced Uninstall v2.4.0
    Category: Utilities
    Priority: Before
    ```
@@ -235,7 +235,7 @@ Criteria:
 #### **Step 3: Create Uninstall Policy**
 1. **General Settings:**
    ```
-   Display Name: Uninstall Jamf Connect Monitor v2.3.0
+   Display Name: Uninstall Jamf Connect Monitor v2.4.0
    Category: Utilities  
    Trigger: Custom Event "uninstall_jamf_monitor" OR Manual
    Execution Frequency: Once per computer
@@ -243,7 +243,7 @@ Criteria:
 
 2. **Scripts Configuration:**
    ```
-   Script: Jamf Connect Monitor - Enhanced Uninstall v2.3.0
+   Script: Jamf Connect Monitor - Enhanced Uninstall v2.4.0
    Priority: Before
    Parameter 4: force
    ```
@@ -401,8 +401,8 @@ sudo cp -R /var/log/jamf_connect_monitor_archive_[timestamp]/* /var/log/jamf_con
 ### **Partial Reinstallation (After Uninstall)**
 ```bash
 # If you need to reinstall after uninstall:
-1. Download latest package: JamfConnectMonitor-2.3.0.pkg
-2. Install package: sudo installer -pkg JamfConnectMonitor-2.3.0.pkg -target /
+1. Download latest package: JamfConnectMonitor-2.4.0.pkg
+2. Install package: sudo installer -pkg JamfConnectMonitor-2.4.0.pkg -target /
 3. Restore approved admin list from backup (if needed)
 4. Verify installation: sudo ./tools/verify_monitoring.sh
 ```
@@ -437,7 +437,7 @@ sudo cp -R /var/log/jamf_connect_monitor_archive_[timestamp]/* /var/log/jamf_con
 
 ## 🎯 **Summary**
 
-The v2.3.0 enhanced uninstall system provides enterprise administrators with:
+The v2.4.0 enhanced uninstall system provides enterprise administrators with:
 
 - **✅ Complete System Restoration** - Total removal with no remnants
 - **✅ Data Preservation** - Critical configurations and logs backed up

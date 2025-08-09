@@ -190,6 +190,6 @@ Once testing succeeds:
 
 ---
 
-**Version:** 2.3.0  
+**Version:** 2.4.0  
 **SMTP Provider:** Select from dropdown (Gmail, Office365, SendGrid, etc.)  
 **Port Configuration:** 587 (STARTTLS) default, 465 (SSL) also supported

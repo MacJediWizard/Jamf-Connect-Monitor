@@ -1,46 +1,73 @@
-# Jamf Connect Privilege Monitor v2.3.0
+# Jamf Connect Privilege Monitor v2.4.0
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Jamf Pro Compatible](https://img.shields.io/badge/Jamf%20Pro-10.19%2B-blue.svg)](https://jamf.com)
 [![macOS Compatible](https://img.shields.io/badge/macOS-10.14%2B-blue.svg)](https://apple.com/macos)
 [![Production Ready](https://img.shields.io/badge/Status-Production%20Ready-green.svg)](https://github.com/MacJediWizard/jamf-connect-monitor/releases/latest)
 
-A comprehensive monitoring and automated remediation system for Jamf Connect privilege elevation events with **enterprise Configuration Profile management** and **real-time detection capabilities**.
+A comprehensive monitoring and automated remediation system for Jamf Connect privilege elevation events with **legitimate elevation tracking**, **enterprise Configuration Profile management**, and **real-time detection capabilities**.
 
-## 🎯 **v2.3.0 - Enhanced SMTP Provider Support**
+## 🎯 **v2.4.0 - Webhook Platforms, Elevation Tracking & Enhanced Monitoring**
 
-### ✨ **New in v2.3.0**
-- **SMTP Provider Selection** - Choose from Gmail, Office 365, SendGrid, AWS SES, and more
-- **Provider-Specific Guidance** - Get tailored configuration help for your email provider
-- **Enhanced Diagnostics** - Improved email testing with provider-aware recommendations
-- **All Providers Authenticated** - Security-first approach with mandatory SMTP authentication
+### ✨ **New in v2.4.0**
+- **💬 Webhook Platform Selection** - Native support for Slack and Microsoft Teams with proper formatting
+- **🔍 Legitimate Elevation Tracking** - Distinguish between authorized Jamf Connect elevations and unauthorized admins
+- **📊 Elevation Analytics** - Track elevation frequency, duration, and reasons with new `elevation-report` command
+- **🎯 MonitorJamfConnectOnly** - Event-driven monitoring that only checks after Jamf Connect elevations
+- **📧 SMTP Improvements** - Fixed authentication, auto-configuration, and required From Address
+- **📝 Enhanced Context** - Violations show legitimate elevations for better security decisions
 
-**✅ SIMPLIFIED SETUP:** Dropdown selection for common SMTP providers  
-**✅ BETTER GUIDANCE:** Provider-specific configuration tips  
-**✅ ENHANCED SECURITY:** All SMTP options require authentication  
-**✅ PRODUCTION READY:** All v2.x fixes plus enhanced provider support  
+**✅ PLATFORM AWARE:** Slack and Teams webhooks with native formatting  
+**✅ COMPLIANCE READY:** Full audit trail of all legitimate privilege elevations  
+**✅ SECURITY CONTEXT:** Clear distinction between authorized and unauthorized admin access  
+**✅ RESOURCE OPTIMIZED:** Optional event-driven monitoring reduces unnecessary checks  
 
-## 🚀 **What's New in v2.3.0**
+## 🚀 **What's New in v2.4.0**
 
-### **New Features**
-- **SMTP Provider Dropdown** - Select your email provider from a list for easier configuration
-- **Provider-Aware Diagnostics** - Get specific troubleshooting tips for your SMTP provider
-- **Improved Documentation** - Updated examples for all major email providers
+### **Webhook Platform Support**
+- **WebhookType Selector** - Choose between Slack and Microsoft Teams in Configuration Profile
+- **Native Formatting** - Messages formatted specifically for each platform
+- **Enhanced Templates** - security_report, detailed, and simple templates per platform
+- **Automatic Detection** - Platform detected from webhook URL if not specified
 
-### **Includes All Previous Fixes** 
-- **✅ ACL Clearing** - Eliminates `@` symbols in file permissions preventing script execution
-- **✅ Configuration Profile Integration** - Company names display correctly  
+### **Elevation Tracking Features**
+- **Legitimate Elevation Log** - Separate audit log for all Jamf Connect elevations
+- **Elevation Statistics** - Track total, daily, per-user, and per-reason counts
+- **Duration Tracking** - Calculate and log how long users remain elevated
+- **Reason Capture** - Record why users elevated for compliance reporting
+- **Current Elevation Status** - Real-time tracking of who's currently elevated and why
+
+### **Enhanced Monitoring Control**
+- **MonitorJamfConnectOnly** - New setting to only check after Jamf Connect events
+- **Event-Driven Mode** - Reduces resource usage by checking only when needed
+- **Always Monitor Option** - Can still check continuously if preferred
+
+### **SMTP Improvements**
+- **Fixed Authentication** - Credential extraction now works reliably with awk
+- **Fixed From Address** - Correctly reads SMTPFromAddress from Configuration Profile
+- **Provider Auto-Config** - Automatically configures based on selected provider
+- **Required Fields** - SMTP From Address now required for proper delivery
+
+### **New Commands**
+- `sudo jamf_connect_monitor.sh elevation-report` - View comprehensive elevation statistics and history
+
+### **Enhanced Notifications**
+- Platform-specific webhook formatting (Slack vs Teams)
+- Legitimate elevation context in all alerts
+- Shows who has authorized elevation vs unauthorized admin
+- Provides elevation reasons in security alerts
+
+### **Includes All Previous Features**
+- **✅ SMTP Provider Selection** - Gmail, Office 365, SendGrid, AWS SES, and more
+- **✅ ACL Clearing** - Eliminates `@` symbols in file permissions
+- **✅ Configuration Profile Integration** - Centralized management  
 - **✅ Extension Attribute Auto-Detection** - Version displays automatically
-- **✅ Smart Group Compatibility** - Enhanced data format ensures proper population
-- **✅ Future-Proof Architecture** - Works automatically with all v2.x+ releases
-
-### **New Production Tools**
-- **🔧 tools/verify_monitoring.sh** - Comprehensive deployment verification script
-- **🗑️ Enhanced Uninstall Script** - Complete system removal with configuration backup
-- **📊 Production Validation** - All fixes verified in enterprise Jamf Pro environment
+- **✅ Smart Group Compatibility** - Enhanced data format
+- **✅ Future-Proof Architecture** - Works with all v2.x+ releases
 
 ## 🌟 **Features**
 
+- **Legitimate Elevation Tracking** - Full audit trail of authorized privilege elevations
 - **Real-time & Periodic Monitoring** - Choose immediate or 5-minute interval detection
 - **Configuration Profile Management** - No more hardcoded credentials in scripts
 - **Automated Remediation** - Instantly removes unauthorized admin privileges
@@ -49,6 +76,24 @@ A comprehensive monitoring and automated remediation system for Jamf Connect pri
 - **Jamf Pro Integration** - Extension Attributes, Smart Groups, and automated policies
 - **Zero User Interaction** - Silent deployment and operation across your fleet
 - **Production Verification** - Built-in tools to validate deployment success
+
+## Log Files and Monitoring Data
+
+### Primary Log Files
+- `/var/log/jamf_connect_monitor/monitor.log` - Main monitoring activity and system events
+- `/var/log/jamf_connect_monitor/admin_violations.log` - Unauthorized admin detections with full context
+- `/var/log/jamf_connect_monitor/legitimate_elevations.log` - Jamf Connect elevation audit trail
+- `/var/log/jamf_connect_monitor/elevation_history.log` - Complete elevation/demotion history
+- `/var/log/jamf_connect_monitor/jamf_connect_events.log` - Jamf Connect integration events
+- `/var/log/jamf_connect_monitor/daemon.log` - LaunchDaemon execution and scheduling logs
+
+### Statistics and Analytics
+- `/var/log/jamf_connect_monitor/elevation_statistics.json` - Elevation analytics data
+- `/var/log/jamf_connect_monitor/.stats_*` - Per-user and per-reason counter files
+- `/var/log/jamf_connect_monitor/.current_elevation_*` - Active elevation tracking files
+
+### External Dependencies
+- `/Library/Logs/JamfConnect/UserElevationReasons.log` - Jamf Connect elevation reasons (read by monitor)
 
 ## 📋 **Requirements**
 
@@ -63,7 +108,7 @@ A comprehensive monitoring and automated remediation system for Jamf Connect pri
 1. Download the latest `.pkg` from [Releases](https://github.com/MacJediWizard/jamf-connect-monitor/releases)
 2. Upload to Jamf Pro and deploy via policy
 3. Deploy Configuration Profile using included JSON Schema
-4. **CRITICAL:** Update Extension Attribute script in Jamf Pro for v2.3.0 features
+4. **CRITICAL:** Update Extension Attribute script in Jamf Pro for v2.4.0 features
 5. **IMPORTANT:** Configure SMTP settings in Configuration Profile with provider selection
 5. Verify deployment with included verification script
 6. See [Jamf Pro Deployment Guide](docs/jamf-pro-deployment.md) for details
@@ -78,7 +123,7 @@ cd jamf-connect-monitor
 sudo ./scripts/package_creation_script.sh build
 
 # Install the generated package
-sudo installer -pkg output/JamfConnectMonitor-2.3.0.pkg -target /
+sudo installer -pkg output/JamfConnectMonitor-2.4.0.pkg -target /
 
 # Verify installation
 sudo ./tools/verify_monitoring.sh
@@ -90,10 +135,10 @@ sudo ./tools/verify_monitoring.sh
 sudo ./tools/verify_monitoring.sh
 
 # Expected output includes:
-# ✅ Main script installed: Version 2.3.0
+# ✅ Main script installed: Version 2.4.0
 # ✅ Permissions correct: -rwxr-xr-x (no @ symbols)
 # ✅ Extension Attribute runs successfully
-# ✅ Version detected: Version: 2.3.0, Periodic: Running
+# ✅ Version detected: Version: 2.4.0, Periodic: Running
 # ✅ Company name: [Your Company Name] (from Configuration Profile)
 ```
 
@@ -169,7 +214,7 @@ sudo ./tools/verify_monitoring.sh
 
 ### Extension Attribute (Enhanced in v2.x)
 Creates comprehensive reporting in Jamf Pro computer records:
-- **Auto-Version Detection** - Shows "Version: 2.3.0" automatically
+- **Auto-Version Detection** - Shows "Version: 2.4.0" automatically
 - **Configuration Profile Status** - "Profile: Deployed" with actual company names
 - **Monitoring Mode Display** - "Mode: periodic" (fixed in v2.x)
 - **Violation History** - Current unauthorized admins with detailed tracking
@@ -262,13 +307,13 @@ sudo ./tools/verify_monitoring.sh
 
 ### Verification Output Example
 ```bash
-🔍 JAMF CONNECT MONITOR VERIFICATION v2.3.0
-✅ Main script installed: Version 2.3.0
+🔍 JAMF CONNECT MONITOR VERIFICATION v2.4.0
+✅ Main script installed: Version 2.4.0
 ✅ Permissions correct: -rwxr-xr-x
-✅ Extension Attribute script installed: Version 2.3.0
+✅ Extension Attribute script installed: Version 2.4.0
 ✅ EA permissions correct: -rwxr-xr-x (no @ symbols)
 ✅ Extension Attribute runs successfully
-✅ Version detected: Version: 2.3.0, Periodic: Running
+✅ Version detected: Version: 2.4.0, Periodic: Running
 ✅ Monitoring mode detected: Mode: periodic
 ✅ Company name: [Your Company Name] (from Configuration Profile)
 🎉 MONITORING APPEARS TO BE WORKING CORRECTLY
@@ -305,27 +350,28 @@ Complete removal guide: [Uninstall Guide](docs/uninstall-guide.md)
 
 ## 📖 **Documentation**
 
-- [Installation Guide](docs/installation-guide.md) - Complete deployment instructions with v2.0.1 verification
+- [Installation Guide](docs/installation-guide.md) - Complete deployment instructions with v2.4.0 verification
 - [Jamf Pro Deployment Guide](docs/jamf-pro-deployment.md) - Enterprise deployment strategies
 - [Configuration Profile Guide](docs/configuration-profiles.md) - Centralized management setup
 - [CLI Reference](docs/cli-reference.md) - Command line interface documentation
-- [Troubleshooting Guide](docs/troubleshooting.md) - Common issues and solutions including ACL problems
+- [Troubleshooting Guide](docs/troubleshooting.md) - Common issues and solutions including UI cache
+- [Forensics & Investigation Guide](docs/forensics-guide.md) - Post-remediation investigation procedures
 - [Smart Groups Guide](docs/smart-groups.md) - Jamf Pro automation setup with future-proof criteria
 - [Migration Guide](docs/migration-guide.md) - v1.x to v2.x upgrade instructions
 
-## 🚀 **Migration to v2.3.0**
+## 🚀 **Migration to v2.4.0**
 
 ### ⚠️ Breaking Change - SMTP Required
 ```bash
 # 1. CONFIGURE SMTP in Configuration Profile (REQUIRED for email)
-# 2. Upload v2.3.0 package to Jamf Pro
+# 2. Upload v2.4.0 package to Jamf Pro
 # 3. Update Extension Attribute script for version display
 # 4. Deploy to existing systems
 # 5. Run verification: sudo ./tools/verify_monitoring.sh
 ```
 
 ### From Previous Versions
-The v2.3.0 package automatically handles upgrades with:
+The v2.4.0 package automatically handles upgrades with:
 - **Clean Installation:** Removes old files before installing new ones
 - **ACL Clearing:** Cleans extended attributes to prevent permission issues
 - **Configuration Preservation:** Keeps approved admin lists and logs
@@ -342,10 +388,10 @@ See [Migration Guide](docs/migration-guide.md) for detailed upgrade instructions
 
 ## 🎯 **Enterprise Deployment Checklist**
 
-### Critical Steps for v2.3.0 Production Deployment
+### Critical Steps for v2.4.0 Production Deployment
 - [ ] **Configure SMTP** - REQUIRED: Set up SMTP in Configuration Profile for email
-- [ ] **Upload Package** - Deploy JamfConnectMonitor-2.3.0.pkg to Jamf Pro
-- [ ] **Update Extension Attribute** - Apply v2.3.0 script for proper version display
+- [ ] **Upload Package** - Deploy JamfConnectMonitor-2.4.0.pkg to Jamf Pro
+- [ ] **Update Extension Attribute** - Apply v2.4.0 script for proper version display
 - [ ] **Deploy Configuration Profile** - Use included JSON Schema for centralized management
 - [ ] **Create Smart Groups** - Use future-proof criteria: `Extension Attribute like "*Version: 2.*"`
 - [ ] **Test on Pilot Group** - Deploy to 2-3 test systems first

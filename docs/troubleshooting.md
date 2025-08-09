@@ -1,16 +1,16 @@
-# Troubleshooting Guide v2.3.0
+# Troubleshooting Guide v2.4.0
 
-## v2.3.0 Critical Issue Resolution
+## v2.4.0 Critical Issue Resolution
 
-### **Issue 1: Extension Attribute Execution Failures (FIXED in v2.3.0)**
+### **Issue 1: Extension Attribute Execution Failures (FIXED in v2.4.0)**
 
 #### **Root Cause**
 macOS Extended Attributes (ACLs) prevent script execution after package installation.
 
-#### **Solution (Automatic in v2.3.0)**
-The v2.3.0 postinstall script automatically clears ACLs:
+#### **Solution (Automatic in v2.4.0)**
+The v2.4.0 postinstall script automatically clears ACLs:
 ```bash
-# Automatically applied during v2.3.0 installation:
+# Automatically applied during v2.4.0 installation:
 xattr -c /usr/local/bin/jamf_connect_monitor.sh
 xattr -c /usr/local/etc/jamf_ea_admin_violations.sh
 ```
@@ -26,15 +26,15 @@ ls -la@ /usr/local/bin/jamf_connect_monitor.sh
 # Should show: -rwxr-xr-x (no @ symbol)
 ```
 
-### **Issue 2: Configuration Profile Integration (ENHANCED in v2.3.0)**
+### **Issue 2: Configuration Profile Integration (ENHANCED in v2.4.0)**
 
 #### **Symptom**
 Extension Attribute shows "Company: Your Company" instead of actual configured company name.
 
 #### **Root Cause**
-v2.3.0 had fallback issues when Configuration Profile wasn't fully processed.
+v2.4.0 had fallback issues when Configuration Profile wasn't fully processed.
 
-#### **Solution (Automatic in v2.3.0)**
+#### **Solution (Automatic in v2.4.0)**
 Enhanced parsing logic automatically detects and displays actual company names:
 ```bash
 # Test Configuration Profile integration:
@@ -46,22 +46,46 @@ sudo jamf_connect_monitor.sh test-config
 # Email: configured@yourcompany.com
 ```
 
-### **Issue 3: Extension Attribute Version Detection (FIXED in v2.3.0)**
+### **Issue 3: Extension Attribute Version Detection (FIXED in v2.4.0)**
 
 #### **Symptom**
 Extension Attribute shows "Version: Unknown" or empty version field.
 
-#### **Solution (Automatic in v2.3.0)**
+#### **Solution (Automatic in v2.4.0)**
 Auto-detection now works reliably:
 ```bash
 # Test Extension Attribute manually:
 sudo /usr/local/etc/jamf_ea_admin_violations.sh
 
 # Expected output shows:
-# Version: 2.3.0, Periodic: Running, Real-time: Not Running
+# Version: 2.4.0, Periodic: Running, Real-time: Not Running
 ```
 
 ## Common Issues and Solutions
+
+### macOS System Settings UI Cache Issue
+**Symptoms**: After auto-remediation, user still shows as admin in System Settings UI
+**Root Cause**: macOS UI cache not refreshing after directory service changes
+**Impact**: Cosmetic only - user has NO actual admin privileges
+
+**Verification**:
+```bash
+# Authoritative check - if this says "not a member" then remediation worked
+dsmemberutil checkmembership -U <username> -G admin
+```
+
+**Solutions**:
+1. Force UI refresh:
+```bash
+sudo killall -9 "System Settings" 2>/dev/null || true
+sudo killall -9 UserManagementAgent 2>/dev/null || true
+sudo dscacheutil -flushcache
+sudo killall -HUP opendirectoryd
+```
+2. Logout and login again
+3. Reboot (always fixes it)
+
+**Note**: This is a known macOS bug, not a security issue. The user cannot perform admin actions regardless of UI display.
 
 ### Extension Attribute Not Populating
 **Symptoms**: Empty or "Not configured" in Jamf Pro
@@ -94,7 +118,7 @@ sudo /usr/local/etc/jamf_ea_admin_violations.sh
 ### Smart Groups Not Populating
 **Symptoms**: Empty Smart Groups despite installations
 **Solutions**:
-1. Update Extension Attribute script in Jamf Pro (CRITICAL for v2.3.0)
+1. Update Extension Attribute script in Jamf Pro (CRITICAL for v2.4.0)
 2. Use flexible criteria: "Version: 2." instead of "Version: 2.0.0"
 3. Force inventory updates: `sudo jamf recon`
 4. Allow time for Smart Group processing
@@ -120,16 +144,16 @@ ls -la@ /usr/local/etc/jamf_ea_admin_violations.sh
 sudo launchctl list | grep jamfconnectmonitor
 ```
 
-### Expected v2.3.0 Output
+### Expected v2.4.0 Output
 ```bash
 # jamf_connect_monitor.sh status should show:
-=== Jamf Connect Elevation Monitor Status (v2.3.0) ===
+=== Jamf Connect Elevation Monitor Status (v2.4.0) ===
 Configuration Profile: Active (or Not deployed)
 Company: [Your Actual Company Name]
 Monitoring Mode: periodic (or realtime/hybrid)
 
 # Extension Attribute should show:
-Version: 2.3.0, Periodic: Running, Real-time: Not Running
+Version: 2.4.0, Periodic: Running, Real-time: Not Running
 Configuration: Profile: Deployed, Webhook: Configured, Mode: periodic
 ```
 

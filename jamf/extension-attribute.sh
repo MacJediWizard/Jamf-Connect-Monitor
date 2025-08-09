@@ -1,11 +1,11 @@
 #!/bin/bash
 
 # Jamf Pro Extension Attribute - Admin Account Violations
-# Version: 2.3.0 - Enhanced SMTP provider support with working Configuration Profile detection
+# Version: 2.4.0 - Added legitimate elevation tracking and analytics
 # Author: MacJediWizard
-# Description: Reports unauthorized admin account violations, monitoring status, and configuration
+# Description: Reports unauthorized admin account violations, monitoring status, elevation tracking, and configuration
 # Compatible with: Jamf Pro 10.19+ and macOS 10.14+
-# Last Updated: 2025-08-08
+# Last Updated: 2025-08-09
 
 REPORT_LOG="/var/log/jamf_connect_monitor/admin_violations.log"
 REALTIME_LOG="/var/log/jamf_connect_monitor/realtime_monitor.log"
@@ -64,6 +64,7 @@ get_version_from_main_script() {
 get_config_profile_status() {
     local webhook_status="Not Configured"
     local email_status="Not Configured"
+    local smtp_status="Not Configured"
     local profile_version="Not Deployed"
     local monitoring_mode="Unknown"
     local company_name="Unknown"
@@ -90,8 +91,22 @@ get_config_profile_status() {
         fi
         
         # Parse email - look for EmailRecipient with @ symbol
-        if echo "$config_data" | grep -q "EmailRecipient" && echo "$config_data" | grep -q "@"; then
-            email_status="Configured"
+        if echo "$config_data" | grep -q "EmailRecipient"; then
+            local email_addr=$(echo "$config_data" | awk -F' = ' '/EmailRecipient/ {gsub(/[";]/, "", $2); print $2}' | head -1)
+            if [[ -n "$email_addr" ]]; then
+                email_status="$email_addr"
+            fi
+        fi
+        
+        # Parse SMTP configuration
+        local smtp_provider=$(echo "$config_data" | awk -F' = ' '/SMTPProvider/ {gsub(/[";]/, "", $2); print $2}' | head -1)
+        local smtp_server=$(echo "$config_data" | awk -F' = ' '/SMTPServer/ {gsub(/[";]/, "", $2); print $2}' | head -1)
+        if [[ -n "$smtp_server" ]]; then
+            if [[ -n "$smtp_provider" ]]; then
+                smtp_status="${smtp_provider}:${smtp_server}"
+            else
+                smtp_status="$smtp_server"
+            fi
         fi
         
         # Parse monitoring mode - enhanced detection
@@ -121,7 +136,42 @@ get_config_profile_status() {
         fi
     fi
     
-    echo "Profile: $profile_version, Webhook: $webhook_status, Email: $email_status, Mode: $monitoring_mode, Company: $company_name"
+    echo "Profile: $profile_version, Webhook: $webhook_status, Email: $email_status, SMTP: $smtp_status, Mode: $monitoring_mode, Company: $company_name"
+}
+
+# Function to get current elevation status with analytics
+get_elevation_status() {
+    local elevation_status="None"
+    local elevation_log="/var/log/jamf_connect_monitor/elevation_history.log"
+    local legitimate_log="/var/log/jamf_connect_monitor/legitimate_elevations.log"
+    
+    # Check for current elevations
+    local current_elevations=""
+    for elevation_file in /var/log/jamf_connect_monitor/.current_elevation_*; do
+        if [[ -f "$elevation_file" ]]; then
+            local user=$(basename "$elevation_file" | sed 's/.current_elevation_//')
+            local info=$(cat "$elevation_file")
+            local reason=$(echo "$info" | sed -n 's/.*"reason":"\([^"]*\)".*/\1/p')
+            if [[ -n "$current_elevations" ]]; then
+                current_elevations="$current_elevations; "
+            fi
+            current_elevations="${current_elevations}${user}:${reason}"
+        fi
+    done
+    
+    # Add legitimate elevation count
+    local legit_count=0
+    if [[ -f "$legitimate_log" ]]; then
+        legit_count=$(grep -c "LEGITIMATE_ELEVATION" "$legitimate_log" 2>/dev/null || echo "0")
+    fi
+    
+    if [[ -n "$current_elevations" ]]; then
+        elevation_status="Current: $current_elevations (Total Legit: $legit_count)"
+    elif [[ $legit_count -gt 0 ]]; then
+        elevation_status="None Active (Total Legit: $legit_count)"
+    fi
+    
+    echo "$elevation_status"
 }
 
 # Function to get comprehensive monitoring status with auto-detection
@@ -158,7 +208,10 @@ get_violation_summary() {
         recent_violations=$(grep "ADMIN PRIVILEGE VIOLATION DETECTED" "$REPORT_LOG" 2>/dev/null | tail -7 | wc -l | tr -d ' ')
         
         if [[ $total_violations -gt 0 ]]; then
-            last_violation=$(grep "ADMIN PRIVILEGE VIOLATION DETECTED" "$REPORT_LOG" | tail -1 | grep -o '[0-9]\{4\}-[0-9]\{2\}-[0-9]\{2\} [0-9]\{2\}:[0-9]\{2\}:[0-9]\{2\}' || echo "Unknown")
+            # Get the timestamp from the last violation entry
+            last_violation=$(grep -A2 "ADMIN PRIVILEGE VIOLATION DETECTED" "$REPORT_LOG" | grep "Timestamp:" | tail -1 | sed 's/Timestamp: //' || echo "Unknown")
+            # Clean up any extra whitespace but preserve the space between date and time
+            last_violation=$(echo "$last_violation" | xargs)
         fi
     fi
     
@@ -176,7 +229,7 @@ get_violation_summary() {
         done <<< "$current_admins"
     fi
     
-    echo "Total: $total_violations, Recent: $recent_violations, Last: $last_violation, Unauthorized: $unauthorized_count"
+    echo "Total: $total_violations, Recent: $recent_violations, Last: \"$last_violation\", Unauthorized: $unauthorized_count"
 }
 
 # Function to get Jamf Connect integration status
@@ -257,6 +310,7 @@ main() {
     local violation_summary=$(get_violation_summary)
     local admin_status="Current: [$(get_current_admins)], Approved: [$(get_approved_admins)]"
     local jamf_connect_status=$(get_jamf_connect_status)
+    local elevation_status=$(get_elevation_status)
     local health_metrics=$(get_health_metrics)
     
     # Enhanced result format for better Smart Group compatibility
@@ -265,6 +319,7 @@ $monitoring_status
 Configuration: $config_status
 Violations: $violation_summary
 Admin Status: $admin_status
+Elevations: $elevation_status
 Jamf Connect: $jamf_connect_status
 Health: $health_metrics
 Report Generated: $(date '+%Y-%m-%d %H:%M:%S')"

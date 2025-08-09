@@ -1,9 +1,9 @@
 #!/bin/bash
 
-# Jamf Connect Monitor - Verification Script v2.3.0
+# Jamf Connect Monitor - Verification Script v2.4.0
 # Use this script to verify monitoring is working properly
 
-echo "🔍 JAMF CONNECT MONITOR VERIFICATION v2.3.0"
+echo "🔍 JAMF CONNECT MONITOR VERIFICATION v2.4.0"
 echo "============================================"
 
 # Colors for output
@@ -136,13 +136,13 @@ if [[ -f "/usr/local/etc/jamf_ea_admin_violations.sh" ]]; then
             print_status "$YELLOW" "⚠️  Version info not found in output"
         fi
         
-        # Check for monitoring mode info (v2.3.0 enhanced)
+        # Check for monitoring mode info (v2.4.0 enhanced)
         if echo "$ea_output" | grep -q "Mode: "; then
             mode_info=$(echo "$ea_output" | grep -o "Mode: [^,]*" | head -1)
             if [[ "$mode_info" != "Mode: " ]]; then
                 print_status "$GREEN" "✅ Monitoring mode detected: $mode_info"
             else
-                print_status "$RED" "❌ Monitoring mode EMPTY (check v2.3.0 installation)"
+                print_status "$RED" "❌ Monitoring mode EMPTY (check v2.4.0 installation)"
             fi
         else
             print_status "$YELLOW" "⚠️  Monitoring mode info not found"

@@ -1,11 +1,11 @@
-# Configuration Profile Deployment Guide v2.3.0
+# Configuration Profile Deployment Guide v2.4.0
 
 ## Overview
-Jamf Connect Monitor v2.3.0 introduces enhanced Configuration Profile management with centralized administration, improved parsing reliability, and comprehensive troubleshooting capabilities for enterprise environments.
+Jamf Connect Monitor v2.4.0 introduces enhanced Configuration Profile management with centralized administration, improved parsing reliability, and comprehensive troubleshooting capabilities for enterprise environments.
 
-## 🎯 **v2.3.0 Configuration Profile Improvements**
+## 🎯 **v2.4.0 Configuration Profile Improvements**
 
-### **Production-Verified Integration (Fixed in v2.3.0)**
+### **Production-Verified Integration (Fixed in v2.4.0)**
 - **✅ Standardized Reading Methods** - Uses verified working methods for enterprise environments
 - **✅ Company Name Display** - Shows actual company names instead of "Your Company" fallback
 - **✅ Enhanced Troubleshooting** - Multiple fallback strategies for reliable configuration reading
@@ -36,7 +36,7 @@ cp temp/Payload/usr/local/share/jamf_connect_monitor/schema/jamf_connect_monitor
 4. **Preference Domain:** `com.macjediwizard.jamfconnectmonitor`
 5. **Upload Schema:** Select `jamf_connect_monitor_schema.json`
 
-### Step 3: Configure Settings (v2.3.0 Enhanced)
+### Step 3: Configure Settings (v2.4.0 Enhanced)
 ```json
 NotificationSettings:
 ├── WebhookURL: https://hooks.slack.com/services/YOUR/WEBHOOK
@@ -57,7 +57,7 @@ SecuritySettings:
 └── RequireConfirmation: false
 
 JamfProIntegration:
-├── CompanyName: Your Company Name (DISPLAYS CORRECTLY in v2.3.0)
+├── CompanyName: Your Company Name (DISPLAYS CORRECTLY in v2.4.0)
 ├── ITContactEmail: ithelp@yourcompany.com
 ├── UpdateInventoryOnViolation: true
 └── TriggerPolicyOnViolation: security_incident_response
@@ -73,14 +73,14 @@ AdvancedSettings:
 - **Target:** Smart Group "Jamf Connect Monitor - Installed v2.x"
 - **Distribution:** Install Automatically
 
-## Configuration Profile Integration Testing (v2.3.0)
+## Configuration Profile Integration Testing (v2.4.0)
 
-### Testing Configuration Reading (Enhanced in v2.3.0)
+### Testing Configuration Reading (Enhanced in v2.4.0)
 ```bash
-# Test v2.3.0 enhanced configuration reading
+# Test v2.4.0 enhanced configuration reading
 sudo jamf_connect_monitor.sh test-config
 
-# Expected v2.3.0 output shows actual values:
+# Expected v2.4.0 output shows actual values:
 # === Configuration Profile Test ===
 # Profile Status: Deployed
 # Webhook: Configured
@@ -92,22 +92,22 @@ sudo jamf_connect_monitor.sh test-config
 
 ### Manual Configuration Profile Testing
 ```bash
-# Test all configuration reading methods (v2.3.0 uses multiple methods)
+# Test all configuration reading methods (v2.4.0 uses multiple methods)
 echo "=== Configuration Profile Reading Methods Test ==="
 
 echo "Method 1 (Standard):"
 defaults read com.macjediwizard.jamfconnectmonitor 2>/dev/null || echo "FAILED"
 
-echo "Method 2 (Managed Preferences - v2.3.0 Preferred):"
+echo "Method 2 (Managed Preferences - v2.4.0 Preferred):"
 defaults read "/Library/Managed Preferences/com.macjediwizard.jamfconnectmonitor" 2>/dev/null || echo "FAILED"
 
 echo "Method 3 (Sudo Standard):"
 sudo defaults read com.macjediwizard.jamfconnectmonitor 2>/dev/null || echo "FAILED"
 
-echo "Method 4 (Sudo Managed Preferences - v2.3.0 Preferred):"
+echo "Method 4 (Sudo Managed Preferences - v2.4.0 Preferred):"
 sudo defaults read "/Library/Managed Preferences/com.macjediwizard.jamfconnectmonitor" 2>/dev/null || echo "FAILED"
 
-# v2.3.0 uses Methods 2 & 4 (the ones that work reliably in enterprise environments)
+# v2.4.0 uses Methods 2 & 4 (the ones that work reliably in enterprise environments)
 ```
 
 ### Verify Profile Deployment
@@ -124,7 +124,7 @@ sudo defaults read com.macjediwizard.jamfconnectmonitor JamfProIntegration.Compa
 sudo defaults read com.macjediwizard.jamfconnectmonitor MonitoringBehavior.MonitoringMode
 ```
 
-## v2.3.0 Enhanced Configuration Features
+## v2.4.0 Enhanced Configuration Features
 
 ### Improved Company Name Display
 ```json
@@ -136,12 +136,12 @@ sudo defaults read com.macjediwizard.jamfconnectmonitor MonitoringBehavior.Monit
 }
 ```
 
-**v2.3.0 Result:**
+**v2.4.0 Result:**
 - Extension Attribute shows: `Company: Acme Corporation`
 - Main script status shows: `Company: Acme Corporation`
 - Notifications include: `Acme Corporation` branding
 
-**Before v2.3.0 (Issue):**
+**Before v2.4.0 (Issue):**
 - Extension Attribute showed: `Company: Your Company`
 - Fallback values used instead of Configuration Profile
 
@@ -156,12 +156,12 @@ sudo defaults read com.macjediwizard.jamfconnectmonitor MonitoringBehavior.Monit
 }
 ```
 
-**v2.3.0 Result:**
+**v2.4.0 Result:**
 - Extension Attribute shows: `Mode: realtime`
 - Smart Groups populate correctly
 - Real-time monitoring activates
 
-**Before v2.3.0 (Issue):**
+**Before v2.4.0 (Issue):**
 - Extension Attribute showed: `Mode: ` (empty)
 - Smart Groups didn't populate properly
 
@@ -253,7 +253,7 @@ sudo defaults read com.macjediwizard.jamfconnectmonitor MonitoringBehavior.Monit
 }
 ```
 
-## Troubleshooting Configuration Profiles (v2.3.0 Enhanced)
+## Troubleshooting Configuration Profiles (v2.4.0 Enhanced)
 
 ### Common Configuration Profile Issues
 
@@ -272,18 +272,18 @@ sudo profiles renew -type=config
 sudo profiles list | grep -E "(jamf|monitor)"
 ```
 
-#### Configuration Values Not Reading (Fixed in v2.3.0)
+#### Configuration Values Not Reading (Fixed in v2.4.0)
 ```bash
-# Test v2.3.0 configuration reading
+# Test v2.4.0 configuration reading
 sudo jamf_connect_monitor.sh test-config
 
 # If showing fallback values, test individual methods:
 echo "Testing Configuration Profile reading methods..."
 
-# Method 2 (v2.3.0 preferred):
+# Method 2 (v2.4.0 preferred):
 defaults read "/Library/Managed Preferences/com.macjediwizard.jamfconnectmonitor" JamfProIntegration.CompanyName 2>/dev/null
 
-# Method 4 (v2.3.0 preferred):
+# Method 4 (v2.4.0 preferred):
 sudo defaults read "/Library/Managed Preferences/com.macjediwizard.jamfconnectmonitor" JamfProIntegration.CompanyName 2>/dev/null
 
 # If both fail, check profile deployment in Jamf Pro
@@ -292,8 +292,8 @@ sudo defaults read "/Library/Managed Preferences/com.macjediwizard.jamfconnectmo
 #### Company Name Shows "Your Company" Instead of Actual Name
 ```bash
 # This was a v2.0.0 issue, fixed in v2.0.1+
-# Verify v2.3.0 installation:
-sudo jamf_connect_monitor.sh status | grep "v2.3.0"
+# Verify v2.4.0 installation:
+sudo jamf_connect_monitor.sh status | grep "v2.4.0"
 
 # Test Configuration Profile company name:
 sudo defaults read "/Library/Managed Preferences/com.macjediwizard.jamfconnectmonitor" JamfProIntegration.CompanyName
@@ -306,11 +306,11 @@ sudo defaults read "/Library/Managed Preferences/com.macjediwizard.jamfconnectmo
 ```bash
 # This was a v2.0.0 issue, fixed in v2.0.1+
 # Update Extension Attribute script in Jamf Pro (CRITICAL):
-# Settings → Extension Attributes → Replace with v2.3.0 script
+# Settings → Extension Attributes → Replace with v2.4.0 script
 
 # Test Extension Attribute:
 sudo /usr/local/etc/jamf_ea_admin_violations.sh | grep "Mode:"
-# Expected v2.3.0: Mode: periodic (or realtime/hybrid)
+# Expected v2.4.0: Mode: periodic (or realtime/hybrid)
 
 # Force inventory update:
 sudo jamf recon
@@ -347,7 +347,7 @@ sudo profiles list | grep jamfconnectmonitor && echo "✅ Installed" || echo "�
 echo "Configuration Reading:"
 sudo jamf_connect_monitor.sh test-config | grep -q "Profile Status: Deployed" && echo "✅ Reading Successfully" || echo "❌ Reading Failed"
 
-# 3. Check company name (v2.3.0 improvement)
+# 3. Check company name (v2.4.0 improvement)
 echo "Company Name Display:"
 company_name=$(sudo jamf_connect_monitor.sh test-config | grep "Company Name:" | cut -d':' -f2 | xargs)
 if [[ "$company_name" != "Your Company" ]]; then
@@ -368,7 +368,7 @@ sudo jamf_connect_monitor.sh test-config | grep -q "Webhook: Configured" && echo
 ## Performance and Scalability
 
 ### Configuration Profile Performance
-- **Reading Overhead:** v2.3.0 uses optimized methods reducing lookup time
+- **Reading Overhead:** v2.4.0 uses optimized methods reducing lookup time
 - **Cache Utilization:** Configuration Profiles cached by macOS for fast access
 - **Network Impact:** Minimal - profiles downloaded once, cached locally
 - **Update Speed:** Changes apply within seconds of profile deployment
@@ -388,7 +388,7 @@ sudo jamf_connect_monitor.sh test-config | grep -q "Webhook: Configured" && echo
 # Monitor Configuration Profile reading performance
 time sudo jamf_connect_monitor.sh test-config
 
-# Typical v2.3.0 performance: < 2 seconds
+# Typical v2.4.0 performance: < 2 seconds
 # If slower, check Configuration Profile deployment status
 ```
 
@@ -501,4 +501,4 @@ sudo jamf_connect_monitor.sh test-config
 
 **Created with ❤️ by MacJediWizard**
 
-**Production-verified Configuration Profile management with v2.3.0 integration improvements and comprehensive troubleshooting.**
+**Production-verified Configuration Profile management with v2.4.0 integration improvements and comprehensive troubleshooting.**

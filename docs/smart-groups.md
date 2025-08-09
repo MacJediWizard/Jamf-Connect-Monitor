@@ -57,19 +57,19 @@ Purpose: Verify notification system deployment
 
 ### Version-Specific Groups (Optional)
 
-#### Jamf Connect Monitor - Latest Version (v2.3.0+)
+#### Jamf Connect Monitor - Latest Version (v2.4.0+)
 ```
 Name: Jamf Connect Monitor - Latest Version
-Criteria: Extension Attribute "[ Jamf Connect ] - Monitor Status v2.x" like "*Version: 2.3.0*"
+Criteria: Extension Attribute "[ Jamf Connect ] - Monitor Status v2.x" like "*Version: 2.4.0*"
 OR Extension Attribute "[ Jamf Connect ] - Monitor Status v2.x" like "*Version: 2.0.2*"
 Purpose: Track latest version deployments for specific features
 ```
 
-#### Jamf Connect Monitor - Legacy v2.3.0
+#### Jamf Connect Monitor - Legacy v2.4.0
 ```
-Name: Jamf Connect Monitor - Legacy v2.3.0
+Name: Jamf Connect Monitor - Legacy v2.4.0
 Criteria: Extension Attribute "[ Jamf Connect ] - Monitor Status v2.x" like "*Version: 2.0.0*"
-Purpose: Identify systems needing upgrade to v2.3.0+ for enhanced parsing
+Purpose: Identify systems needing upgrade to v2.4.0+ for enhanced parsing
 ```
 
 ### Monitoring Mode Groups
@@ -258,10 +258,10 @@ Actions:
 ### Smart Group Evolution
 As versions evolve, maintain backward compatibility:
 
-**v2.3.0 → v2.3.0 Migration:**
+**v2.4.0 → v2.4.0 Migration:**
 - ✅ Keep "Version: 2." criteria (catches both versions)
 - ✅ No Smart Group updates needed
-- ✅ Automatic inclusion of v2.3.0 systems
+- ✅ Automatic inclusion of v2.4.0 systems
 
 **Future v2.x Versions:**
 - ✅ Flexible criteria continue to work

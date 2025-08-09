@@ -1,11 +1,11 @@
 #!/bin/bash
 
 # Jamf Connect Elevation Monitor & Admin Account Remediation Script
-# Version: 2.3.0 - Added SMTP provider selection and improved configuration
+# Version: 2.4.0 - Added legitimate elevation tracking and audit logging
 # Author: MacJediWizard
 
 # Centralized Version Management
-VERSION="2.3.0"
+VERSION="2.4.0"
 SCRIPT_NAME="JamfConnectMonitor"
 
 # Configuration Variables
@@ -51,16 +51,57 @@ read_configuration() {
         
         # Parse settings from the config data using robust extraction
         # Notification Settings
+        WEBHOOK_TYPE=$(echo "$config_data" | awk -F' = ' '/WebhookType/ {gsub(/[";]/, "", $2); print $2}' | head -1 || echo "none")
         WEBHOOK_URL=$(echo "$config_data" | grep -A1 "WebhookURL" | grep -o 'https://[^"]*' | head -1 || echo "")
         EMAIL_RECIPIENT=$(echo "$config_data" | grep -A1 "EmailRecipient" | grep -o '[a-zA-Z0-9._%+-]*@[a-zA-Z0-9.-]*\.[a-zA-Z]*' | head -1 || echo "")
         
         # SMTP Configuration - NEW with Provider support
-        SMTP_PROVIDER=$(echo "$config_data" | grep -A1 "SMTPProvider" | grep -o '"[^"]*"' | tr -d '"' | head -1 || echo "custom")
-        SMTP_SERVER=$(echo "$config_data" | grep -A1 "SMTPServer" | grep -o '"[^"]*"' | tr -d '"' | head -1 || echo "")
-        SMTP_PORT=$(echo "$config_data" | grep -A1 "SMTPPort" | grep -o '[0-9]*' | head -1 || echo "587")
-        SMTP_USERNAME=$(echo "$config_data" | grep -A1 "SMTPUsername" | grep -o '[a-zA-Z0-9._%+-]*@[a-zA-Z0-9.-]*\.[a-zA-Z]*' | head -1 || echo "")
-        SMTP_PASSWORD=$(echo "$config_data" | grep -A1 "SMTPPassword" | grep -o '"[^"]*"' | tr -d '"' | head -1 || echo "")
-        SMTP_FROM_ADDRESS=$(echo "$config_data" | grep -A1 "SMTPFromAddress" | grep -o '[a-zA-Z0-9._%+-]*@[a-zA-Z0-9.-]*\.[a-zA-Z]*' | head -1 || echo "$SMTP_USERNAME")
+        SMTP_PROVIDER=$(echo "$config_data" | awk -F' = ' '/SMTPProvider/ {gsub(/[";]/, "", $2); print $2}' | head -1 || echo "custom")
+        
+        # Auto-configure SMTP settings based on provider if not explicitly set
+        case "$SMTP_PROVIDER" in
+            "gmail")
+                DEFAULT_SMTP_SERVER="smtp.gmail.com"
+                DEFAULT_SMTP_PORT="587"
+                ;;
+            "office365")
+                DEFAULT_SMTP_SERVER="smtp.office365.com"
+                DEFAULT_SMTP_PORT="587"
+                ;;
+            "sendgrid")
+                DEFAULT_SMTP_SERVER="smtp.sendgrid.net"
+                DEFAULT_SMTP_PORT="587"
+                ;;
+            "aws_ses")
+                DEFAULT_SMTP_SERVER="email-smtp.us-east-1.amazonaws.com"
+                DEFAULT_SMTP_PORT="587"
+                ;;
+            "smtp2go")
+                DEFAULT_SMTP_SERVER="mail.smtp2go.com"
+                DEFAULT_SMTP_PORT="587"
+                ;;
+            "mailgun")
+                DEFAULT_SMTP_SERVER="smtp.mailgun.org"
+                DEFAULT_SMTP_PORT="587"
+                ;;
+            *)
+                DEFAULT_SMTP_SERVER=""
+                DEFAULT_SMTP_PORT="587"
+                ;;
+        esac
+        
+        # Use configured values or fall back to provider defaults
+        SMTP_SERVER=$(echo "$config_data" | awk -F' = ' '/SMTPServer/ {gsub(/[";]/, "", $2); print $2}' | head -1)
+        [[ -z "$SMTP_SERVER" ]] && SMTP_SERVER="$DEFAULT_SMTP_SERVER"
+        
+        SMTP_PORT=$(echo "$config_data" | awk -F' = ' '/SMTPPort/ {gsub(/[";]/, "", $2); print $2}' | head -1)
+        [[ -z "$SMTP_PORT" ]] && SMTP_PORT="$DEFAULT_SMTP_PORT"
+        # Fixed: Robust extraction using awk for SMTP username
+        SMTP_USERNAME=$(echo "$config_data" | awk -F' = ' '/SMTPUsername/ {gsub(/[";]/, "", $2); print $2}' | head -1 || echo "")
+        # Fixed: Robust extraction using awk for SMTP password  
+        SMTP_PASSWORD=$(echo "$config_data" | awk -F' = ' '/SMTPPassword/ {gsub(/[";]/, "", $2); print $2}' | head -1 || echo "")
+        # SMTP From Address is REQUIRED - must be verified with SMTP provider
+        SMTP_FROM_ADDRESS=$(echo "$config_data" | grep -A1 "SMTPFromAddress" | grep -o '[a-zA-Z0-9._%+-]*@[a-zA-Z0-9.-]*\.[a-zA-Z]*' | head -1 || echo "")
         
         NOTIFICATION_TEMPLATE=$(echo "$config_data" | grep -A1 "NotificationTemplate" | grep -o '"[^"]*"' | tr -d '"' | grep -E "(simple|detailed|security_report)" | head -1 || echo "detailed")
         NOTIFICATION_COOLDOWN=$(echo "$config_data" | grep -A1 "NotificationCooldownMinutes" | grep -o '[0-9]*' | head -1 || echo "15")
@@ -126,11 +167,39 @@ read_configuration() {
         log_message "DEBUG" "Webhook: $([[ -n "$WEBHOOK_URL" ]] && echo "Configured" || echo "None")"
         log_message "DEBUG" "Email: $([[ -n "$EMAIL_RECIPIENT" ]] && echo "$EMAIL_RECIPIENT" || echo "None")"
         log_message "DEBUG" "SMTP: $([[ -n "$SMTP_SERVER" ]] && echo "Configured ($SMTP_SERVER:$SMTP_PORT)" || echo "System mail")"
+        log_message "DEBUG" "SMTP Username: $([[ -n "$SMTP_USERNAME" ]] && echo "${SMTP_USERNAME}" || echo "None")"
+        log_message "DEBUG" "SMTP Password: $([[ -n "$SMTP_PASSWORD" ]] && echo "***configured***" || echo "None")"
+        log_message "DEBUG" "SMTP From Address: $([[ -n "$SMTP_FROM_ADDRESS" ]] && echo "${SMTP_FROM_ADDRESS}" || echo "WARNING: Not configured!")"
         log_message "DEBUG" "Monitoring Mode: $MONITORING_MODE"
         log_message "DEBUG" "Auto Remediation: $AUTO_REMEDIATION"
         log_message "DEBUG" "Violation Reporting: $VIOLATION_REPORTING"
         log_message "DEBUG" "Company: $COMPANY_NAME"
     fi
+    
+    # Warn if SMTP is configured but From Address is missing
+    if [[ -n "$SMTP_SERVER" && -z "$SMTP_FROM_ADDRESS" ]]; then
+        log_message "WARN" "SMTP From Address not configured - email delivery may fail!"
+        log_message "WARN" "Please configure SMTPFromAddress in Configuration Profile"
+    fi
+    
+    # Provider-specific validation and guidance
+    case "$SMTP_PROVIDER" in
+        "gmail")
+            if [[ -n "$SMTP_PASSWORD" && ${#SMTP_PASSWORD} -ne 16 ]]; then
+                log_message "WARN" "Gmail typically requires a 16-character App Password, not your regular password"
+            fi
+            ;;
+        "smtp2go"|"mailgun"|"sendgrid")
+            if [[ -n "$SMTP_FROM_ADDRESS" ]]; then
+                log_message "INFO" "Note: $SMTP_PROVIDER requires sender domain/email verification"
+            fi
+            ;;
+        "sendgrid")
+            if [[ "$SMTP_USERNAME" != "apikey" ]]; then
+                log_message "WARN" "SendGrid requires username to be 'apikey' (literal string)"
+            fi
+            ;;
+    esac
 }
 
 # Create necessary directories
@@ -315,7 +384,7 @@ EOF
         # Create email in RFC 2822 format
         local temp_email="/tmp/jamf_monitor_email_$$"
         cat > "$temp_email" << EOF
-From: ${SMTP_FROM:-$SMTP_USERNAME}
+From: ${SMTP_FROM_ADDRESS:-$SMTP_USERNAME}
 To: $recipient
 Subject: $subject
 Date: $(date -R 2>/dev/null || date '+%a, %d %b %Y %H:%M:%S %z')
@@ -333,19 +402,37 @@ EOF
             curl_opts="--ssl"
         fi
         
-        # Send via curl
-        if curl -s --url "${protocol}://${SMTP_SERVER}:${SMTP_PORT}" \
-               --mail-from "${SMTP_FROM:-$SMTP_USERNAME}" \
+        # Send via curl with verbose error capture
+        local curl_output
+        curl_output=$(curl -v --url "${protocol}://${SMTP_SERVER}:${SMTP_PORT}" \
+               --mail-from "${SMTP_FROM_ADDRESS:-$SMTP_USERNAME}" \
                --mail-rcpt "$recipient" \
                --user "${SMTP_USERNAME}:${SMTP_PASSWORD}" \
                $curl_opts \
-               --upload-file "$temp_email" 2>&1; then
+               --upload-file "$temp_email" 2>&1)
+        
+        local curl_exit_code=$?
+        
+        if [[ $curl_exit_code -eq 0 ]]; then
             rm -f "$temp_email"
             log_message "INFO" "Authenticated email sent successfully via curl to $recipient"
             return 0
         else
             rm -f "$temp_email"
-            log_message "ERROR" "curl SMTP authentication failed"
+            log_message "ERROR" "curl SMTP failed (exit code: $curl_exit_code)"
+            
+            # Check for common SMTP errors and provide helpful messages
+            if echo "$curl_output" | grep -q "550.*not verified"; then
+                log_message "ERROR" "SMTP2GO requires sender domain verification"
+                log_message "ERROR" "Please verify ${SMTP_FROM_ADDRESS:-$SMTP_USERNAME} in SMTP2GO dashboard:"
+                log_message "ERROR" "1. Log into SMTP2GO dashboard"
+                log_message "ERROR" "2. Go to Settings > Verified Senders"
+                log_message "ERROR" "3. Add and verify: successacademies.org or ${SMTP_FROM_ADDRESS:-$SMTP_USERNAME}"
+            elif echo "$curl_output" | grep -q "535.*Authentication failed"; then
+                log_message "ERROR" "SMTP authentication failed - check username and password"
+            else
+                log_message "DEBUG" "curl error output: ${curl_output}"
+            fi
             return 1
         fi
     fi
@@ -580,20 +667,145 @@ monitor_realtime_events() {
     done
 }
 
-# Process individual elevation events
+# Calculate duration between two timestamps
+calculate_duration() {
+    local start_time="$1"
+    local end_time="$2"
+    
+    # Convert to epoch seconds if possible
+    if command -v date >/dev/null 2>&1; then
+        local start_epoch=$(date -j -f "%Y-%m-%d %H:%M:%S" "$start_time" "+%s" 2>/dev/null || echo "0")
+        local end_epoch=$(date -j -f "%Y-%m-%d %H:%M:%S" "$end_time" "+%s" 2>/dev/null || echo "0")
+        
+        if [[ $start_epoch -gt 0 && $end_epoch -gt 0 ]]; then
+            local diff=$((end_epoch - start_epoch))
+            local hours=$((diff / 3600))
+            local minutes=$(( (diff % 3600) / 60 ))
+            
+            if [[ $hours -gt 0 ]]; then
+                echo "${hours}h ${minutes}m"
+            else
+                echo "${minutes} minutes"
+            fi
+        else
+            echo "Unknown"
+        fi
+    else
+        echo "Unknown"
+    fi
+}
+
+# Update elevation statistics for reporting
+update_elevation_statistics() {
+    local user="$1"
+    local reason="$2"
+    local stats_file="$LOG_DIR/elevation_statistics.json"
+    local today=$(date '+%Y-%m-%d')
+    
+    # Initialize stats file if it doesn't exist
+    if [[ ! -f "$stats_file" ]]; then
+        echo "{\"total_elevations\": 0, \"daily_elevations\": {}, \"user_elevations\": {}, \"reasons\": {}}" > "$stats_file"
+    fi
+    
+    # Update statistics using simple counters (avoiding complex JSON manipulation)
+    local total_count_file="$LOG_DIR/.stats_total"
+    local user_count_file="$LOG_DIR/.stats_user_$user"
+    local daily_count_file="$LOG_DIR/.stats_daily_$today"
+    local reason_count_file="$LOG_DIR/.stats_reason_$(echo "$reason" | tr ' ' '_')"
+    
+    # Increment counters
+    echo $(($(cat "$total_count_file" 2>/dev/null || echo 0) + 1)) > "$total_count_file"
+    echo $(($(cat "$user_count_file" 2>/dev/null || echo 0) + 1)) > "$user_count_file"
+    echo $(($(cat "$daily_count_file" 2>/dev/null || echo 0) + 1)) > "$daily_count_file"
+    echo $(($(cat "$reason_count_file" 2>/dev/null || echo 0) + 1)) > "$reason_count_file"
+    
+    log_message "INFO" "Updated elevation statistics for $user"
+}
+
+# Generate elevation summary report
+generate_elevation_summary() {
+    local legitimate_log="$LOG_DIR/legitimate_elevations.log"
+    local summary=""
+    
+    if [[ -f "$legitimate_log" ]]; then
+        # Count total legitimate elevations
+        local total_elevations=$(grep -c "LEGITIMATE_ELEVATION" "$legitimate_log" 2>/dev/null || echo "0")
+        
+        # Get today's elevations
+        local today=$(date '+%Y-%m-%d')
+        local today_elevations=$(grep "$today" "$legitimate_log" | grep -c "LEGITIMATE_ELEVATION" || echo "0")
+        
+        # Get unique users who elevated
+        local unique_users=$(grep "LEGITIMATE_ELEVATION" "$legitimate_log" | awk -F'|' '{print $3}' | sort -u | wc -l | tr -d ' ')
+        
+        # Get most common reasons (top 3)
+        local top_reasons=$(grep "LEGITIMATE_ELEVATION" "$legitimate_log" | awk -F'|' '{print $4}' | sort | uniq -c | sort -rn | head -3 | awk '{$1="["$1"]"; print}' | tr '\n' '; ')
+        
+        summary="Total Elevations: $total_elevations | Today: $today_elevations | Unique Users: $unique_users | Top Reasons: $top_reasons"
+    else
+        summary="No legitimate elevation data available"
+    fi
+    
+    echo "$summary"
+}
+
+# Process individual elevation events with enhanced tracking
 process_elevation_event() {
     local event_line="$1"
+    local timestamp=$(echo "$event_line" | awk '{print $1 " " $2}')
+    local elevation_log="$LOG_DIR/elevation_history.log"
+    local legitimate_log="$LOG_DIR/legitimate_elevations.log"
     
     if echo "$event_line" | grep -q "Added user"; then
         local user=$(echo "$event_line" | sed -n 's/.*Added user \([^[:space:]]*\).*/\1/p')
         log_message "INFO" "User elevated via Jamf Connect: $user"
         
+        # Log elevation event
+        echo "$timestamp | ELEVATED | $user | Awaiting reason..." >> "$elevation_log"
+        
+        # Store elevation time for duration calculation
+        echo "$timestamp" > "$LOG_DIR/.elevation_time_$user"
+        
         # Check authorization with grace period
         check_user_with_grace_period "$user"
+        
+    elif echo "$event_line" | grep -q "elevated to admin for stated reason"; then
+        # Capture the elevation reason
+        local user=$(echo "$event_line" | sed -n 's/.*User \([^[:space:]]*\) elevated.*/\1/p')
+        local reason=$(echo "$event_line" | sed -n 's/.*stated reason: \(.*\)/\1/p')
+        log_message "INFO" "Elevation reason for $user: $reason"
+        
+        # Update the elevation log with reason
+        echo "$timestamp | REASON | $user | $reason" >> "$elevation_log"
+        
+        # Log legitimate elevation for audit trail
+        echo "$timestamp | LEGITIMATE_ELEVATION | $user | $reason | $hostname" >> "$legitimate_log"
+        
+        # Store current elevation info for notifications
+        echo "{\"user\":\"$user\",\"reason\":\"$reason\",\"time\":\"$timestamp\"}" > "$LOG_DIR/.current_elevation_$user"
+        
+        # Update elevation statistics
+        update_elevation_statistics "$user" "$reason"
         
     elif echo "$event_line" | grep -q "Removed user"; then
         local user=$(echo "$event_line" | sed -n 's/.*Removed user \([^[:space:]]*\).*/\1/p')
         log_message "INFO" "User demoted via Jamf Connect: $user"
+        
+        # Calculate elevation duration
+        if [[ -f "$LOG_DIR/.elevation_time_$user" ]]; then
+            local start_time=$(cat "$LOG_DIR/.elevation_time_$user")
+            local duration=$(calculate_duration "$start_time" "$timestamp")
+            echo "$timestamp | DEMOTED | $user | Duration: $duration" >> "$elevation_log"
+            
+            # Log to legitimate elevations audit
+            echo "$timestamp | LEGITIMATE_DEMOTION | $user | Duration: $duration" >> "$legitimate_log"
+            
+            # Clean up temporary files
+            rm -f "$LOG_DIR/.elevation_time_$user"
+            rm -f "$LOG_DIR/.current_elevation_$user"
+        else
+            echo "$timestamp | DEMOTED | $user | Duration: Unknown" >> "$elevation_log"
+        fi
     fi
 }
 
@@ -657,12 +869,29 @@ check_unauthorized_admins() {
     fi
 }
 
-# Enhanced violation handling with configuration support
+# Enhanced violation handling with configuration support and elevation context
 handle_violation() {
     local user="$1"
     local timestamp=$(date '+%Y-%m-%d %H:%M:%S')
     local hostname=$(hostname)
     local current_user=$(who | awk 'NR==1{print $1}')
+    
+    # Get legitimate elevation context
+    local elevation_context=""
+    local legitimate_elevations=""
+    for elevation_file in "$LOG_DIR"/.current_elevation_*; do
+        if [[ -f "$elevation_file" ]]; then
+            local elevated_user=$(basename "$elevation_file" | sed 's/.current_elevation_//')
+            local elevation_info=$(cat "$elevation_file")
+            local reason=$(echo "$elevation_info" | sed -n 's/.*"reason":"\([^"]*\)".*/\1/p')
+            local elev_time=$(echo "$elevation_info" | sed -n 's/.*"time":"\([^"]*\)".*/\1/p')
+            legitimate_elevations="${legitimate_elevations}\n  - $elevated_user: $reason (at $elev_time)"
+        fi
+    done
+    
+    if [[ -n "$legitimate_elevations" ]]; then
+        elevation_context="Legitimate Elevations:$legitimate_elevations"
+    fi
     
     # Check if violation reporting is enabled (FIXED BOOLEAN PARSING)
     if [[ "$VIOLATION_REPORTING" != "true" ]]; then
@@ -670,7 +899,7 @@ handle_violation() {
         return
     fi
     
-    # Create detailed violation report
+    # Create detailed violation report with elevation context
     local violation_report="ADMIN PRIVILEGE VIOLATION DETECTED
 Company: $COMPANY_NAME
 Timestamp: $timestamp
@@ -680,11 +909,16 @@ Current Console User: $current_user
 Monitoring Mode: $MONITORING_MODE
 Action Taken: $([[ "$AUTO_REMEDIATION" == "true" ]] && echo "Admin privileges removed" || echo "Violation logged only")
 
-Recent Admin Group Members:
+$elevation_context
+
+Current Admin Group Members:
 $(get_current_admins)
 
+Recent Elevation History:
+$(tail -n 10 "$LOG_DIR/elevation_history.log" 2>/dev/null || echo "No elevation history available")
+
 Recent Jamf Connect Activity:
-$(tail -n 10 "$JAMF_LOG" 2>/dev/null || echo "No recent activity")
+$(tail -n 5 "$JAMF_LOG" 2>/dev/null || echo "No recent activity")
 
 System Information:
 macOS Version: $(sw_vers -productVersion)
@@ -734,30 +968,84 @@ send_enhanced_notifications() {
     fi
 }
 
-# Enhanced webhook notification with template support
+# Enhanced webhook notification with platform-specific formatting
 send_webhook_notification_enhanced() {
     local user="$1"
     local hostname="$2"
     
+    # Get elevation context for the notification
+    local elevation_info=""
+    for elevation_file in "$LOG_DIR"/.current_elevation_*; do
+        if [[ -f "$elevation_file" ]]; then
+            local elevated_user=$(basename "$elevation_file" | sed 's/.current_elevation_//')
+            local info=$(cat "$elevation_file")
+            local reason=$(echo "$info" | sed -n 's/.*"reason":"\([^"]*\)".*/\1/p')
+            elevation_info="${elevation_info}${elevated_user}: ${reason}; "
+        fi
+    done
+    
+    if [[ -z "$elevation_info" ]]; then
+        elevation_info="No legitimate elevations active"
+    fi
+    
     local payload=""
     
-    if [[ "$NOTIFICATION_TEMPLATE" == "detailed" ]]; then
-        payload="{
-            \"text\": \"🚨 Admin Privilege Violation - $COMPANY_NAME\",
-            \"attachments\": [{
-                \"color\": \"danger\",
-                \"title\": \"Unauthorized Admin Account Detected\",
-                \"fields\": [
-                    {\"title\": \"Company\", \"value\": \"$COMPANY_NAME\", \"short\": true},
-                    {\"title\": \"Hostname\", \"value\": \"$hostname\", \"short\": true},
-                    {\"title\": \"User\", \"value\": \"$user\", \"short\": true},
-                    {\"title\": \"Monitoring\", \"value\": \"$MONITORING_MODE\", \"short\": true},
-                    {\"title\": \"Auto Remediation\", \"value\": \"$AUTO_REMEDIATION\", \"short\": true},
-                    {\"title\": \"Timestamp\", \"value\": \"$(date)\", \"short\": true},
-                    {\"title\": \"IT Contact\", \"value\": \"$IT_CONTACT_EMAIL\", \"short\": false}
-                ]
-            }]
-        }"
+    # Format message based on webhook platform
+    case "$WEBHOOK_TYPE" in
+        "teams")
+            # Microsoft Teams adaptive card format
+            if [[ "$NOTIFICATION_TEMPLATE" == "detailed" ]]; then
+                payload="{
+                    \"@type\": \"MessageCard\",
+                    \"@context\": \"http://schema.org/extensions\",
+                    \"themeColor\": \"FF0000\",
+                    \"summary\": \"Admin Privilege Violation Detected\",
+                    \"sections\": [{
+                        \"activityTitle\": \"🚨 Admin Privilege Violation - $COMPANY_NAME\",
+                        \"activitySubtitle\": \"Unauthorized Admin Account Detected\",
+                        \"facts\": [
+                            {\"name\": \"Company:\", \"value\": \"$COMPANY_NAME\"},
+                            {\"name\": \"Hostname:\", \"value\": \"$hostname\"},
+                            {\"name\": \"Unauthorized User:\", \"value\": \"$user\"},
+                            {\"name\": \"Legitimate Elevations:\", \"value\": \"$elevation_info\"},
+                            {\"name\": \"Monitoring:\", \"value\": \"$MONITORING_MODE\"},
+                            {\"name\": \"Auto Remediation:\", \"value\": \"$AUTO_REMEDIATION\"},
+                            {\"name\": \"Timestamp:\", \"value\": \"$(date)\"},
+                            {\"name\": \"IT Contact:\", \"value\": \"${IT_CONTACT_EMAIL:-Not configured}\"}
+                        ],
+                        \"markdown\": true
+                    }]
+                }"
+            else
+                payload="{
+                    \"@type\": \"MessageCard\",
+                    \"@context\": \"http://schema.org/extensions\",
+                    \"themeColor\": \"FF0000\",
+                    \"text\": \"🚨 **Admin Violation**: User $user on $hostname is not authorized\"
+                }"
+            fi
+            ;;
+        
+        "slack")
+            # Slack block kit format
+            if [[ "$NOTIFICATION_TEMPLATE" == "detailed" ]]; then
+                payload="{
+                    \"text\": \"🚨 Admin Privilege Violation - $COMPANY_NAME\",
+                    \"attachments\": [{
+                        \"color\": \"danger\",
+                        \"title\": \"Unauthorized Admin Account Detected\",
+                        \"fields\": [
+                            {\"title\": \"Company\", \"value\": \"$COMPANY_NAME\", \"short\": true},
+                            {\"title\": \"Hostname\", \"value\": \"$hostname\", \"short\": true},
+                            {\"title\": \"Unauthorized User\", \"value\": \"$user\", \"short\": true},
+                            {\"title\": \"Legitimate Elevations\", \"value\": \"$elevation_info\", \"short\": false},
+                            {\"title\": \"Monitoring\", \"value\": \"$MONITORING_MODE\", \"short\": true},
+                            {\"title\": \"Auto Remediation\", \"value\": \"$AUTO_REMEDIATION\", \"short\": true},
+                            {\"title\": \"Timestamp\", \"value\": \"$(date)\", \"short\": true},
+                            {\"title\": \"IT Contact\", \"value\": \"${IT_CONTACT_EMAIL:-Not configured}\", \"short\": false}
+                        ]
+                    }]
+                }"
     elif [[ "$NOTIFICATION_TEMPLATE" == "security_report" ]]; then
         payload="{
             \"text\": \"🚨 SECURITY INCIDENT - Unauthorized Admin Account\",
@@ -768,6 +1056,7 @@ send_webhook_notification_enhanced() {
                     {\"title\": \"🏢 Organization\", \"value\": \"$COMPANY_NAME\", \"short\": true},
                     {\"title\": \"💻 Affected System\", \"value\": \"$hostname\", \"short\": true},
                     {\"title\": \"👤 Unauthorized User\", \"value\": \"$user\", \"short\": true},
+                    {\"title\": \"✅ Legitimate Elevations\", \"value\": \"$elevation_info\", \"short\": false},
                     {\"title\": \"🔍 Detection Method\", \"value\": \"$MONITORING_MODE monitoring\", \"short\": true},
                     {\"title\": \"⚡ Response Status\", \"value\": \"$([[ "$AUTO_REMEDIATION" == "true" ]] && echo "Auto-remediated" || echo "Manual intervention required")\", \"short\": true},
                     {\"title\": \"📞 IT Support\", \"value\": \"$IT_CONTACT_EMAIL\", \"short\": true},
@@ -775,17 +1064,35 @@ send_webhook_notification_enhanced() {
                 ]
             }]
         }"
-    else
-        # Simple template
-        payload="{
-            \"text\": \"🚨 Admin Violation: User $user on $hostname - $COMPANY_NAME\"
-        }"
-    fi
+            else
+                # Simple template for Slack
+                payload="{
+                    \"text\": \"🚨 Admin Violation: User $user on $hostname - $COMPANY_NAME\"
+                }"
+            fi
+            ;;
+            
+        *)
+            # Default/generic webhook format
+            log_message "WARN" "Unknown webhook type: $WEBHOOK_TYPE, using generic format"
+            payload="{
+                \"text\": \"Admin Violation Detected\",
+                \"user\": \"$user\",
+                \"hostname\": \"$hostname\",
+                \"company\": \"$COMPANY_NAME\",
+                \"timestamp\": \"$(date)\"
+            }"
+            ;;
+    esac
     
-    curl -X POST -H 'Content-type: application/json' \
-         --data "$payload" \
-         "$WEBHOOK_URL" &>/dev/null && \
-    log_message "INFO" "Enhanced webhook notification sent ($NOTIFICATION_TEMPLATE template)"
+    # Send webhook notification
+    if [[ -n "$payload" && -n "$WEBHOOK_URL" ]]; then
+        curl -X POST -H 'Content-type: application/json' \
+             --data "$payload" \
+             "$WEBHOOK_URL" &>/dev/null && \
+        log_message "INFO" "Webhook notification sent ($WEBHOOK_TYPE: $NOTIFICATION_TEMPLATE template)" || \
+        log_message "ERROR" "Failed to send webhook notification to $WEBHOOK_TYPE"
+    fi
 }
 
 # FIXED: Enhanced email notification with improved SMTP authentication support
@@ -976,13 +1283,87 @@ main_monitor() {
     # Initialize whitelist if needed
     initialize_admin_whitelist
     
-    # Monitor Jamf Connect elevation events
-    monitor_jamf_connect_elevation
-    
-    # Check for unauthorized admin accounts
-    check_unauthorized_admins
+    # Determine monitoring behavior based on configuration
+    if [[ "$MONITOR_JAMF_CONNECT_ONLY" == "true" ]]; then
+        # Only check for violations if Jamf Connect elevation is detected
+        log_message "INFO" "Monitoring mode: Jamf Connect events only"
+        
+        # Check for recent Jamf Connect elevation events
+        local time_window="${MONITORING_INTERVAL}s"
+        local recent_events=$(log show --style compact --predicate '(subsystem == "com.jamf.connect.daemon") && (category == "PrivilegeElevation")' --last "$time_window" 2>/dev/null)
+        
+        if [[ -n "$recent_events" ]]; then
+            log_message "INFO" "Recent Jamf Connect elevation detected - checking for violations"
+            echo "$recent_events" >> "$JAMF_LOG"
+            
+            # Only check for unauthorized admins if Jamf Connect activity detected
+            check_unauthorized_admins
+        else
+            log_message "INFO" "No recent Jamf Connect elevation - skipping admin check"
+        fi
+    else
+        # Always monitor for unauthorized admins regardless of Jamf Connect activity
+        log_message "INFO" "Monitoring mode: Always check for unauthorized admins"
+        
+        # Still log Jamf Connect events if they exist
+        monitor_jamf_connect_elevation
+        
+        # Always check for unauthorized admin accounts
+        check_unauthorized_admins
+    fi
     
     log_message "INFO" "Monitoring cycle completed"
+}
+
+# Test webhook functionality
+send_test_webhook() {
+    if [[ -z "$WEBHOOK_URL" ]]; then
+        echo "❌ No webhook URL configured"
+        echo "Please configure WebhookURL in Configuration Profile"
+        return 1
+    fi
+    
+    echo "Testing webhook notification..."
+    echo "  Platform: $WEBHOOK_TYPE"
+    echo "  URL: ${WEBHOOK_URL:0:50}..."
+    echo "  Template: $NOTIFICATION_TEMPLATE"
+    echo ""
+    
+    # Send test notification
+    local test_user="testuser"
+    local test_hostname=$(hostname)
+    
+    send_webhook_notification_enhanced "$test_user" "$test_hostname"
+    
+    if [[ $? -eq 0 ]]; then
+        echo "✅ Test webhook sent successfully!"
+        echo ""
+        echo "Check your $WEBHOOK_TYPE channel for the test message."
+        
+        if [[ "$WEBHOOK_TYPE" == "teams" ]]; then
+            echo ""
+            echo "📝 Microsoft Teams Setup:"
+            echo "1. In Teams, go to the channel where you want notifications"
+            echo "2. Click ••• (More options) → Connectors"
+            echo "3. Search for 'Incoming Webhook' and click Configure"
+            echo "4. Give it a name (e.g., 'Jamf Monitor') and optionally upload an image"
+            echo "5. Click Create and copy the webhook URL"
+            echo "6. Add the URL to your Jamf Configuration Profile"
+        elif [[ "$WEBHOOK_TYPE" == "slack" ]]; then
+            echo ""
+            echo "📝 Slack Setup (Legacy Webhooks):"
+            echo "1. Go to https://api.slack.com/apps"
+            echo "2. Create new app → From scratch"
+            echo "3. Enable Incoming Webhooks"
+            echo "4. Add New Webhook to Workspace"
+            echo "5. Choose channel and copy the webhook URL"
+            echo "6. Add the URL to your Jamf Configuration Profile"
+        fi
+    else
+        echo "❌ Failed to send test webhook"
+        echo "Check the logs for detailed error information:"
+        echo "  tail -f /var/log/jamf_connect_monitor/monitor.log"
+    fi
 }
 
 # Command line interface (enhanced with FIXED email support)
@@ -1013,6 +1394,39 @@ case "${1:-monitor}" in
         check_lock
         read_configuration
         check_unauthorized_admins
+        ;;
+    "elevation-report")
+        echo "=== Legitimate Elevation Report ==="
+        echo
+        generate_elevation_summary
+        echo
+        echo "Recent Legitimate Elevations:"
+        if [[ -f "$LOG_DIR/legitimate_elevations.log" ]]; then
+            tail -10 "$LOG_DIR/legitimate_elevations.log" | while IFS='|' read -r timestamp type user reason host; do
+                echo "  $timestamp |$type |$user |$reason"
+            done
+        else
+            echo "  No legitimate elevation data available"
+        fi
+        echo
+        echo "Current Elevation Statistics:"
+        if [[ -f "$LOG_DIR/.stats_total" ]]; then
+            echo "  Total Elevations: $(cat "$LOG_DIR/.stats_total" 2>/dev/null || echo "0")"
+            echo "  Today's Elevations: $(cat "$LOG_DIR/.stats_daily_$(date '+%Y-%m-%d')" 2>/dev/null || echo "0")"
+        fi
+        echo
+        echo "Top Users (by elevation count):"
+        if ls "$LOG_DIR"/.stats_user_* >/dev/null 2>&1; then
+            for stats_file in "$LOG_DIR"/.stats_user_*; do
+                if [[ -f "$stats_file" ]]; then
+                    local user=$(basename "$stats_file" | sed 's/.stats_user_//')
+                    local count=$(cat "$stats_file")
+                    echo "  $user: $count elevations"
+                fi
+            done | sort -t: -k2 -rn | head -5
+        else
+            echo "  No elevation statistics available yet"
+        fi
         ;;
     "test-config")
         read_configuration
@@ -1056,23 +1470,31 @@ case "${1:-monitor}" in
         read_configuration
         send_test_email "$2"
         ;;
+    "test-webhook")
+        read_configuration
+        send_test_webhook
+        ;;
     "help")
         echo "Usage: $0 [command]"
         echo "Commands:"
-        echo "  monitor        Run monitoring cycle (default)"
-        echo "  status         Show current status and configuration"
-        echo "  add-admin      Add user to approved admin list"
-        echo "  remove-admin   Remove user from approved admin list"
-        echo "  force-check    Force check for unauthorized admins"
-        echo "  test-config    Test configuration profile settings"
-        echo "  test-email     Send test email to verify delivery"
-        echo "  help           Show this help message"
+        echo "  monitor          Run monitoring cycle (default)"
+        echo "  status           Show current status and configuration"
+        echo "  elevation-report View legitimate elevation statistics and history"
+        echo "  add-admin        Add user to approved admin list"
+        echo "  remove-admin     Remove user from approved admin list"
+        echo "  force-check      Force check for unauthorized admins"
+        echo "  test-config      Test configuration profile settings"
+        echo "  test-email       Send test email to verify delivery"
+        echo "  test-webhook     Test webhook notification (Slack/Teams)"
+        echo "  help             Show this help message"
         echo
         echo "Version $VERSION Features:"
+        echo "  • NEW: Legitimate elevation tracking and audit logging"
+        echo "  • NEW: Elevation analytics and compliance reporting"
         echo "  • Configuration Profile support for centralized management"
-        echo "  • FIXED: Reliable email delivery with multiple fallback methods"
+        echo "  • SMTP provider selection with auto-configuration"
         echo "  • Real-time monitoring capabilities"
-        echo "  • Enhanced notification templates"
+        echo "  • Enhanced notification templates with elevation context"
         echo "  • Configurable grace periods and auto-remediation"
         echo "  • Advanced Jamf Pro integration"
         echo

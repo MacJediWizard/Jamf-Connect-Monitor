@@ -1,7 +1,7 @@
-# Production Tools & Verification Guide - v2.3.0
+# Production Tools & Verification Guide - v2.4.0
 
 ## Overview
-Jamf Connect Monitor v2.3.0 introduces comprehensive production tools for enterprise deployment validation, troubleshooting, and system maintenance. These tools ensure reliable deployment and ongoing operational excellence.
+Jamf Connect Monitor v2.4.0 introduces comprehensive production tools for enterprise deployment validation, troubleshooting, and system maintenance. These tools ensure reliable deployment and ongoing operational excellence.
 
 ## 🔧 **tools/ Directory Structure**
 
@@ -43,7 +43,7 @@ sudo ./tools/verify_monitoring.sh --quick
 #### **2. Extension Attribute Validation**
 ```bash
 ✅ Script Installation: /usr/local/etc/jamf_ea_admin_violations.sh exists
-✅ Version Compatibility: Confirms v2.3.0 features present
+✅ Version Compatibility: Confirms v2.4.0 features present
 ✅ Permissions: Validates executable permissions without ACL symbols
 ✅ Execution Test: Runs script and validates output format
 ✅ Data Format: Ensures Jamf Pro and Smart Group compatibility
@@ -77,15 +77,15 @@ sudo ./tools/verify_monitoring.sh --quick
 
 #### **Successful Verification**
 ```bash
-🔍 JAMF CONNECT MONITOR VERIFICATION v2.3.0
+🔍 JAMF CONNECT MONITOR VERIFICATION v2.4.0
 ======================================
 
-✅ Main script installed: Version 2.3.0
+✅ Main script installed: Version 2.4.0
 ✅ Permissions correct: -rwxr-xr-x
-✅ Extension Attribute script installed: Version 2.3.0
+✅ Extension Attribute script installed: Version 2.4.0
 ✅ EA permissions correct: -rwxr-xr-x (no @ symbols)
 ✅ Extension Attribute runs successfully
-✅ Version detected: Version: 2.3.0, Periodic: Running
+✅ Version detected: Version: 2.4.0, Periodic: Running
 ✅ Monitoring mode detected: Mode: periodic
 ✅ Company name: [Your Company Name] (from Configuration Profile)
 ✅ Configuration Profile integration: Working (Method 2)
@@ -106,11 +106,11 @@ sudo ./tools/verify_monitoring.sh --quick
 
 #### **Troubleshooting Output**
 ```bash
-🔍 JAMF CONNECT MONITOR VERIFICATION v2.3.0
+🔍 JAMF CONNECT MONITOR VERIFICATION v2.4.0
 ======================================
 
 ❌ Main script installed: Missing
-✅ Extension Attribute script installed: Version 2.3.0
+✅ Extension Attribute script installed: Version 2.4.0
 ⚠️  EA permissions incorrect: -rw-r--r--@ (has @ symbol)
 ❌ Extension Attribute execution: Permission denied
 ⚠️  Configuration Profile: Method 1 failed, trying Method 2...
@@ -119,7 +119,7 @@ sudo ./tools/verify_monitoring.sh --quick
 🚨 ISSUES DETECTED - MANUAL INTERVENTION REQUIRED
 
 🔧 RECOMMENDED FIXES:
-1. Install main monitoring script: sudo installer -pkg JamfConnectMonitor-2.3.0.pkg -target /
+1. Install main monitoring script: sudo installer -pkg JamfConnectMonitor-2.4.0.pkg -target /
 2. Clear ACLs on Extension Attribute: sudo xattr -c /usr/local/etc/jamf_ea_admin_violations.sh
 3. Set correct permissions: sudo chmod +x /usr/local/etc/jamf_ea_admin_violations.sh
 
@@ -142,7 +142,7 @@ Parameter 4: Verification Mode (quick|verbose|standard)
 #### **Policy Integration**
 ```bash
 # Deployment Validation Policy:
-1. Deploy JamfConnectMonitor-2.3.0.pkg
+1. Deploy JamfConnectMonitor-2.4.0.pkg
 2. Run Production Verification script
 3. Update inventory if verification passes
 4. Send notification with results
@@ -198,11 +198,11 @@ Criteria: Script Result "Production Verification" contains "ISSUES DETECTED"
 
 ### Upgrade Validation
 ```bash
-# v2.3.0 → v2.3.0 upgrade verification
+# v2.4.0 → v2.4.0 upgrade verification
 1. Note pre-upgrade version: sudo jamf_connect_monitor.sh status
-2. Deploy v2.3.0 package
+2. Deploy v2.4.0 package
 3. Run verification script
-4. Confirm version shows "2.3.0" 
+4. Confirm version shows "2.4.0" 
 5. Verify Configuration Profile improvements
 6. Test Extension Attribute execution
 ```
@@ -246,7 +246,7 @@ Method 4: sudo defaults read "/Library/Managed Preferences/com.macjediwizard.jam
 
 ### Pre-Production Checklist
 - [ ] **Package Upload** - JamfConnectMonitor-2.3.0.pkg uploaded to Jamf Pro
-- [ ] **Extension Attribute Update** - v2.3.0 script deployed in Jamf Pro
+- [ ] **Extension Attribute Update** - v2.4.0 script deployed in Jamf Pro
 - [ ] **Configuration Profile** - JSON Schema deployed and scoped
 - [ ] **Verification Script** - Available for post-deployment testing
 - [ ] **Smart Groups** - Created with flexible v2.x criteria
@@ -255,7 +255,7 @@ Method 4: sudo defaults read "/Library/Managed Preferences/com.macjediwizard.jam
 ### Post-Deployment Validation
 - [ ] **Run Verification** - `sudo ./tools/verify_monitoring.sh` on pilot systems
 - [ ] **Check Output** - All tests show ✅ status
-- [ ] **Extension Attribute** - Jamf Pro shows proper v2.3.0 data format
+- [ ] **Extension Attribute** - Jamf Pro shows proper v2.4.0 data format
 - [ ] **Smart Groups** - Pilot systems populate correctly
 - [ ] **Configuration Profile** - Company name displays correctly
 - [ ] **Force Inventory** - `sudo jamf recon` on pilot systems
@@ -308,7 +308,7 @@ Method 4: sudo defaults read "/Library/Managed Preferences/com.macjediwizard.jam
 ```bash
 # If tools/verify_monitoring.sh missing:
 1. Re-download from GitHub releases
-2. Extract from package: pkgutil --expand JamfConnectMonitor-2.3.0.pkg temp
+2. Extract from package: pkgutil --expand JamfConnectMonitor-2.4.0.pkg temp
 3. Copy to appropriate location
 4. Set permissions: chmod +x tools/verify_monitoring.sh
 ```
@@ -340,7 +340,7 @@ Method 4: sudo defaults read "/Library/Managed Preferences/com.macjediwizard.jam
 
 ## 🎯 **Bottom Line**
 
-The production verification tools in v2.3.0 provide enterprise administrators with:
+The production verification tools in v2.4.0 provide enterprise administrators with:
 
 - **✅ Deployment Confidence** - Comprehensive validation before production rollout
 - **✅ Troubleshooting Speed** - Immediate diagnosis of common issues

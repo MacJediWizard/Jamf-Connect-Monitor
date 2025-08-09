@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Jamf Connect Monitor - Complete Uninstall Script
-# Version: 2.3.0
+# Version: 2.4.0
 # Author: MacJediWizard
 # Description: Completely removes all Jamf Connect Monitor components
 

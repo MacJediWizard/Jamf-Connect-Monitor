@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Jamf Connect Monitor - Email Testing & Verification Tool
-# Version: 2.3.0
+# Version: 2.4.0
 # Author: MacJediWizard
 # Description: Comprehensive email delivery testing for production deployment
 
@@ -259,7 +259,7 @@ If you received this email, your SMTP authentication is working correctly.
 
 Technical Details:
 - Configuration Profile: Active
-- Test Tool: email_test.sh v2.3.0
+- Test Tool: email_test.sh v2.4.0
 - System: macOS $(sw_vers -productVersion)
 
 Next steps: Configure your monitoring system with these SMTP settings.
@@ -321,7 +321,7 @@ System Mail Configuration:
 If you received this email, your system mail is working correctly.
 
 Technical Details:
-- Test Tool: email_test.sh v2.3.0  
+- Test Tool: email_test.sh v2.4.0  
 - System: macOS $(sw_vers -productVersion)
 - User: $(whoami)
 
@@ -727,7 +727,7 @@ main() {
             show_email_configuration
             ;;
         "help")
-            echo "Jamf Connect Monitor - Email Testing Tool v2.3.0"
+            echo "Jamf Connect Monitor - Email Testing Tool v2.4.0"
             echo "Usage: $0 [command] [email@domain.com]"
             echo
             echo "Commands:"

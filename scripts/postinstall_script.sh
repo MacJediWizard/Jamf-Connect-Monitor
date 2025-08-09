@@ -18,7 +18,7 @@ if [[ -f "/usr/local/bin/jamf_connect_monitor.sh" ]]; then
         PACKAGE_VERSION=$(head -10 "/usr/local/bin/jamf_connect_monitor.sh" | grep -o '[0-9]\+\.[0-9]\+\.[0-9]\+' | head -1)
     fi
 fi
-[[ -z "$PACKAGE_VERSION" ]] && PACKAGE_VERSION="2.3.0"  # Fallback
+[[ -z "$PACKAGE_VERSION" ]] && PACKAGE_VERSION="2.4.0"  # Fallback
 
 # Configuration from Jamf Pro Parameters (if provided)
 WEBHOOK_URL="${4:-}"          # Parameter 4

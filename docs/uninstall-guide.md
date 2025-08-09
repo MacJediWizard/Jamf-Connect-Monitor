@@ -1,11 +1,11 @@
-# Jamf Connect Monitor - Complete Uninstall Guide v2.3.0
+# Jamf Connect Monitor - Complete Uninstall Guide v2.4.0
 
 ## Overview
-This guide provides multiple methods to completely remove Jamf Connect Monitor from your fleet, including **enhanced v2.3.0 uninstall capabilities**, silent uninstall via Jamf Pro, and comprehensive system restoration.
+This guide provides multiple methods to completely remove Jamf Connect Monitor from your fleet, including **enhanced v2.4.0 uninstall capabilities**, silent uninstall via Jamf Pro, and comprehensive system restoration.
 
-## 🗑️ **Enhanced v2.3.0 Uninstall Features**
+## 🗑️ **Enhanced v2.4.0 Uninstall Features**
 
-### **Enterprise-Grade Removal (New in v2.3.0)**
+### **Enterprise-Grade Removal (New in v2.4.0)**
 - **✅ Complete System Restoration** - All scripts, daemons, logs, and configurations removed
 - **✅ Configuration Backup** - Preserves approved admin lists and settings with timestamped backups
 - **✅ Log Archiving** - Complete monitoring history preserved before removal
@@ -13,7 +13,7 @@ This guide provides multiple methods to completely remove Jamf Connect Monitor f
 - **✅ Package Receipt Management** - All installer receipts cleaned from system database
 - **✅ Verification System** - Comprehensive validation of complete removal
 
-### **Jamf Pro Integration (v2.3.0)**
+### **Jamf Pro Integration (v2.4.0)**
 - **✅ Silent Mass Deployment** - Automated uninstall via Jamf Pro policies
 - **✅ Inventory Updates** - Automatic Jamf Pro inventory refresh after removal
 - **✅ Notification Support** - Uninstall confirmation via configured webhooks
@@ -50,7 +50,7 @@ This guide provides multiple methods to completely remove Jamf Connect Monitor f
 - **Preference files** - All system and managed preferences cleaned
 - **ACL and Extended Attributes** - Complete system state restoration
 
-### What's Preserved (v2.3.0 Feature)
+### What's Preserved (v2.4.0 Feature)
 
 #### **Automatic Backups**
 ```bash
@@ -75,11 +75,11 @@ This guide provides multiple methods to completely remove Jamf Connect Monitor f
 
 ## Uninstall Methods
 
-### Method 1: Enhanced Local Manual Uninstall (v2.3.0)
+### Method 1: Enhanced Local Manual Uninstall (v2.4.0)
 
 #### Download and Run Enhanced Uninstall Script
 ```bash
-# Download the enhanced v2.3.0 uninstall script
+# Download the enhanced v2.4.0 uninstall script
 curl -o uninstall_script.sh https://github.com/MacJediWizard/jamf-connect-monitor/releases/latest/download/uninstall_script.sh
 
 # Make executable
@@ -92,7 +92,7 @@ sudo ./uninstall_script.sh
 sudo ./uninstall_script.sh --force
 ```
 
-#### Enhanced Uninstall Options (v2.3.0)
+#### Enhanced Uninstall Options (v2.4.0)
 ```bash
 # Interactive uninstall with confirmation prompts
 sudo ./uninstall_script.sh
@@ -131,7 +131,7 @@ sudo ./uninstall_script.sh verify
 
 2. **Script Configuration:**
    ```
-   Display Name: Jamf Connect Monitor - Enhanced Uninstall v2.3.0
+   Display Name: Jamf Connect Monitor - Enhanced Uninstall v2.4.0
    Category: Utilities
    Priority: Before
    Script Contents: [Copy entire enhanced uninstall_script.sh content]
@@ -159,7 +159,7 @@ Criteria:
 
 1. **General Settings:**
    ```
-   Display Name: Uninstall Jamf Connect Monitor v2.3.0 (Enhanced)
+   Display Name: Uninstall Jamf Connect Monitor v2.4.0 (Enhanced)
    Category: Utilities
    Trigger: Custom Event "uninstall_jamf_monitor_v201" OR Manual
    Execution Frequency: Once per computer
@@ -167,7 +167,7 @@ Criteria:
 
 2. **Scripts Configuration:**
    ```
-   Script: Jamf Connect Monitor - Enhanced Uninstall v2.3.0
+   Script: Jamf Connect Monitor - Enhanced Uninstall v2.4.0
    Priority: Before
    Parameter 4: force
    ```
@@ -200,10 +200,10 @@ sudo jamf policy -event uninstall_jamf_monitor_v201
 - Allow users to uninstall if appropriate
 - Include clear description of enhanced uninstall features
 
-### Method 3: Local Package-Included Uninstall (v2.3.0)
+### Method 3: Local Package-Included Uninstall (v2.4.0)
 
 ```bash
-# Use enhanced uninstall script included with v2.3.0 package
+# Use enhanced uninstall script included with v2.4.0 package
 sudo /usr/local/share/jamf_connect_monitor/uninstall_script.sh
 
 # Available options:
@@ -212,11 +212,11 @@ sudo /usr/local/share/jamf_connect_monitor/uninstall_script.sh verify
 sudo /usr/local/share/jamf_connect_monitor/uninstall_script.sh help
 ```
 
-## Enhanced Uninstall Process (v2.3.0)
+## Enhanced Uninstall Process (v2.4.0)
 
 ### Interactive Uninstall Experience
 ```bash
-⚠️  WARNING: This will completely remove Jamf Connect Monitor v2.3.0
+⚠️  WARNING: This will completely remove Jamf Connect Monitor v2.4.0
 This includes:
   • Monitoring scripts and daemon
   • Configuration files and approved admin lists (will be backed up)
@@ -295,7 +295,7 @@ Cleanup Complete:
 Note: Jamf Connect application itself remains installed and functional.
 ```
 
-## Verification and Validation (Enhanced v2.3.0)
+## Verification and Validation (Enhanced v2.4.0)
 
 ### Comprehensive Verification
 ```bash
@@ -337,7 +337,7 @@ ls -la /usr/local/etc/*.uninstall_backup.* 2>/dev/null && echo "✅ Configs back
 # 4. Validate no monitoring processes running on sample systems
 ```
 
-## Troubleshooting Enhanced Uninstall (v2.3.0)
+## Troubleshooting Enhanced Uninstall (v2.4.0)
 
 ### Common Issues and Solutions
 
@@ -351,7 +351,7 @@ sudo ./uninstall_script.sh --force
 
 #### LaunchDaemon Won't Unload
 ```bash
-# Enhanced v2.3.0 uninstall handles this automatically, but manual fix:
+# Enhanced v2.4.0 uninstall handles this automatically, but manual fix:
 sudo launchctl unload /Library/LaunchDaemons/com.macjediwizard.jamfconnectmonitor.plist
 sudo rm -f /Library/LaunchDaemons/com.macjediwizard.jamfconnectmonitor.plist
 
@@ -361,7 +361,7 @@ sudo pkill -f jamf_connect_monitor
 
 #### Package Receipts Not Removed
 ```bash
-# Enhanced v2.3.0 uninstall handles multiple package IDs, but manual cleanup:
+# Enhanced v2.4.0 uninstall handles multiple package IDs, but manual cleanup:
 sudo pkgutil --forget com.macjediwizard.jamfconnectmonitor
 sudo pkgutil --forget com.yourcompany.jamfconnectmonitor  
 sudo pkgutil --forget com.company.jamfconnectmonitor
@@ -394,7 +394,7 @@ df -h /usr/local
 sudo cp -R /var/log/jamf_connect_monitor /var/log/jamf_connect_monitor_manual_backup_$(date +%Y%m%d_%H%M%S)
 ```
 
-## Backup and Recovery (v2.3.0 Feature)
+## Backup and Recovery (v2.4.0 Feature)
 
 ### Restoring from Enhanced Backups
 ```bash
@@ -416,19 +416,19 @@ sudo cp -R /var/log/jamf_connect_monitor_archive_[timestamp]/* /var/log/jamf_con
 ```bash
 # If you need to reinstall after enhanced uninstall:
 # 1. Download latest package
-curl -LO https://github.com/MacJediWizard/jamf-connect-monitor/releases/latest/download/JamfConnectMonitor-2.3.0.pkg
+curl -LO https://github.com/MacJediWizard/jamf-connect-monitor/releases/latest/download/JamfConnectMonitor-2.4.0.pkg
 
 # 2. Install package
-sudo installer -pkg JamfConnectMonitor-2.3.0.pkg -target /
+sudo installer -pkg JamfConnectMonitor-2.4.0.pkg -target /
 
 # 3. Restore approved admin list from backup (if needed)
 sudo cp /usr/local/etc/approved_admins.txt.uninstall_backup.[timestamp] /usr/local/etc/approved_admins.txt
 
-# 4. Verify installation with v2.3.0 tools
+# 4. Verify installation with v2.4.0 tools
 sudo ./tools/verify_monitoring.sh
 ```
 
-## Enterprise Best Practices (v2.3.0)
+## Enterprise Best Practices (v2.4.0)
 
 ### Planning Phase for Mass Uninstall
 - **📋 Document Current State** - Note all approved admins and configurations
