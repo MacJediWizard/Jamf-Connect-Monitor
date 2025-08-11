@@ -316,7 +316,6 @@ sudo jamf_connect_monitor.sh test-config | grep "Company Name:"
 
 - **GitHub Issues:** [Report migration problems](https://github.com/MacJediWizard/jamf-connect-monitor/issues)
 - **Documentation:** [Complete guides](https://github.com/MacJediWizard/jamf-connect-monitor/tree/main/docs)
-- **Discussions:** [Community migration experiences](https://github.com/MacJediWizard/jamf-connect-monitor/discussions)
 
 ---
 

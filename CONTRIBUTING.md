@@ -233,8 +233,7 @@ sudo ./scripts/test-cleanup.sh
 
 ## Getting Help
 
-- **GitHub Discussions**: Ask questions about development
 - **GitHub Issues**: Report bugs or request features
-- **Wiki**: Check documentation and examples
+- **Documentation**: Check the docs/ folder for guides
 
 Thank you for contributing to Jamf Connect Monitor! 🎉

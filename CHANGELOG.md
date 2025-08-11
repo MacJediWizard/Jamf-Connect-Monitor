@@ -718,7 +718,6 @@ sudo ./tools/verify_monitoring.sh
 For issues, feature requests, or support:
 - **GitHub Issues**: [Report bugs or request features](https://github.com/MacJediWizard/jamf-connect-monitor/issues)
 - **Documentation**: [Complete guides in docs/](https://github.com/MacJediWizard/jamf-connect-monitor/tree/main/docs)
-- **Discussions**: [Community discussions](https://github.com/MacJediWizard/jamf-connect-monitor/discussions)
 - **Production Issues**: Use included verification script for immediate diagnostics
 
 ---

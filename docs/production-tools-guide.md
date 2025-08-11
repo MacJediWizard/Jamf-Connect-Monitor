@@ -334,7 +334,6 @@ Method 4: sudo defaults read "/Library/Managed Preferences/com.macjediwizard.jam
 ### Getting Help
 - **GitHub Issues**: [Report verification problems](https://github.com/MacJediWizard/jamf-connect-monitor/issues)
 - **Documentation**: [Complete troubleshooting guide](docs/troubleshooting.md)
-- **Community**: [Share verification results and solutions](https://github.com/MacJediWizard/jamf-connect-monitor/discussions)
 
 ---
 

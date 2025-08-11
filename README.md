@@ -433,7 +433,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 - **Issues**: [GitHub Issues](https://github.com/MacJediWizard/jamf-connect-monitor/issues)
 - **Documentation**: [Complete Guides](https://github.com/MacJediWizard/jamf-connect-monitor/tree/main/docs)
-- **Discussions**: [GitHub Discussions](https://github.com/MacJediWizard/jamf-connect-monitor/discussions)
 - **Production Support**: Use included `tools/verify_monitoring.sh` for immediate diagnostics
 
 ## ⭐ **Acknowledgments**
