@@ -25,7 +25,7 @@ Jamf Connect Monitor v2.4.0 introduces enhanced Configuration Profile management
 /usr/local/share/jamf_connect_monitor/schema/jamf_connect_monitor_schema.json
 
 # Or from package contents:
-pkgutil --expand JamfConnectMonitor-2.3.0.pkg temp
+pkgutil --expand JamfConnectMonitor-2.4.0.pkg temp
 cp temp/Payload/usr/local/share/jamf_connect_monitor/schema/jamf_connect_monitor_schema.json .
 ```
 

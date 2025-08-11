@@ -47,7 +47,7 @@ This guide provides detailed instructions for deploying Jamf Connect Monitor v2.
 #### 1.1 Upload Installation Package
 1. **Download Package:**
    - Go to [GitHub Releases](https://github.com/MacJediWizard/jamf-connect-monitor/releases/latest)
-   - Download `JamfConnectMonitor-2.3.0.pkg` (or latest 2.x version)
+   - Download `JamfConnectMonitor-2.4.0.pkg` (or latest 2.x version)
    - Download `jamf_connect_monitor_schema.json`
 
 2. **Upload to Jamf Pro:**
@@ -64,10 +64,10 @@ This guide provides detailed instructions for deploying Jamf Connect Monitor v2.
 #### 1.2 Package Verification
 ```bash
 # Verify package integrity
-pkgutil --check-signature JamfConnectMonitor-2.3.0.pkg
+pkgutil --check-signature JamfConnectMonitor-2.4.0.pkg
 
 # Check package contents for v2.4.0 features
-pkgutil --payload-files JamfConnectMonitor-2.3.0.pkg | grep -E "(verify_monitoring|uninstall_script)"
+pkgutil --payload-files JamfConnectMonitor-2.4.0.pkg | grep -E "(verify_monitoring|uninstall_script)"
 # Should show: tools/verify_monitoring.sh and enhanced uninstall script
 ```
 
@@ -159,7 +159,7 @@ Exclusions: None (unless testing specific groups)
 ```
 Name: Jamf Connect Monitor - Installed v2.x
 Criteria: Extension Attribute "[ Jamf Connect ] - Monitor Status v2.4.0" like "*Version: 2.*"
-Purpose: Track ALL v2.x installations (2.3.0, 2.0.2, 2.1.0, etc.)
+Purpose: Track ALL v2.x installations (2.4.0, 2.3.0, 2.0.2, etc.)
 ```
 
 **Jamf Connect Monitor - Config Profile Active**
@@ -266,7 +266,7 @@ Purpose: Proactive maintenance and troubleshooting (enhanced in v2.4.0)
 2. **Test Scenarios:**
    ```bash
    # Test 1: Package installation
-   sudo installer -pkg JamfConnectMonitor-2.3.0.pkg -target /
+   sudo installer -pkg JamfConnectMonitor-2.4.0.pkg -target /
    
    # Test 2: Production verification (NEW in v2.4.0)
    sudo ./tools/verify_monitoring.sh
@@ -441,7 +441,7 @@ sudo jamf_connect_monitor.sh test-config
 ```bash
 # Use flexible criteria for future-proof Smart Groups:
 Extension Attribute "Monitor Status" like "*Version: 2.*"
-# This catches 2.3.0, 2.0.2, 2.1.0, etc. automatically
+# This catches 2.4.0, 2.3.0, 2.0.2, etc. automatically
 
 # Force inventory update on sample systems:
 sudo jamf recon

@@ -245,7 +245,7 @@ Method 4: sudo defaults read "/Library/Managed Preferences/com.macjediwizard.jam
 ## 📋 **Deployment Checklist Integration**
 
 ### Pre-Production Checklist
-- [ ] **Package Upload** - JamfConnectMonitor-2.3.0.pkg uploaded to Jamf Pro
+- [ ] **Package Upload** - JamfConnectMonitor-2.4.0.pkg uploaded to Jamf Pro
 - [ ] **Extension Attribute Update** - v2.4.0 script deployed in Jamf Pro
 - [ ] **Configuration Profile** - JSON Schema deployed and scoped
 - [ ] **Verification Script** - Available for post-deployment testing
