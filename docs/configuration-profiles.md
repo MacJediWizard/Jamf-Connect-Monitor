@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="../JamfConnectMonitor-815x1024.png" alt="Jamf Connect Monitor Logo" width="200">
+</p>
+
 # Configuration Profile Deployment Guide v2.4.0
 
 ## Overview

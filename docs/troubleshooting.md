@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="../JamfConnectMonitor-815x1024.png" alt="Jamf Connect Monitor Logo" width="200">
+</p>
+
 # Troubleshooting Guide v2.4.0
 
 ## v2.4.0 Critical Issue Resolution
