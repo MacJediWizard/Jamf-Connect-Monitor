@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="JamfConnectMonitor-815x1024.png" alt="Jamf Connect Monitor Logo" width="300">
+</p>
+
 # Jamf Connect Privilege Monitor v2.4.0
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
